@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2f5597">
+<title>ઇન્ટરવ્યુ પ્રેક્ટિસ</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<style>
+:root{
+  color-scheme: light;
+  --bg:#f5f7fa; --card:#fff; --ink:#151a21; --muted:#6f7887;
+  --line:#e8ebf1; --accent:#2f5597; --accent-d:#24406f; --soft:#eaf0fa;
+  --good:#1f8a4c; --mid:#c07d0a; --low:#c0392b; --rec:#d64541;
+  --sh:0 1px 2px rgba(16,24,40,.05), 0 0 0 1px rgba(16,24,40,.045);
+  --sh2:0 4px 16px rgba(16,24,40,.09), 0 0 0 1px rgba(16,24,40,.045);
+  --r:14px;
+  /* ઇન્ટરફેસનો ફોન્ટ — ભાષા બદલાય ત્યારે i18n.js આ બદલે છે.
+     બધા ફોન્ટ સિસ્ટમના છે, તેથી એપ ઓફલાઇન પણ બરાબર દેખાય. */
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{overscroll-behavior-y:none}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font-family:var(--font);
+  font-size:15px;line-height:1.6;
+}
+.lat{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+/* ભાષાંતર બાકી હોય એવું ગુજરાતી લખાણ — ઇન્ટરફેસ બીજી ભાષામાં હોય ત્યારે પણ સાચો ફોન્ટ */
+.guscript{font-family:"Noto Sans Gujarati","Shruti",sans-serif}
+.wrap{max-width:600px;margin:0 auto;padding:0 15px 44px}
+[hidden]{display:none !important}
+
+/* ---------- ટોપ બાર ---------- */
+.bar{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 15px;padding-top:calc(12px + env(safe-area-inset-top));
+  position:sticky;top:0;z-index:30;background:var(--bg);
+}
+.bar.solid{box-shadow:0 1px 0 var(--line)}
+.bar h1{margin:0;font-size:16.5px;font-weight:700;flex:1;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar .sub{font-size:11.5px;color:var(--muted);font-weight:500}
+.ib{
+  border:0;background:transparent;font-size:19px;line-height:1;padding:8px;
+  border-radius:10px;color:var(--ink);cursor:pointer;flex:none;min-width:40px;min-height:40px
+}
+.ib:active{background:var(--line)}
+.pill{
+  font-size:12px;font-weight:700;color:var(--accent);background:var(--soft);
+  padding:5px 10px;border-radius:20px;flex:none
+}
+
+/* ---------- કાર્ડ ---------- */
+.card{background:var(--card);border-radius:var(--r);padding:16px;margin-bottom:12px;box-shadow:var(--sh)}
+.card.flat{background:transparent;box-shadow:none;padding:0}
+h2.sec{font-size:12.5px;margin:22px 0 10px;color:var(--muted);font-weight:700;letter-spacing:.3px}
+
+/* ---------- હોમ — કોર્સની ટાઇલ ---------- */
+.hero{padding:6px 0 16px}
+.hero .big{font-size:22px;font-weight:800;line-height:1.35;margin:0;text-wrap:balance}
+.hero .lead{font-size:13.5px;color:var(--muted);margin:6px 0 0}
+
+/* ભાષા પસંદગી — હોમ સ્ક્રીન પર */
+.langbar{display:flex;align-items:center;gap:10px;margin:0 0 16px}
+.langbar .cap{
+  font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.3px;
+  text-transform:uppercase;flex:none
+}
+.langseg{display:flex;gap:4px;background:#eceff5;padding:3px;border-radius:10px;flex:1}
+.langseg button{
+  flex:1;border:0;background:transparent;padding:8px 4px;border-radius:8px;
+  font-size:13px;font-weight:700;color:var(--muted);font-family:var(--font)
+}
+.langseg button[data-l="gu"]{font-family:"Noto Sans Gujarati","Shruti",sans-serif}
+.langseg button[data-l="hi"]{font-family:"Noto Sans Devanagari","Nirmala UI","Mangal",sans-serif}
+.langseg button.on{background:var(--card);color:var(--accent);box-shadow:var(--sh)}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{
+  background:var(--card);border:0;border-radius:var(--r);padding:14px 13px;
+  text-align:left;box-shadow:var(--sh);cursor:pointer;display:block;width:100%;
+  font:inherit;color:inherit
+}
+.tile:active{transform:scale(.985)}
+.tile .ic{font-size:25px;line-height:1}
+.tile .nm{font-weight:700;font-size:14.5px;margin-top:7px}
+.tile .tg{font-size:11.5px;color:var(--muted);line-height:1.42;margin-top:3px}
+.tile .mt{font-size:11px;color:var(--accent);font-weight:700;margin-top:9px}
+.tile .mt.done{color:var(--good)}
+
+/* ---------- પહેલી વારની સ્ક્રીન — નામ પૂછવા માટે ---------- */
+.wel{
+  display:flex;flex-direction:column;justify-content:center;
+  min-height:calc(100vh - 40px);min-height:calc(100dvh - 40px);
+  padding:28px 0 20px
+}
+.wel .ic{font-size:42px;line-height:1;margin-bottom:14px}
+.wel h1{font-size:25px;font-weight:800;margin:0;line-height:1.3;text-wrap:balance}
+.wel .lead{font-size:14px;color:var(--muted);margin:9px 0 0;line-height:1.6}
+.wel .fld{margin-top:26px}
+.wel input{
+  width:100%;font-size:17px;padding:14px;border:1px solid var(--line);border-radius:12px;
+  background:var(--card);color:var(--ink);font-family:var(--font)
+}
+.wel input:focus{outline:2px solid var(--soft);border-color:var(--accent)}
+.wel .why{font-size:12px;color:var(--muted);margin:10px 2px 0;line-height:1.55}
+.wel .or{
+  display:flex;align-items:center;gap:12px;margin:20px 0;
+  font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px
+}
+.wel .or::before,.wel .or::after{content:"";height:1px;background:var(--line);flex:1}
+#gbtn{display:flex;justify-content:center;min-height:44px}
+
+/* ---------- સૂચના સ્ક્રીન — મૉક ઇન્ટરવ્યુ શરૂ કરતાં પહેલાં ---------- */
+.briefwrap{
+  display:flex;flex-direction:column;padding-bottom:6px;
+  min-height:calc(100vh - 120px);min-height:calc(100dvh - 120px)
+}
+.brief{padding:10px 0 0}
+.brief .ic{font-size:38px;line-height:1}
+.brief .eyebrow{
+  font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;
+  color:var(--muted);margin:18px 0 5px
+}
+.brief .nm{font-size:23px;font-weight:800;margin:0;line-height:1.3;text-wrap:balance}
+.brief .meta{font-size:13px;color:var(--muted);margin:6px 0 0}
+
+/* ચાર સૂચનાઓ — એક જ કાર્ડમાં, પાતળી લીટીથી અલગ */
+.steps{
+  list-style:none;margin:20px 0 0;padding:0;background:var(--card);
+  border-radius:var(--r);box-shadow:var(--sh);overflow:hidden
+}
+.steps li{
+  display:flex;gap:13px;align-items:flex-start;padding:14px 15px;
+  border-top:1px solid var(--line);font-size:14.5px;line-height:1.5
+}
+.steps li:first-child{border-top:0}
+.steps .si{font-size:17px;line-height:1.4;flex:none;width:22px;text-align:center}
+
+/* શરૂ કરવાનું બટન — સ્ક્રીનની નીચે ચીપકેલું */
+.startbar{
+  margin-top:auto;padding:22px 0 calc(6px + env(safe-area-inset-bottom));
+  position:sticky;bottom:0;
+  background:linear-gradient(to top,var(--bg) 55%,rgba(245,247,250,0))
+}
+
+/* ---------- અવતાર — ઇન્ટરવ્યુ લેનારની વિડિયો-ટાઇલ ---------- */
+.stage{text-align:center;padding:14px 0 4px}
+.avatar{width:158px;height:158px;margin:0 auto 22px;position:relative}
+.av-frame{
+  position:absolute;inset:0;border-radius:20px;overflow:hidden;background:var(--soft);
+  box-shadow:0 6px 20px rgba(16,24,40,.13),0 0 0 1px rgba(16,24,40,.06);
+  transition:box-shadow .25s ease
+}
+.av-photo{width:100%;height:100%;object-fit:cover;display:block;transform-origin:center}
+.no-photo .av-photo{display:none}
+.av-fallback{display:none;position:absolute;inset:0}
+.no-photo .av-fallback{display:block}
+
+/* સાંભળતી વખતે ફરતાં વર્તુળ — ટાઇલની બહાર */
+.av-ring,.av-ring2{
+  position:absolute;inset:-7px;border-radius:26px;border:2.5px solid var(--rec);
+  opacity:0;pointer-events:none
+}
+.is-listening .av-ring{animation:ping 1.7s ease-out infinite}
+.is-listening .av-ring2{animation:ping 1.7s ease-out .85s infinite}
+.is-speaking .av-photo{animation:breathe 2.1s ease-in-out infinite}
+.is-speaking .av-frame{box-shadow:0 6px 22px rgba(47,85,151,.3),0 0 0 2.5px var(--accent)}
+.is-listening .av-frame{box-shadow:0 6px 22px rgba(214,69,65,.22),0 0 0 2.5px var(--rec)}
+
+/* સ્થિતિનો બૅજ — ટાઇલની નીચેની કિનારે */
+.av-badge{
+  position:absolute;left:50%;bottom:-13px;transform:translateX(-50%);
+  min-width:50px;height:26px;padding:0 12px;border-radius:14px;background:var(--card);
+  box-shadow:0 2px 8px rgba(16,24,40,.16),0 0 0 1px rgba(16,24,40,.05);
+  display:none;align-items:center;justify-content:center
+}
+.is-speaking .av-badge,.is-listening .av-badge,.is-thinking .av-badge{display:flex}
+.av-badge>span{display:none;align-items:flex-end;gap:3px;height:15px}
+.is-speaking .b-speak{display:flex}
+.is-listening .b-listen{display:block}
+.is-thinking .b-think{display:flex;align-items:center}
+
+/* બોલે ત્યારે અવાજની પટ્ટીઓ */
+.b-speak i{width:3px;height:14px;border-radius:2px;background:var(--accent);display:block}
+.b-speak i:nth-child(1){animation:wave .9s ease-in-out infinite}
+.b-speak i:nth-child(2){animation:wave .9s ease-in-out .15s infinite}
+.b-speak i:nth-child(3){animation:wave .9s ease-in-out .3s infinite}
+/* સાંભળે ત્યારે લાલ ટપકું */
+.b-listen{width:11px;height:11px;border-radius:50%;background:var(--rec);animation:blip 1.1s infinite}
+/* તપાસે ત્યારે ત્રણ ટપકાં */
+.b-think i{width:6px;height:6px;border-radius:50%;background:var(--muted);display:block}
+.b-think i:nth-child(1){animation:bob .9s ease-in-out infinite}
+.b-think i:nth-child(2){animation:bob .9s ease-in-out .15s infinite}
+.b-think i:nth-child(3){animation:bob .9s ease-in-out .3s infinite}
+
+/* ફોટો ન મળે તો દોરેલો ચહેરો દેખાય */
+.av-svg{width:100%;height:100%;display:block}
+.av-face{fill:var(--accent);transform-origin:60px 44px}
+.av-body{fill:var(--accent);opacity:.26}
+.av-eyes{transform-origin:60px 41px;transition:transform .09s ease}
+.av-eyes.blink{transform:scaleY(.12)}
+.av-eye{fill:#fff}
+.av-brow{fill:none;stroke:#fff;stroke-width:2.4;stroke-linecap:round;opacity:.5}
+.av-mouth{fill:#fff}
+
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+@keyframes ping{0%{transform:scale(.9);opacity:.55}100%{transform:scale(1.1);opacity:0}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes wave{0%,100%{height:6px}50%{height:15px}}
+@keyframes blip{0%,100%{opacity:1}50%{opacity:.3}}
+@media (prefers-reduced-motion:reduce){
+  .av-photo,.av-ring,.av-ring2,.b-speak i,.b-think i,.b-listen{animation:none !important}
+  .b-speak i{height:11px}
+}
+
+.status{font-size:13px;font-weight:700;color:var(--muted);min-height:20px}
+.status.rec{color:var(--rec)}
+.status.ok{color:var(--good)}
+
+/* ---------- પ્રશ્ન ---------- */
+.qbox{text-align:center;padding:4px 2px 2px}
+.qcat{font-size:11.5px;color:var(--muted);font-weight:600;margin-bottom:6px}
+/* ઇન્ટરવ્યુ લેનારનું અભિવાદન — પહેલા પ્રશ્ન પહેલાં (અંગ્રેજીમાં જ) */
+.qgreet{font-size:14.5px;color:var(--muted);margin:0 0 8px;line-height:1.5;font-style:italic}
+.qtext{font-size:19.5px;font-weight:600;line-height:1.45;margin:0}
+.qhelp{font-size:12.5px;color:var(--muted);margin-top:10px}
+
+/* ---------- બટન ---------- */
+button{font:inherit;font-weight:600;cursor:pointer}
+.act{
+  width:100%;border:0;border-radius:12px;background:var(--accent);color:#fff;
+  padding:15px 16px;font-size:16px;font-weight:700;min-height:54px;box-shadow:var(--sh)
+}
+.act:active{transform:scale(.99)}
+.act:disabled{opacity:.55}
+.act.rec{background:var(--rec)}
+.act.ghost{background:#fff;color:var(--ink);box-shadow:var(--sh)}
+.mini{
+  border:0;background:transparent;color:var(--muted);font-size:13px;font-weight:600;
+  padding:9px 11px;border-radius:9px
+}
+.mini:active{background:var(--line)}
+.mini.on{color:var(--accent);background:var(--soft)}
+.row{display:flex;gap:6px;align-items:center;justify-content:center;flex-wrap:wrap}
+.row.tight{gap:2px}
+.stack{display:flex;flex-direction:column;gap:9px}
+
+/* ---------- ટાઇપ કરવાનું ખાનું ---------- */
+textarea{
+  width:100%;min-height:104px;font-size:16px;line-height:1.55;padding:12px;
+  border:1px solid var(--line);border-radius:11px;resize:vertical;background:#fff;color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif
+}
+textarea:focus{outline:2px solid var(--soft);border-color:var(--accent)}
+.heard{
+  background:#fbfcfe;border:1px dashed var(--line);border-radius:11px;padding:11px 13px;
+  font-size:14.5px;line-height:1.55;min-height:52px;color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  text-align:left;white-space:pre-wrap;word-break:break-word
+}
+.heard:empty::before{content:"…";color:var(--muted)}
+.lab{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:7px;display:block;text-align:left}
+.hint{font-size:12.5px;color:var(--muted);margin-top:9px;text-align:center}
+.hint.warn{
+  color:#8a5a00;background:#fff7e8;border:1px solid #f2e2bd;
+  padding:10px 12px;border-radius:10px;text-align:left
+}
+
+/* ---------- પરિણામ ---------- */
+.score{display:flex;align-items:center;gap:14px}
+.ring{width:74px;height:74px;flex:none;position:relative}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .bgc{fill:none;stroke:var(--line);stroke-width:8}
+.ring .fgc{fill:none;stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset .6s ease}
+.ring b{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:20px;font-weight:800
+}
+.score .txt .t{font-size:15px;font-weight:700}
+.score .txt .s{font-size:12.5px;color:var(--muted)}
+
+.crit{padding:10px 0;border-top:1px solid var(--line)}
+.crit:first-of-type{border-top:0;padding-top:14px}
+.cline{display:flex;align-items:center;gap:9px}
+.cname{font-weight:600;flex:1;font-size:14px}
+.bar2{height:6px;background:var(--line);border-radius:4px;overflow:hidden;width:66px;flex:none}
+.bar2 i{display:block;height:100%;border-radius:4px}
+.cnum{font-weight:800;min-width:34px;text-align:right;font-size:14.5px}
+.cnote{color:var(--muted);font-size:12.5px;margin-top:4px}
+
+.box{border-radius:11px;padding:12px 14px;margin-top:12px;font-size:14px;text-align:left}
+.box b{display:block;margin-bottom:4px;font-size:12px;letter-spacing:.2px;font-weight:700}
+.box.adv{background:var(--soft)} .box.adv b{color:var(--accent)}
+.box.tip{background:#fff8e8} .box.tip b{color:#8a5a00}
+.box.gerr{background:#fdeceb} .box.gerr b{color:#922}
+.box.gerr ul{margin:6px 0 0;padding-inline-start:18px}
+.box.gerr li{margin-bottom:4px;font-size:13.5px}
+.box.safe{background:#fdecea;border:1.5px solid #e8a6a0}
+.box.safe b{color:#a1281c}
+.box.safe ul{margin:6px 0 0;padding-inline-start:18px}
+.box.safe li{margin-bottom:4px;font-size:14px;font-weight:600}
+
+details.model{margin-top:12px;border-radius:11px;padding:12px 14px;background:#fbfcfe;box-shadow:var(--sh)}
+details.model summary{cursor:pointer;font-weight:700;font-size:14px;color:var(--accent);list-style:none}
+details.model summary::-webkit-details-marker{display:none}
+details.model summary::after{content:" ▾";font-size:11px}
+details.model[open] summary::after{content:" ▴"}
+details.model .gu{margin:10px 0 0;font-size:14px;text-align:left}
+details.model .enlab{font-size:11.5px;color:var(--muted);margin-top:12px;display:block;text-align:left}
+details.model .en{
+  margin:6px 0 0;padding:11px 12px;background:#fff;border-radius:9px;box-shadow:var(--sh);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  font-size:14px;line-height:1.55;text-align:left
+}
+
+/* ---------- પ્રગતિ ---------- */
+.stats{display:flex;gap:8px}
+.st{flex:1;background:var(--card);border-radius:12px;padding:12px 10px;text-align:center;box-shadow:var(--sh)}
+.st .v{font-size:21px;font-weight:800;line-height:1.2}
+.st .k{font-size:11px;color:var(--muted);margin-top:2px}
+.st .v.sm{font-size:13.5px;padding:3px 0}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:right;padding:8px 6px;border-bottom:1px solid var(--line)}
+tr:last-child td{border-bottom:0}
+th{color:var(--muted);font-size:11px;font-weight:700}
+td.n{font-weight:800}
+.empty{color:var(--muted);font-size:13.5px;text-align:center;padding:14px 0}
+.err{background:#fdeceb;color:#922;padding:11px 13px;border-radius:10px;font-size:13.5px}
+
+/* ---------- સેટિંગ શીટ ---------- */
+.sheetbg{position:fixed;inset:0;background:rgba(16,24,40,.42);z-index:60;display:flex;align-items:flex-end}
+.sheet{
+  background:var(--card);width:100%;max-width:600px;margin:0 auto;
+  border-radius:18px 18px 0 0;padding:6px 16px calc(20px + env(safe-area-inset-bottom));
+  max-height:88vh;overflow:auto;box-shadow:var(--sh2)
+}
+.grab{width:38px;height:4px;background:var(--line);border-radius:3px;margin:8px auto 12px}
+.opt{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--line)}
+.opt:last-of-type{border-bottom:0}
+.opt .txt{flex:1}
+.opt .txt .t{font-weight:700;font-size:14.5px}
+.opt .txt .d{font-size:12px;color:var(--muted);line-height:1.45;margin-top:1px}
+.sw{
+  width:48px;height:29px;border-radius:20px;background:var(--line);border:0;flex:none;
+  position:relative;transition:background .18s;padding:0
+}
+.sw i{
+  position:absolute;top:3px;left:3px;width:23px;height:23px;border-radius:50%;
+  background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.22);transition:transform .18s
+}
+.sw.on{background:var(--accent)}
+.sw.on i{transform:translateX(19px)}
+.seg{display:flex;gap:5px;background:var(--bg);padding:4px;border-radius:11px}
+.seg button{flex:1;border:0;background:transparent;padding:9px 4px;border-radius:8px;font-size:13px;font-weight:700;color:var(--muted)}
+.seg button.on{background:var(--card);color:var(--accent);box-shadow:var(--sh)}
+.danger{color:var(--low);font-weight:700}
+
+.foot{text-align:center;color:var(--muted);font-size:11.5px;margin-top:20px;line-height:1.7}
+</style>
+</head>
+<body>
+
+<!-- ============ પહેલી વારની સ્ક્રીન ============ -->
+<div id="scWelcome" hidden>
+  <div class="wrap">
+    <div class="wel">
+      <div class="ic">💼</div>
+      <h1 data-i18n="welcome.title">Welcome</h1>
+      <p class="lead" data-i18n="welcome.lead"></p>
+
+      <div class="fld">
+        <label class="lab" for="uname" data-i18n="welcome.nameLabel">What is your name?</label>
+        <input id="uname" type="text" autocomplete="name" enterkeyhint="go"
+               data-i18n-ph="welcome.namePh" placeholder="Your full name">
+        <p class="why" data-i18n="welcome.why"></p>
+      </div>
+
+      <div class="stack" style="margin-top:18px">
+        <button class="act" id="btnSaveName" data-i18n="btn.continue">Continue</button>
+      </div>
+
+      <div id="gwrap" hidden>
+        <div class="or" data-i18n="welcome.or">or</div>
+        <div id="gbtn"></div>
+      </div>
+
+      <div class="row" style="margin-top:14px">
+        <button class="mini" id="btnSkipName" data-i18n="btn.skipName">Skip for now</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ હોમ સ્ક્રીન ============ -->
+<div id="scHome" hidden>
+  <div class="bar">
+    <h1 data-i18n="app.name">Interview Practice</h1>
+    <button class="ib" id="btnSet" data-i18n-aria="run.settings" aria-label="Settings">⚙</button>
+  </div>
+  <div class="wrap">
+    <div class="hero">
+      <p class="big" id="homeHeading" data-i18n="home.heading">Which course do you want to practise?</p>
+      <p class="lead" data-i18n="app.tagline">Questions in English · Answer aloud in English · Feedback in English</p>
+    </div>
+
+    <div class="langbar">
+      <span class="cap" data-i18n="home.lang">App language</span>
+      <div class="langseg" id="langSeg">
+        <button data-l="en">English</button>
+        <button data-l="gu">ગુજરાતી</button>
+        <button data-l="hi">हिन्दी</button>
+      </div>
+    </div>
+
+    <div class="tiles" id="tiles"></div>
+
+    <h2 class="sec" data-i18n="home.progress">Your overall progress</h2>
+    <div class="stats">
+      <div class="st"><div class="v" id="hCount">0</div><div class="k" data-i18n="st.answered">Answered</div></div>
+      <div class="st"><div class="v" id="hAvg">—</div><div class="k" data-i18n="st.avg">Average score</div></div>
+      <div class="st"><div class="v sm" id="hWeak">—</div><div class="k" data-i18n="st.weak">Needs work</div></div>
+    </div>
+    <div class="foot">
+      <span data-i18n="home.foot1">The app works without internet.</span><br>
+      <span data-i18n="home.foot2">Scoring is automatic.</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============ સૂચના સ્ક્રીન ============ -->
+<div id="scBrief" hidden>
+  <div class="bar solid">
+    <button class="ib" id="btnBriefBack" data-i18n-aria="run.back" aria-label="Back">←</button>
+    <h1 data-i18n="app.name">Interview Practice</h1>
+  </div>
+  <div class="wrap briefwrap">
+    <div class="brief">
+      <div class="ic" id="briefIcon">💼</div>
+      <div class="eyebrow" data-i18n="brief.eyebrow">Before you begin</div>
+      <h2 class="nm" id="briefName">—</h2>
+      <p class="meta" id="briefMeta">—</p>
+      <ol class="steps">
+        <li><span class="si">🤫</span><span data-i18n="brief.i1"></span></li>
+        <li><span class="si">🎤</span><span data-i18n="brief.i2"></span></li>
+        <li><span class="si">✅</span><span id="briefI3"></span></li>
+        <li><span class="si">📊</span><span data-i18n="brief.i4"></span></li>
+      </ol>
+    </div>
+    <div class="startbar">
+      <button class="act" id="btnStart" data-i18n="btn.start">Start mock interview</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ પ્રેક્ટિસ સ્ક્રીન ============ -->
+<div id="scRun" hidden>
+  <div class="bar solid">
+    <button class="ib" id="btnBack" data-i18n-aria="run.back" aria-label="Back">←</button>
+    <h1 id="runName">—</h1>
+    <span class="pill" id="runProg">0/0</span>
+  </div>
+
+  <div class="wrap">
+    <div class="stage">
+      <div class="avatar" id="av"></div>
+      <div class="status" id="status" data-i18n="status.ready">Ready</div>
+    </div>
+
+    <div class="card">
+      <div class="qbox">
+        <div class="qcat" id="qcat">—</div>
+        <p class="qgreet lat" id="qgreet" hidden></p>
+        <p class="qtext lat" id="qtext">…</p>
+      </div>
+      <div class="row tight" style="margin-top:12px">
+        <button class="mini" id="btnRepeat" data-i18n="btn.repeat">🔊 Hear it again</button>
+        <button class="mini" id="btnSkip" data-i18n="btn.skip">↻ Another question</button>
+      </div>
+    </div>
+
+    <div class="card" id="ansCard">
+      <span class="lab" data-i18n="run.answerLabel">Your answer (in English)</span>
+      <div class="heard lat" id="heard"></div>
+      <div class="stack" style="margin-top:12px">
+        <button class="act" id="btnAct" data-i18n="btn.answer">🎤 Answer</button>
+      </div>
+      <div class="row tight" style="margin-top:8px">
+        <button class="mini" id="btnType" data-i18n="btn.type">⌨ Type instead</button>
+        <button class="mini" id="btnClear" data-i18n="btn.clear">Clear</button>
+      </div>
+      <div id="typeWrap" hidden style="margin-top:10px">
+        <textarea id="ans" data-i18n-ph="run.typePlaceholder" placeholder="Type your answer in English here."></textarea>
+        <div class="stack" style="margin-top:9px">
+          <button class="act ghost" id="btnCheck" data-i18n="btn.check">Check my answer</button>
+        </div>
+      </div>
+      <div class="hint" id="hint"></div>
+    </div>
+
+    <div class="card" id="result" hidden></div>
+
+    <h2 class="sec" data-i18n="run.progress">This course</h2>
+    <div class="stats">
+      <div class="st"><div class="v" id="cCount">0</div><div class="k" data-i18n="st.answered">Answered</div></div>
+      <div class="st"><div class="v" id="cAvg">—</div><div class="k" data-i18n="st.avg">Average score</div></div>
+      <div class="st"><div class="v sm" id="cWeak">—</div><div class="k" data-i18n="st.weak">Needs work</div></div>
+    </div>
+    <div class="card" id="histwrap" style="margin-top:12px"></div>
+  </div>
+</div>
+
+<!-- ============ સેટિંગ ============ -->
+<div class="sheetbg" id="sheet" hidden>
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2 class="sec" style="margin-top:0" data-i18n="set.title">Settings</h2>
+
+    <div class="opt">
+      <div class="txt">
+        <div class="t" data-i18n="set.name">Your name</div>
+        <div class="d" id="setNameVal">—</div>
+      </div>
+      <button class="mini" id="btnChangeName" data-i18n="btn.change">Change</button>
+    </div>
+
+    <div class="opt">
+      <div class="txt">
+        <div class="t" data-i18n="set.hands">Hands-free mode</div>
+        <div class="d" data-i18n="set.handsD"></div>
+      </div>
+      <button class="sw" id="swHands" role="switch" data-i18n-aria="set.hands" aria-label="Hands-free mode"><i></i></button>
+    </div>
+
+    <div class="opt">
+      <div class="txt">
+        <div class="t" data-i18n="set.ask">Ask questions aloud</div>
+        <div class="d" data-i18n="set.askD"></div>
+      </div>
+      <button class="sw" id="swAsk" role="switch" data-i18n-aria="set.ask" aria-label="Ask questions aloud"><i></i></button>
+    </div>
+
+    <div class="opt">
+      <div class="txt">
+        <div class="t" data-i18n="set.fb">Read the feedback aloud</div>
+        <div class="d" data-i18n="set.fbD"></div>
+      </div>
+      <button class="sw" id="swFb" role="switch" data-i18n-aria="set.fb" aria-label="Read the feedback aloud"><i></i></button>
+    </div>
+
+    <div class="opt" style="display:block">
+      <div class="txt" style="margin-bottom:10px">
+        <div class="t" data-i18n="set.rate">Speaking speed</div>
+        <div class="d" data-i18n="set.rateD"></div>
+      </div>
+      <div class="seg" id="segRate">
+        <button data-r="0.75" data-i18n="set.rateSlow">Slow</button>
+        <button data-r="0.92" data-i18n="set.rateNormal">Normal</button>
+        <button data-r="1.1" data-i18n="set.rateFast">Fast</button>
+      </div>
+    </div>
+
+    <div class="opt" style="display:block">
+      <div class="txt" style="margin-bottom:10px">
+        <div class="t" data-i18n="set.silence">Pause that ends your answer</div>
+        <div class="d" data-i18n="set.silenceD"></div>
+      </div>
+      <div class="seg" id="segSil">
+        <button data-s="2000">2</button>
+        <button data-s="3000">3</button>
+        <button data-s="4500">4.5</button>
+      </div>
+    </div>
+
+    <div id="setDiag" class="hint" style="text-align:left"></div>
+
+    <div class="opt">
+      <div class="txt"><div class="t danger" data-i18n="set.reset">Erase everything and start again</div>
+        <div class="d" data-i18n="set.resetD"></div></div>
+      <button class="mini danger" id="btnReset" data-i18n="btn.erase">Erase</button>
+    </div>
+
+    <div class="stack" style="margin-top:14px">
+      <button class="act ghost" id="btnCloseSet" data-i18n="btn.close">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="./i18n.js"></script>
+<script src="./i18n-content.js"></script>
+<script src="./courses.js"></script>
+<script src="./questions.js"></script>
+<script src="./bank-computer.js"></script>
+<script src="./bank-cnc.js"></script>
+<script src="./bank-electrician.js"></script>
+<script src="./bank-automotive.js"></script>
+<script src="./bank-evehicle.js"></script>
+<script src="./bank-nursing.js"></script>
+<script src="./bank-welding.js"></script>
+<script src="./scoring.js"></script>
+<script src="./speech.js"></script>
+<script src="./avatar.js"></script>
+<script src="./app.js"></script>
+</body>
+</html>
