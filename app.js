@@ -10,6 +10,15 @@ const esc = s => String(s == null ? "" : s)
   .replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
 const colorFor = n => n >= 7.5 ? "var(--good)" : n >= 5 ? "var(--mid)" : "var(--low)";
 
+/* દરેક જવાબની પોતાની ઓળખ — બૅકઅપ બમણો ન થાય તે માટે.
+   randomUUID ફક્ત https/localhost પર મળે છે, તેથી પડતી વ્યવસ્થા રાખી છે. */
+function newCid() {
+  try {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  } catch (e) {}
+  return "c" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10);
+}
+
 /* ---------------- સંગ્રહ ---------------- */
 
 /* ---------------- Google સાઇન-ઇન ----------------
@@ -564,12 +573,20 @@ function submit(text) {
     const r = scoreAnswer(ans, current, course.mode);
     lastResult = r;
 
+    /* `q` અને `answer` ફક્ત આ ફોનમાં રહે છે. `cid` બૅકઅપ માટે છે —
+       સર્વર (user, cid) પર unique રાખે છે, તેથી કતાર ફરી મોકલાય તો પણ
+       બમણું થતું નથી. sync.js માં કયાં ખાનાં બહાર જાય તે જોઈ લો. */
     bucket(course.id).history.push({
-      ts: Date.now(), course: course.id, q: current.q, cat: current.cat,
+      // પ્રશ્નની ઓળખ આંકડો છે, પણ ઓળખ તરીકે વાપરીએ છીએ — તેથી લખાણમાં
+      ts: Date.now(), cid: newCid(), course: course.id,
+      qid: current.id == null ? "" : String(current.id),
+      q: current.q, cat: current.cat,
       answer: ans, overall: r.overall, scores: r.scores,
+      words: r.stats.words, coverage: r.stats.coverage,
       weakest: r.weakest, missed: r.missingMust, secs: secs
     });
     save();
+    Sync.flush();                  // ચાલુ ન હોય તો કંઈ કરતું નથી
 
     showResult(r);
     renderProgress();
@@ -724,6 +741,7 @@ function paintSettings() {
   $("setAva").textContent = nm ? nm.trim().charAt(0).toUpperCase() : "•";
   $("setVer").textContent = t("set.version", { v: APP_VERSION });
   Stats.renderProfileStats($("profStats"));
+  paintSync();
   $("swHands").classList.toggle("on", !!s.hands);
   $("swAsk").classList.toggle("on", !!s.ask);
   $("swFb").classList.toggle("on", !!s.speakFb);
@@ -747,6 +765,46 @@ function paintSettings() {
   $("setDiag").innerHTML = lines.map(l => esc(l)).join("<br>");
 }
 
+/* ---------------- પ્રગતિનો બૅકઅપ ----------------
+
+   sync.js માં PB_URL ખાલી હોય તો આખો વિભાગ દેખાતો જ નથી — એપ પહેલાં
+   જેવી ઓફલાઇન એપ રહે છે. ભરેલું હોય તો ત્રણ પગથિયાં છે:
+   સાઇન-ઇન → સંમતિ → મોકલવાનું ચાલુ. */
+
+function paintSync() {
+  const wrap = $("syncWrap");
+  if (!Sync.enabled()) { wrap.hidden = true; return; }
+  wrap.hidden = false;
+
+  const s = Sync.status();
+  const show = (id, on) => { $(id).hidden = !on; };
+
+  // પટ્ટી પર એક શબ્દમાં સ્થિતિ
+  $("syncState").textContent =
+    !s.signedIn ? t("sync.stOff")
+    : !s.consented ? t("sync.stReady")
+    : s.pending ? t("sync.stPending", { n: s.pending })
+    : t("sync.stOn");
+
+  // વિગત — શું બાકી છે, છેલ્લે ક્યારે ગયું, કંઈ અટક્યું છે?
+  const bits = [];
+  if (s.signedIn) bits.push(t("sync.asName", { name: s.name || "—" }));
+  if (s.consented && !s.pending && s.lastAt) {
+    bits.push(t("sync.lastAt", { time: new Date(s.lastAt).toLocaleTimeString() }));
+  }
+  if (s.legacy) bits.push(t("sync.legacy", { n: s.legacy }));
+  if (!s.online) bits.push(t("sync.offline"));
+  else if (s.error) bits.push(t("sync.err", { e: s.error }));
+  $("syncDetail").textContent = bits.join(" · ") || t("sync.never");
+
+  show("btnSyncIn", !s.signedIn);
+  show("btnSyncOn", s.signedIn && !s.consented);
+  show("btnSyncNow", s.signedIn && s.consented && s.pending > 0);
+  show("btnSyncOff", s.signedIn && s.consented);
+  show("btnSyncErase", s.signedIn);
+  show("btnSyncOut", s.signedIn);
+}
+
 function toggle(key, el) {
   state.settings[key] = !state.settings[key];
   save();
@@ -766,6 +824,31 @@ Array.prototype.forEach.call($("tabbar").querySelectorAll(".tab"), b =>
 
 $("btnHelp").addEventListener("click", () => show("help"));
 $("btnHelpBack").addEventListener("click", () => show("profile"));
+
+/* બૅકઅપના બટન. બધું નિષ્ફળ જાય તો પણ એપ ચાલુ રહે — તેથી દરેક જગ્યાએ
+   catch છે અને ભૂલ ફક્ત સ્થિતિની લીટીમાં દેખાય છે. */
+Sync.onChange(() => { if (!$("scProfile").hidden) paintSync(); });
+
+$("btnSyncIn").addEventListener("click", () => {
+  Sync.signIn().then(paintSync).catch(paintSync);
+});
+$("btnSyncOn").addEventListener("click", () => {
+  if (!confirm(t("sync.confirmOn"))) return;
+  Sync.setConsent(true).then(paintSync).catch(paintSync);
+});
+$("btnSyncOff").addEventListener("click", () => {
+  Sync.setConsent(false).then(paintSync).catch(paintSync);
+});
+$("btnSyncNow").addEventListener("click", () => {
+  Sync.flush().then(paintSync);
+});
+$("btnSyncOut").addEventListener("click", () => { Sync.signOut(); paintSync(); });
+$("btnSyncErase").addEventListener("click", () => {
+  if (!confirm(t("sync.confirmErase"))) return;
+  Sync.eraseRemote()
+    .then(n => { alert(t("sync.erased", { n: n })); paintSync(); })
+    .catch(paintSync);
+});
 
 $("swHands").addEventListener("click", () => toggle("hands"));
 $("swAsk").addEventListener("click", () => toggle("ask"));
@@ -880,6 +963,10 @@ renderDash();
    કોર્સની યાદી વધુ કામની છે). */
 if (!state.user) show("splash");
 else show(allHistory().length ? "stats" : "practice");
+
+/* એપ ખૂલે ત્યારે બાકી રહેલી પ્રગતિ મોકલી દો — ચાલુ ન હોય તો કંઈ થતું નથી.
+   શરૂઆતમાં જ નહીં, થોડું મોડું: પહેલો પડદો દોરાવા દો. */
+setTimeout(() => { try { Sync.flush(); } catch (e) {} }, 2500);
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
