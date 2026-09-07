@@ -1,15 +1,15 @@
 {
-  "name": "ઇન્ટરવ્યુ પ્રેક્ટિસ",
-  "short_name": "ઇન્ટરવ્યુ",
-  "description": "ઇન્ટરવ્યુની તૈયારી માટે પ્રશ્ન-જવાબ પ્રેક્ટિસ એપ",
-  "lang": "gu",
+  "name": "Interview Prep",
+  "short_name": "Interview Prep",
+  "description": "Practise real job-interview questions aloud in English and get instant feedback.",
+  "lang": "en",
   "dir": "ltr",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#f7f8fa",
-  "theme_color": "#2f5597",
+  "background_color": "#eef2fa",
+  "theme_color": "#eef2fa",
   "icons": [
     {
       "src": "./icon-192.png",

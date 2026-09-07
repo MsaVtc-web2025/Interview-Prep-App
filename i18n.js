@@ -22,7 +22,7 @@ const STRINGS = {
 
 /* ==================== ENGLISH ==================== */
 en: {
-  "app.name": "Interview Practice",
+  "app.name": "Interview Prep",
   "app.tagline": "Questions in English · Answer aloud in English · Feedback in English",
 
   "home.heading": "Which course do you want to practise?",
@@ -326,7 +326,7 @@ en: {
 
 /* ==================== ગુજરાતી ==================== */
 gu: {
-  "app.name": "ઇન્ટરવ્યુ પ્રેક્ટિસ",
+  "app.name": "ઇન્ટરવ્યુ પ્રેપ",
   "app.tagline": "પ્રશ્ન અંગ્રેજીમાં · જવાબ અંગ્રેજીમાં બોલો · મૂલ્યાંકન ગુજરાતીમાં",
 
   "home.heading": "કયો વિભાગ પ્રેક્ટિસ કરવો છે?",
@@ -630,7 +630,7 @@ gu: {
 
 /* ==================== हिन्दी ==================== */
 hi: {
-  "app.name": "इंटरव्यू प्रैक्टिस",
+  "app.name": "इंटरव्यू प्रेप",
   "app.tagline": "प्रश्न अंग्रेज़ी में · जवाब अंग्रेज़ी में बोलें · मूल्यांकन हिन्दी में",
 
   "home.heading": "कौन सा विभाग प्रैक्टिस करना है?",
