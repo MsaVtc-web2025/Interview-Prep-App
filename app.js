@@ -17,11 +17,20 @@ const colorFor = n => n >= 7.5 ? "var(--good)" : n >= 5 ? "var(--mid)" : "var(--
    Client ID જાહેર માહિતી છે — તે દરેક વેબ એપની સ્ક્રિપ્ટમાં દેખાય જ છે.
    (Client SECRET કદી અહીં ન મુકવું — તે ફક્ત સર્વર પર રહે.)
 
-   ⚠ ચાલવા માટે Google Cloud Console માં «Authorized JavaScript origins»
-   માં એપનું સરનામું નોંધાયેલું હોવું જરૂરી છે, જેમ કે:
-       https://<તમારુંનામ>.github.io
-       http://localhost:8123          (કમ્પ્યુટર પર ટેસ્ટ કરવા માટે)
-   સરનામું નોંધ્યું ન હોય તો Google «origin_mismatch» ભૂલ આપે અને બટન ચાલે નહીં.
+   ⚠ ચાલવા માટે Google Cloud Console → APIs & Services → Credentials →
+   (આ OAuth client) → «Authorized JavaScript origins» માં એપનું સરનામું
+   નોંધાયેલું હોવું જરૂરી છે. ફક્ત scheme + host (+ port) — રસ્તો (path) નહીં:
+       https://msavtc-web2025.github.io      ✓ આમ લખો
+       https://msavtc-web2025.github.io/Interview-Prep-App/   ✗ Google સ્વીકારશે નહીં
+       http://localhost:8123                 (કમ્પ્યુટર પર ટેસ્ટ કરવા માટે)
+   સરનામું નોંધ્યું ન હોય તો Google «Error 400: origin_mismatch» આપે છે.
+
+   આ પ્રવાહમાં «Authorized redirect URIs» ની જરૂર નથી — બ્રાઉઝર જ ટોકન
+   મેળવે છે, કોઈ સર્વર પર પાછું જવાનું નથી.
+
+   OAuth consent screen «Testing» માં હોય તો ફક્ત «Test users» માં નોંધેલા
+   ખાતાં સાઇન-ઇન કરી શકે. બધા વિદ્યાર્થીઓ માટે «Publish app» દબાવવું પડે
+   (openid/email/profile બિન-સંવેદનશીલ છે, તેથી ચકાસણીની જરૂર નથી).
 
    નોંધ: આર્ટિફેક્ટની અંદર Google ની સ્ક્રિપ્ટ બ્લોક થાય છે, તેથી બટન ત્યાં
    દેખાતું નથી — ત્યાં નામનું ખાનું વાપરો. તમારા પોતાના સરનામે જ ચાલશે.
@@ -265,48 +274,80 @@ function finishWelcome(name, via) {
 /* Google સાઇન-ઇન — GOOGLE_CLIENT_ID ભરેલો હોય તો જ બટન દેખાય.
    ટોકનમાંથી ફક્ત નામ વાંચીએ છીએ; કોઈ પરવાનગી એના પર આધારિત નથી,
    તેથી અહીં ટોકનની ખરાઈ કરવાની જરૂર નથી. */
-let googleTried = false;
+let googleLoading = false;
 
 function initGoogle() {
-  if (!GOOGLE_CLIENT_ID || googleTried) return;
-  googleTried = true;
+  if (!GOOGLE_CLIENT_ID) return;
+  $("gerr").hidden = true;
+
+  // સ્ક્રિપ્ટ પહેલેથી આવી ગઈ હોય તો ફક્ત બટન ફરી દોરો
+  if (window.google && window.google.accounts && window.google.accounts.id) {
+    renderGoogleButton();
+    return;
+  }
+  if (googleLoading) return;         // બે વાર સ્ક્રિપ્ટ ન ઉમેરો
+  googleLoading = true;
+
   const s = document.createElement("script");
   s.src = "https://accounts.google.com/gsi/client";
   s.async = true;
   s.defer = true;
-  s.onload = () => {
-    try {
-      window.google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: onGoogleCredential,
-        auto_select: false,          // જાતે સાઇન-ઇન ન કરો — વિદ્યાર્થી પોતે દબાવે
-        cancel_on_tap_outside: true
-      });
-      window.google.accounts.id.renderButton($("gbtn"), {
-        theme: "outline", size: "large", shape: "pill",
-        text: "signup_with", width: 280
-      });
-      $("gwrap").hidden = false;
-    } catch (e) {
-      googleTried = false;         // ફરી પ્રયત્ન થઈ શકે
-      $("gwrap").hidden = true;
-    }
-  };
-  /* સ્ક્રિપ્ટ બ્લોક થાય કે ઇન્ટરનેટ ન હોય તો ચૂપચાપ નામના ખાના પર જ રહો.
-     googleTried પાછું ખોલીએ, જેથી ઇન્ટરનેટ આવે પછી ફરી પ્રયત્ન થાય. */
-  s.onerror = () => { googleTried = false; $("gwrap").hidden = true; };
+  s.onload = () => { googleLoading = false; renderGoogleButton(); };
+  /* સ્ક્રિપ્ટ બ્લોક થાય કે ઇન્ટરનેટ ન હોય તો ચૂપચાપ નામના ખાના પર જ રહો —
+     Google વગર પણ એપ પૂરેપૂરી ચાલે છે. */
+  s.onerror = () => { googleLoading = false; $("gwrap").hidden = true; };
   document.head.appendChild(s);
+}
+
+function renderGoogleButton() {
+  try {
+    /* ખાનું પહેલાં દેખાડો: છુપાયેલા (display:none) ખાનામાં Google બટન
+       પોતાનું માપ ખોટું ગણે છે અને કોઈ વાર દેખાતું જ નથી. */
+    $("gwrap").hidden = false;
+    $("gbtn").innerHTML = "";
+
+    window.google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: onGoogleCredential,
+      auto_select: false,          // જાતે સાઇન-ઇન ન કરો — વિદ્યાર્થી પોતે દબાવે
+      cancel_on_tap_outside: true,
+      ux_mode: "popup",
+      error_callback: onGoogleError
+    });
+    window.google.accounts.id.renderButton($("gbtn"), {
+      theme: "outline", size: "large", shape: "pill",
+      text: "signup_with", width: 280
+    });
+  } catch (e) {
+    onGoogleError(e);
+  }
+}
+
+/* Google ના પડી ભાંગે તો વિદ્યાર્થીને અટકવા ન દો — નામ ટાઇપ કરી શકાય છે.
+   ખરી ભૂલ કન્સોલમાં જ રાખીએ; વિદ્યાર્થીને «origin_mismatch» કહેવાનો અર્થ નથી.
+
+   વિદ્યાર્થીએ પોતે પૉપ-અપ બંધ કર્યું હોય (popup_closed) તો એ ભૂલ નથી —
+   એમાં કંઈ કહેવાનું નથી. */
+function onGoogleError(err) {
+  const type = (err && (err.type || err.message)) || "unknown";
+  if (type === "popup_closed") return;
+  console.warn("Google sign-in unavailable:", type, err);
+  $("gerr").hidden = false;
+  $("gerr").textContent = t("err.google");
 }
 
 /* Google માંથી ફક્ત નામ લઈએ — ઈમેલ કે ફોટો સાચવતા નથી */
 function onGoogleCredential(res) {
   const p = res && res.credential ? decodeJwt(res.credential) : null;
-  if (p && p.name) finishWelcome(p.name, "google");
+  const name = p && (p.name || p.given_name);
+  if (name) finishWelcome(name, "google");
+  else onGoogleError({ type: "no-name-in-token" });
 }
 
 function decodeJwt(jwt) {
   try {
-    const part = jwt.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    let part = String(jwt).split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    while (part.length % 4) part += "=";       // base64url માં ગાદી હોતી નથી
     const bin = atob(part);
     const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
     return JSON.parse(new TextDecoder().decode(bytes));

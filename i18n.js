@@ -247,6 +247,7 @@ en: {
   "err.mic.unsupported": "This phone cannot convert speech to text. Type your answer, or use the mic button on your keyboard.",
   "err.mic.other": "The mic stopped ({e}). Try again, or type your answer.",
   "err.mic.silent": "The mic is on but nothing is being heard. Speak a little louder, check that the right microphone is selected in your browser, or tap “Type instead”.",
+  "err.google": "Google sign-in did not work. Type your name above instead — the app works exactly the same.",
 
   "hint.speak": "Speak slowly and clearly, in full sentences. Pausing is fine.",
   "hint.edit": "Fix anything that came out wrong, then tap “Check my answer”.",
@@ -551,6 +552,7 @@ gu: {
   "err.mic.unsupported": "આ ફોનમાં બોલીને લખવાની સુવિધા નથી. જવાબ ટાઇપ કરો, અથવા કીબોર્ડ પરના માઇક બટનથી બોલો.",
   "err.mic.other": "માઇક બંધ થઈ ગયો ({e}). ફરી પ્રયત્ન કરો અથવા ટાઇપ કરો.",
   "err.mic.silent": "માઇક ચાલુ છે પણ કંઈ સંભળાતું નથી. થોડું મોટેથી બોલો, બ્રાઉઝરમાં સાચો માઇક પસંદ થયો છે તે તપાસો, અથવા «ટાઇપ કરીને લખું» દબાવો.",
+  "err.google": "Google થી સાઇન-ઇન થયું નહીં. ઉપર નામ ટાઇપ કરી દો — એપ બરાબર એ જ રીતે ચાલે છે.",
 
   "hint.speak": "પૂરાં વાક્યોમાં, ધીમે અને સ્પષ્ટ બોલો. વચ્ચે અટકો તો વાંધો નથી.",
   "hint.edit": "ખોટું લખાયું હોય તો સુધારી લો, પછી «જવાબ તપાસો» દબાવો.",
@@ -855,6 +857,7 @@ hi: {
   "err.mic.unsupported": "इस फ़ोन में बोलकर लिखने की सुविधा नहीं है। जवाब टाइप करें, या कीबोर्ड के माइक बटन से बोलें।",
   "err.mic.other": "माइक बंद हो गया ({e})। फिर कोशिश करें या टाइप करें।",
   "err.mic.silent": "माइक चालू है पर कुछ सुनाई नहीं दे रहा। थोड़ा ज़ोर से बोलें, ब्राउज़र में सही माइक चुना है यह जाँचें, या «टाइप करके लिखूँ» दबाएँ।",
+  "err.google": "Google से साइन-इन नहीं हुआ। ऊपर नाम टाइप कर दें — ऐप बिल्कुल उसी तरह चलता है।",
 
   "hint.speak": "पूरे वाक्यों में, धीरे और साफ़ बोलें। बीच में रुकें तो कोई बात नहीं।",
   "hint.edit": "ग़लत लिखा गया हो तो सुधार लें, फिर «जवाब जाँचें» दबाएँ।",
