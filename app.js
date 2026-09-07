@@ -100,6 +100,7 @@ let course = null;      // ચાલુ કોર્સ
 let current = null;      // ચાલુ પ્રશ્ન
 let phase = "idle";      // idle · asking · listening · scoring · feedback
 let lastResult = null;
+let micWatch = null;     // માઇક ચાલુ છે પણ કંઈ સંભળાતું નથી તે પકડવા
 
 /* ---------------- હોમ સ્ક્રીન ---------------- */
 
@@ -410,12 +411,29 @@ function beginListen() {
   const ok = Speech.listen({
     lang: "en-IN",
     silenceMs: state.settings.hands ? state.settings.silence : 0,
-    onInterim: txt => { $("heard").textContent = txt; },
+    onStart: () => armMicWatch(),
+    onInterim: txt => { $("heard").textContent = txt; if (txt.trim()) clearMicWatch(); },
     onSilence: txt => { $("heard").textContent = txt; submit(txt); },
     onError: err => onMicError(err)
   });
   if (!ok) setPhase("ready");
 }
+
+/* કેટલાક કમ્પ્યુટર બ્રાઉઝરમાં માઇક ચાલુ થાય પણ એક પણ શબ્દ પકડાતો નથી
+   (ખોટો માઇક પસંદ થયો હોય, કે બ્રાઉઝરમાં આ સેવા ન હોય). થોડી વાર પછી
+   વિદ્યાર્થીને જણાવીએ જેથી તે અટકી ન રહે — સાંભળવાનું ચાલુ જ રહે છે. */
+function armMicWatch() {
+  clearMicWatch();
+  micWatch = setTimeout(() => {
+    micWatch = null;
+    if (phase !== "listening" || $("heard").textContent.trim()) return;
+    $("hint").className = "hint warn";
+    $("hint").textContent = t("err.mic.silent");
+    showTypeFallback(null);
+  }, 9000);
+}
+
+function clearMicWatch() { if (micWatch) { clearTimeout(micWatch); micWatch = null; } }
 
 function onMicError(err) {
   setPhase("ready");
@@ -499,6 +517,7 @@ const PHASE_UI = {
 function setPhase(p) {
 
   if (!PHASE_UI[p]) p = "ready";
+  if (p !== "listening") clearMicWatch();
   phase = p;
   const u = PHASE_UI[p];
   Avatar.setState(u.av);

@@ -169,17 +169,81 @@ const Speech = (function () {
 
   let rec = null;
   let active = false;
-  let finalText = "";
-  let interimText = "";
+  let committed = "";         // પહેલાંનાં recogniser સેશનનું પાકું લખાણ (+ seed)
+  let sessionFinal = "";      // ચાલુ સેશનનું પાકું લખાણ
+  let interimText = "";       // ચાલુ સેશનનું કામચલાઉ લખાણ
   let lastVoiceAt = 0;
   let silenceTimer = null;
+  let startTimer = null;
   let restarts = 0;
   let handlers = {};
   const MAX_RESTARTS = 40;
 
   function clearSilence() { if (silenceTimer) { clearInterval(silenceTimer); silenceTimer = null; } }
+  function clearStartTimer() { if (startTimer) { clearTimeout(startTimer); startTimer = null; } }
 
-  function fullText() { return (finalText + " " + interimText).replace(/\s{2,}/g, " ").trim(); }
+  /* --- લખાણ જોડવાનું કામ ---
+     કેટલાક એન્ડ્રોઇડ ફોન એક જ વાક્ય વધતું વધતું ફરી ફરી «પાકું» તરીકે મોકલે છે
+     («I» → «I am» → «I am Prakash») અને માઇક ફરી ચાલુ થાય ત્યારે જૂનું વાક્ય
+     બીજી વાર મોકલે છે. તેથી નવો ટુકડો સીધો ઉમેરવાને બદલે, જે ભાગ પહેલેથી
+     લખાયેલો છે તે ઓળખીને છોડી દઈએ છીએ — નહીં તો સ્ક્રીન પર લખાણ બમણું થાય. */
+
+  function toWords(s) { return String(s || "").trim().split(/\s+/).filter(Boolean); }
+
+  /* સરખામણી માટે શબ્દની સાદી ચાવી — નાના અક્ષર, વિરામચિહ્ન વગર */
+  function wordKey(w) { return String(w).toLowerCase().replace(/[.,!?;:।'"“”‘’()\-]/g, ""); }
+
+  function sameRun(a, b) {
+    for (let i = 0; i < a.length; i++) if (wordKey(a[i]) !== wordKey(b[i])) return false;
+    return true;
+  }
+
+  /* acc પછી piece જોડો, પણ પુનરાવર્તન વગર */
+  function mergeWords(acc, piece) {
+    if (!piece.length) return acc;
+    if (!acc.length) return piece;
+    // piece એ acc નો જ વિસ્તાર હોય → વધારે પૂરું piece રાખો
+    if (piece.length >= acc.length && sameRun(acc, piece.slice(0, acc.length))) return piece;
+    // piece પહેલેથી acc માં આવી ગયું છે → કંઈ ઉમેરવાનું નથી
+    if (acc.length >= piece.length && sameRun(piece, acc.slice(0, piece.length))) return acc;
+    // acc ના છેલ્લા n શબ્દ = piece ના પહેલા n શબ્દ → એટલા છોડીને જોડો
+    const max = Math.min(acc.length, piece.length);
+    for (let n = max; n > 0; n--) {
+      if (sameRun(acc.slice(acc.length - n), piece.slice(0, n))) return acc.concat(piece.slice(n));
+    }
+    return acc.concat(piece);
+  }
+
+  function mergeText(a, b) { return mergeWords(toWords(a), toWords(b)).join(" "); }
+
+  /* આખું સાંભળેલું લખાણ — દર વખતે ફરીથી બનાવીએ, જૂનામાં ઉમેરતા નથી */
+  function fullText() {
+    let w = mergeWords(toWords(committed), toWords(sessionFinal));
+    w = mergeWords(w, toWords(interimText));
+    return w.join(" ");
+  }
+
+  /* ચાલુ સેશનનું પાકું લખાણ કાયમી ખાતામાં નાખો (માઇક ફરી ચાલુ થાય તે પહેલાં) */
+  function commitSession() {
+    if (sessionFinal.trim()) committed = mergeText(committed, sessionFinal);
+    sessionFinal = "";
+    interimText = "";
+  }
+
+  /* ડેસ્કટૉપ Chrome માં speechSynthesis પૂરું બંધ ન થયું હોય ત્યાં સુધી માઇક ચાલુ
+     થાય પણ એક પણ શબ્દ પકડાતો નથી. તેથી synth શાંત થાય તેની રાહ જોઈને જ શરૂ કરીએ. */
+  function whenSynthQuiet(cb) {
+    clearStartTimer();
+    if (!synth) { startTimer = setTimeout(cb, 0); return; }
+    const t0 = Date.now();
+    (function wait() {
+      if (!isSpeaking() || Date.now() - t0 > 1200) {
+        startTimer = setTimeout(cb, 250);   // માઇક ખૂલતાં પહેલાં સહેજ થોભો
+        return;
+      }
+      startTimer = setTimeout(wait, 60);
+    })();
+  }
 
   /* સાંભળવાનું શરૂ કરો.
      opts = { lang, seed, silenceMs, onInterim, onFinal, onSilence, onError, onStart } */
@@ -188,26 +252,31 @@ const Speech = (function () {
     handlers = opts;
 
     if (!SR) { if (opts.onError) opts.onError("unsupported"); return false; }
-    if (isSpeaking()) cancelSpeech();     // અવતાર બોલતો હોય તો પહેલાં બંધ કરો
 
     stopListen(true);
-    finalText = opts.seed ? String(opts.seed).replace(/\s+$/, "") + " " : "";
+    if (isSpeaking()) cancelSpeech();     // અવતાર બોલતો હોય તો પહેલાં બંધ કરો
+    committed = opts.seed ? String(opts.seed).trim() : "";
+    sessionFinal = "";
     interimText = "";
     restarts = 0;
     active = true;
     lastVoiceAt = Date.now();
 
-    startRecogniser();
+    whenSynthQuiet(() => {
+      if (!active) return;
+      lastVoiceAt = Date.now();           // રાહ જોયેલો સમય મૌન ન ગણાય
+      startRecogniser();
+    });
 
     // મૌન પકડવા માટે — હાથ વગરના મોડમાં જવાબ પૂરો થયો કે નહીં તે નક્કી કરે
     if (opts.silenceMs) {
       clearSilence();
       silenceTimer = setInterval(() => {
         if (!active) return;
-        const words = finalText.trim().split(/\s+/).filter(Boolean).length;
+        const words = toWords(mergeText(committed, sessionFinal)).length;
         if (words >= 3 && Date.now() - lastVoiceAt > opts.silenceMs) {
           const t = fullText();
-          stopListen();
+          stopListen(true);
           if (handlers.onSilence) handlers.onSilence(t);
         }
       }, 400);
@@ -231,15 +300,21 @@ const Speech = (function () {
     rec.onstart = () => { if (handlers.onStart) handlers.onStart(); };
 
     rec.onresult = ev => {
-      let fin = "", inter = "";
-      for (let i = ev.resultIndex; i < ev.results.length; i++) {
-        const t = ev.results[i][0].transcript;
-        if (ev.results[i].isFinal) fin += t + " "; else inter += t;
+      // આખી results યાદીમાંથી ફરીથી બનાવીએ — ફક્ત resultIndex પછીના ટુકડા
+      // ઉમેરવાથી કેટલાક ફોનમાં લખાણ બમણું થઈ જાય છે
+      let fin = [], inter = [];
+      for (let i = 0; i < ev.results.length; i++) {
+        const r = ev.results[i];
+        const txt = r && r[0] && r[0].transcript ? r[0].transcript : "";
+        if (!txt) continue;
+        if (r.isFinal) fin = mergeWords(fin, toWords(txt));
+        else inter = mergeWords(inter, toWords(txt));
       }
-      if (fin) finalText += fin;
-      interimText = inter;
-      if (fin || inter) lastVoiceAt = Date.now();
-      if (handlers.onInterim) handlers.onInterim(fullText(), !!fin);
+      const hadFinal = fin.length > 0;
+      sessionFinal = fin.join(" ");
+      interimText = inter.join(" ");
+      if (hadFinal || inter.length) lastVoiceAt = Date.now();
+      if (handlers.onInterim) handlers.onInterim(fullText(), hadFinal);
     };
 
     rec.onerror = ev => {
@@ -248,19 +323,22 @@ const Speech = (function () {
       if (m === "no-speech" || m === "aborted") return;
       active = false;
       clearSilence();
+      clearStartTimer();
       if (handlers.onError) handlers.onError(m);
     };
 
     // એન્ડ્રોઇડમાં continuous હોવા છતાં માઇક જાતે બંધ થઈ જાય — તેથી ફરી ચાલુ કરીએ
     rec.onend = () => {
       if (!active) return;
+      commitSession();                    // નવું સેશન જૂનું લખાણ ફરી ન મોકલે
       if (++restarts > MAX_RESTARTS) {
         active = false;
         clearSilence();
         if (handlers.onError) handlers.onError("too-many-restarts");
         return;
       }
-      setTimeout(() => { if (active) startRecogniser(); }, 250);
+      clearStartTimer();
+      startTimer = setTimeout(() => { if (active) startRecogniser(); }, 300);
     };
 
     try { rec.start(); } catch (e) { /* પહેલેથી ચાલુ હોય તો વાંધો નથી */ }
@@ -270,13 +348,15 @@ const Speech = (function () {
   function stopListen(quiet) {
     active = false;
     clearSilence();
+    clearStartTimer();
     if (rec) {
-      try { rec.onend = null; rec.stop(); } catch (e) {}
+      try { rec.onend = null; rec.onresult = null; rec.onerror = null; rec.stop(); } catch (e) {}
       try { rec.abort && rec.abort(); } catch (e) {}
       rec = null;
     }
-    if (!quiet && handlers.onFinal) handlers.onFinal(fullText());
-    return fullText();
+    const txt = fullText();
+    if (!quiet && handlers.onFinal) handlers.onFinal(txt);
+    return txt;
   }
 
   function isListening() { return active; }

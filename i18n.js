@@ -139,6 +139,7 @@ en: {
   "err.mic.network": "Speaking your answer needs internet. Without it, type your answer — the scoring still works offline.",
   "err.mic.unsupported": "This phone cannot convert speech to text. Type your answer, or use the mic button on your keyboard.",
   "err.mic.other": "The mic stopped ({e}). Try again, or type your answer.",
+  "err.mic.silent": "The mic is on but nothing is being heard. Speak a little louder, check that the right microphone is selected in your browser, or tap “Type instead”.",
 
   "hint.speak": "Speak slowly and clearly, in full sentences. Pausing is fine.",
   "hint.edit": "Fix anything that came out wrong, then tap “Check my answer”.",
@@ -335,6 +336,7 @@ gu: {
   "err.mic.network": "બોલીને જવાબ આપવા માટે ઇન્ટરનેટ જરૂરી છે. ઇન્ટરનેટ ન હોય તો જવાબ ટાઇપ કરો — મૂલ્યાંકન ઓફલાઇન થશે.",
   "err.mic.unsupported": "આ ફોનમાં બોલીને લખવાની સુવિધા નથી. જવાબ ટાઇપ કરો, અથવા કીબોર્ડ પરના માઇક બટનથી બોલો.",
   "err.mic.other": "માઇક બંધ થઈ ગયો ({e}). ફરી પ્રયત્ન કરો અથવા ટાઇપ કરો.",
+  "err.mic.silent": "માઇક ચાલુ છે પણ કંઈ સંભળાતું નથી. થોડું મોટેથી બોલો, બ્રાઉઝરમાં સાચો માઇક પસંદ થયો છે તે તપાસો, અથવા «ટાઇપ કરીને લખું» દબાવો.",
 
   "hint.speak": "પૂરાં વાક્યોમાં, ધીમે અને સ્પષ્ટ બોલો. વચ્ચે અટકો તો વાંધો નથી.",
   "hint.edit": "ખોટું લખાયું હોય તો સુધારી લો, પછી «જવાબ તપાસો» દબાવો.",
@@ -531,6 +533,7 @@ hi: {
   "err.mic.network": "बोलकर जवाब देने के लिए इंटरनेट ज़रूरी है। इंटरनेट न हो तो जवाब टाइप करें — मूल्यांकन ऑफ़लाइन हो जाएगा।",
   "err.mic.unsupported": "इस फ़ोन में बोलकर लिखने की सुविधा नहीं है। जवाब टाइप करें, या कीबोर्ड के माइक बटन से बोलें।",
   "err.mic.other": "माइक बंद हो गया ({e})। फिर कोशिश करें या टाइप करें।",
+  "err.mic.silent": "माइक चालू है पर कुछ सुनाई नहीं दे रहा। थोड़ा ज़ोर से बोलें, ब्राउज़र में सही माइक चुना है यह जाँचें, या «टाइप करके लिखूँ» दबाएँ।",
 
   "hint.speak": "पूरे वाक्यों में, धीरे और साफ़ बोलें। बीच में रुकें तो कोई बात नहीं।",
   "hint.edit": "ग़लत लिखा गया हो तो सुधार लें, फिर «जवाब जाँचें» दबाएँ।",

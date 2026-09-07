@@ -63,8 +63,8 @@ h2.sec{font-size:12.5px;margin:22px 0 10px;color:var(--muted);font-weight:700;le
 .hero .big{font-size:22px;font-weight:800;line-height:1.35;margin:0;text-wrap:balance}
 .hero .lead{font-size:13.5px;color:var(--muted);margin:6px 0 0}
 
-/* ભાષા પસંદગી — હોમ સ્ક્રીન પર */
-.langbar{display:flex;align-items:center;gap:10px;margin:0 0 16px}
+/* ભાષા પસંદગી — હોમ સ્ક્રીનના તળિયે */
+.langbar{display:flex;align-items:center;gap:10px;margin:18px 0 4px}
 .langbar .cap{
   font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.3px;
   text-transform:uppercase;flex:none
@@ -406,6 +406,16 @@ td.n{font-weight:800}
       <p class="lead" data-i18n="app.tagline">Questions in English · Answer aloud in English · Feedback in English</p>
     </div>
 
+    <div class="tiles" id="tiles"></div>
+
+    <h2 class="sec" data-i18n="home.progress">Your overall progress</h2>
+    <div class="stats">
+      <div class="st"><div class="v" id="hCount">0</div><div class="k" data-i18n="st.answered">Answered</div></div>
+      <div class="st"><div class="v" id="hAvg">—</div><div class="k" data-i18n="st.avg">Average score</div></div>
+      <div class="st"><div class="v sm" id="hWeak">—</div><div class="k" data-i18n="st.weak">Needs work</div></div>
+    </div>
+
+    <!-- ભાષાની પસંદગી સ્ક્રીનના તળિયે — કોર્સ પહેલાં દેખાય તે જરૂરી નથી -->
     <div class="langbar">
       <span class="cap" data-i18n="home.lang">App language</span>
       <div class="langseg" id="langSeg">
@@ -415,14 +425,6 @@ td.n{font-weight:800}
       </div>
     </div>
 
-    <div class="tiles" id="tiles"></div>
-
-    <h2 class="sec" data-i18n="home.progress">Your overall progress</h2>
-    <div class="stats">
-      <div class="st"><div class="v" id="hCount">0</div><div class="k" data-i18n="st.answered">Answered</div></div>
-      <div class="st"><div class="v" id="hAvg">—</div><div class="k" data-i18n="st.avg">Average score</div></div>
-      <div class="st"><div class="v sm" id="hWeak">—</div><div class="k" data-i18n="st.weak">Needs work</div></div>
-    </div>
     <div class="foot">
       <span data-i18n="home.foot1">The app works without internet.</span><br>
       <span data-i18n="home.foot2">Scoring is automatic.</span>
