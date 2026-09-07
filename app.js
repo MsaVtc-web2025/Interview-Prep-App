@@ -3,6 +3,7 @@
 
 const STORE = "interview_practice_gu_v2";
 const OLD_STORE = "interview_practice_gu_v1";
+const APP_VERSION = "1.1";
 const $ = id => document.getElementById(id);
 
 const esc = s => String(s == null ? "" : s)
@@ -105,15 +106,16 @@ let micWatch = null;     // માઇક ચાલુ છે પણ કંઈ �
 /* ---------------- હોમ સ્ક્રીન ---------------- */
 
 function renderHome() {
-  $("tiles").innerHTML = COURSES.map(c => {
+  $("tiles").innerHTML = COURSES.map((c, i) => {
     const b = bucket(c.id);
     const n = b.history.length;
     const avg = n ? (b.history.reduce((a, e) => a + e.overall, 0) / n) : 0;
     const meta = n
       ? '<div class="mt done">' + esc(t("tile.done", { n: n, a: avg.toFixed(1) })) + "</div>"
       : '<div class="mt">' + esc(t("tile.questions", { n: c.questions.length })) + "</div>";
+    // ઇમોજી પાછળનો પેસ્ટલ રંગ — કોર્સના ક્રમ પ્રમાણે ફરતો રહે
     return '<button class="tile" data-id="' + esc(c.id) + '">' +
-      '<div class="ic">' + esc(c.icon) + "</div>" +
+      '<div class="chip t' + (i % 8 + 1) + '">' + esc(c.icon) + "</div>" +
       '<div class="nm">' + esc(tCourse(c, "name")) + "</div>" +
       '<div class="tg">' + esc(tCourse(c, "tagline")) + "</div>" + meta + "</button>";
   }).join("");
@@ -168,9 +170,13 @@ function qIsGuOnly(q) {
   return lang !== "gu" && !(q.i18n && q.i18n[lang] && q.i18n[lang].gu != null);
 }
 
+/* ભાષાની પસંદગી બે જગ્યાએ છે — હોમના તળિયે અને સેટિંગમાં. બંને સાથે રંગાય. */
 function paintLang() {
-  Array.prototype.forEach.call($("langSeg").children, b =>
-    b.classList.toggle("on", b.getAttribute("data-l") === getLang()));
+  ["langSeg", "langSeg2"].forEach(id => {
+    Array.prototype.forEach.call($(id).children, b =>
+      b.classList.toggle("on", b.getAttribute("data-l") === getLang()));
+  });
+  $("setLangVal").textContent = langDef(getLang()).label;
 }
 
 /* ભાષા બદલાય ત્યારે આખી સ્ક્રીન ફરી લખો */
@@ -187,16 +193,19 @@ function relocalize() {
     if (lastResult) showResult(lastResult);
     if (!$("scRun").hidden) setPhase(phase === "idle" ? "ready" : phase);
   }
-  if (!$("sheet").hidden) paintSettings();
+  if (!$("scSet").hidden) paintSettings();
 }
 
 /* ---------------- સ્ક્રીન બદલવી ---------------- */
 
+const SCREENS = ["splash", "welcome", "home", "brief", "run", "set", "help"];
+const SC_ID = {
+  splash: "scSplash", welcome: "scWelcome", home: "scHome", brief: "scBrief",
+  run: "scRun", set: "scSet", help: "scHelp"
+};
+
 function show(which) {
-  $("scWelcome").hidden = which !== "welcome";
-  $("scHome").hidden = which !== "home";
-  $("scBrief").hidden = which !== "brief";
-  $("scRun").hidden = which !== "run";
+  SCREENS.forEach(s => { $(SC_ID[s]).hidden = s !== which; });
   window.scrollTo(0, 0);
 }
 
@@ -625,9 +634,18 @@ function renderProgress() {
 
 /* ---------------- સેટિંગ ---------------- */
 
+function openSettings() {
+  paintSettings();
+  show("set");
+}
+
 function paintSettings() {
   const s = state.settings;
-  $("setNameVal").textContent = userName() || t("set.nameNotSet");
+  const nm = userName();
+  $("setNameVal").textContent = nm || t("set.nameNotSet");
+  // નામનો પહેલો અક્ષર — ગોળ ચકતીમાં
+  $("setAva").textContent = nm ? nm.trim().charAt(0).toUpperCase() : "•";
+  $("setVer").textContent = t("set.version", { v: APP_VERSION });
   $("swHands").classList.toggle("on", !!s.hands);
   $("swAsk").classList.toggle("on", !!s.ask);
   $("swFb").classList.toggle("on", !!s.speakFb);
@@ -664,9 +682,10 @@ function toggle(key, el) {
 
 /* ---------------- જોડાણ ---------------- */
 
-$("btnSet").addEventListener("click", () => { paintSettings(); $("sheet").hidden = false; });
-$("btnCloseSet").addEventListener("click", () => { $("sheet").hidden = true; });
-$("sheet").addEventListener("click", ev => { if (ev.target === $("sheet")) $("sheet").hidden = true; });
+$("btnSet").addEventListener("click", openSettings);
+$("btnSetBack").addEventListener("click", () => show("home"));
+$("btnHelp").addEventListener("click", () => show("help"));
+$("btnHelpBack").addEventListener("click", () => show("set"));
 
 $("swHands").addEventListener("click", () => toggle("hands"));
 $("swAsk").addEventListener("click", () => toggle("ask"));
@@ -677,19 +696,21 @@ Array.prototype.forEach.call($("segRate").children, b =>
 Array.prototype.forEach.call($("segSil").children, b =>
   b.addEventListener("click", () => { state.settings.silence = parseInt(b.dataset.s, 10); save(); paintSettings(); }));
 
-Array.prototype.forEach.call($("langSeg").children, b =>
-  b.addEventListener("click", () => {
-    Speech.stopAll();
-    state.settings.lang = b.getAttribute("data-l");
-    save();
-    relocalize();
-  }));
+/* ભાષાની બંને પસંદગી-પટ્ટી — હોમના તળિયે અને સેટિંગમાં */
+["langSeg", "langSeg2"].forEach(id =>
+  Array.prototype.forEach.call($(id).children, b =>
+    b.addEventListener("click", () => {
+      Speech.stopAll();
+      state.settings.lang = b.getAttribute("data-l");
+      save();
+      relocalize();
+    })));
 
 $("btnReset").addEventListener("click", () => {
   if (!confirm(t("set.resetAsk"))) return;
   state.courses = {};
   save();
-  $("sheet").hidden = true;
+  show("home");
   // પ્રેક્ટિસ ચાલુ હોય તો જ નવો પ્રશ્ન લાવો — સૂચના સ્ક્રીન પર હોઈએ તો નહીં
   if (course && !$("scRun").hidden) { renderProgress(); pickQuestion(false); }
   renderBriefIfOpen();
@@ -701,7 +722,11 @@ $("btnSkipName").addEventListener("click", () => { show("home"); });
 $("uname").addEventListener("keydown", ev => {
   if (ev.key === "Enter") { ev.preventDefault(); finishWelcome($("uname").value); }
 });
-$("btnChangeName").addEventListener("click", () => { $("sheet").hidden = true; openWelcome(); });
+$("btnChangeName").addEventListener("click", openWelcome);
+
+/* પરિચય સ્ક્રીન — «શરૂ કરો» નામ પૂછે, «પછી જોઈશ» સીધા હોમ પર લઈ જાય */
+$("btnGetStarted").addEventListener("click", () => { Speech.prime(); openWelcome(); });
+$("btnMaybeLater").addEventListener("click", () => { Speech.prime(); show("home"); });
 
 $("btnStart").addEventListener("click", startInterview);
 $("btnBriefBack").addEventListener("click", leaveCourse);
@@ -765,8 +790,8 @@ applyI18n();
 paintLang();
 renderHome();
 
-/* પહેલી વાર એપ ખૂલે અને નામ ખબર ન હોય તો પહેલાં નામ પૂછો */
-if (state.user) show("home"); else openWelcome();
+/* નામ ખબર હોય તો સીધા હોમ પર; નહીં તો પહેલાં એપનો પરિચય */
+if (state.user) show("home"); else show("splash");
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
