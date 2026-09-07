@@ -103,9 +103,42 @@ let phase = "idle";      // idle · asking · listening · scoring · feedback
 let lastResult = null;
 let micWatch = null;     // માઇક ચાલુ છે પણ કંઈ સંભળાતું નથી તે પકડવા
 
-/* ---------------- હોમ સ્ક્રીન ---------------- */
+/* ---------------- પ્રશ્નનું ઘડિયાળ ----------------
 
-function renderHome() {
+   દરેક જવાબ પર કેટલો સમય ગયો તે નોંધીએ છીએ, જેથી ડૅશબોર્ડ «કેટલો સમય
+   પ્રેક્ટિસ કરી» દેખાડી શકે. ફક્ત ખરો સમય ગણાય — એપ પાછળ જાય કે વિદ્યાર્થી
+   બીજા ટૅબ પર જાય તો ઘડિયાળ થોભી જાય, નહીં તો રાતભર ખૂલી રહેલી એપ
+   ખોટા કલાકો ઉમેરી દે. */
+
+let qClock = { start: 0, acc: 0 };
+
+function qClockReset() { qClock = { start: Date.now(), acc: 0 }; }
+function qClockPause() {
+  if (qClock.start) { qClock.acc += Date.now() - qClock.start; qClock.start = 0; }
+}
+function qClockResume() { if (!qClock.start) qClock.start = Date.now(); }
+
+/* આ પ્રશ્ન પર ગયેલી સેકન્ડ — એક જવાબ માટે વધુમાં વધુ દસ મિનિટ ગણીએ */
+function qClockSecs() {
+  const acc = qClock.acc + (qClock.start ? Date.now() - qClock.start : 0);
+  return Math.min(Math.round(acc / 1000), Stats.MAX_SECS);
+}
+
+/* ---------------- હોમ (વિશ્લેષણ) અને પ્રેક્ટિસ ટૅબ ---------------- */
+
+/* બંને ટૅબ ફરી લખો — જવાબ તપાસાય કે ભાષા બદલાય ત્યારે બોલાવાય છે */
+function renderDash() {
+  renderTiles();
+  renderStats();
+}
+
+function renderStats() {
+  const fn = firstName();
+  $("statsHeading").textContent = fn ? t("home.hello", { name: fn }) : t("stats.title");
+  Stats.render($("statsBody"), () => show("practice"));
+}
+
+function renderTiles() {
   $("tiles").innerHTML = COURSES.map((c, i) => {
     const b = bucket(c.id);
     const n = b.history.length;
@@ -123,20 +156,6 @@ function renderHome() {
   Array.prototype.forEach.call($("tiles").querySelectorAll(".tile"), el => {
     el.addEventListener("click", () => openCourse(el.getAttribute("data-id")));
   });
-
-  // નામ ખબર હોય તો હોમ સ્ક્રીન પર નામથી સંબોધો
-  const fn = firstName();
-  $("homeHeading").textContent = fn
-    ? t("home.hello", { name: fn })
-    : t("home.heading");
-
-  const h = allHistory();
-  $("hCount").textContent = h.length;
-  if (!h.length) { $("hAvg").textContent = "—"; $("hWeak").textContent = "—"; return; }
-  const avg = h.reduce((a, e) => a + e.overall, 0) / h.length;
-  $("hAvg").textContent = avg.toFixed(1);
-  $("hAvg").style.color = colorFor(avg);
-  $("hWeak").textContent = weakestLabel(h);
 }
 
 /* સૌથી નબળો માપદંડ. mode આપ્યો હોય તો તકનીકી કોર્સનું નામ વપરાય. */
@@ -184,7 +203,7 @@ function relocalize() {
   setLang(state.settings.lang);
   applyI18n();
   paintLang();
-  renderHome();
+  renderDash();
   if (course) {
     renderBrief();
     $("runName").textContent = tCourse(course, "name");
@@ -193,20 +212,40 @@ function relocalize() {
     if (lastResult) showResult(lastResult);
     if (!$("scRun").hidden) setPhase(phase === "idle" ? "ready" : phase);
   }
-  if (!$("scSet").hidden) paintSettings();
+  if (!$("scProfile").hidden) paintSettings();
 }
 
 /* ---------------- સ્ક્રીન બદલવી ---------------- */
 
-const SCREENS = ["splash", "welcome", "home", "brief", "run", "set", "help"];
 const SC_ID = {
-  splash: "scSplash", welcome: "scWelcome", home: "scHome", brief: "scBrief",
-  run: "scRun", set: "scSet", help: "scHelp"
+  splash: "scSplash", welcome: "scWelcome", stats: "scStats", practice: "scPractice",
+  brief: "scBrief", run: "scRun", profile: "scProfile", help: "scHelp"
 };
+/* તળિયેની પટ્ટીવાળા ત્રણ ટૅબ — બાકીની સ્ક્રીન પર પટ્ટી છુપાય છે */
+const TABS = ["stats", "practice", "profile"];
 
 function show(which) {
-  SCREENS.forEach(s => { $(SC_ID[s]).hidden = s !== which; });
+  Object.keys(SC_ID).forEach(s => { $(SC_ID[s]).hidden = s !== which; });
+
+  const isTab = TABS.indexOf(which) >= 0;
+  $("tabbar").hidden = !isTab;
+  document.body.classList.toggle("tabs", isTab);
+  if (isTab) {
+    Array.prototype.forEach.call($("tabbar").querySelectorAll(".tab"), b =>
+      b.classList.toggle("on", b.getAttribute("data-tab") === which));
+  }
+  // પ્રેક્ટિસ સ્ક્રીન છોડીએ તો પ્રશ્નનું ઘડિયાળ થોભાવો
+  if (which !== "run") qClockPause();
   window.scrollTo(0, 0);
+}
+
+/* ટૅબ પર જાઓ — જે ટૅબ ખૂલે તેની માહિતી તાજી કરીએ */
+function goTab(tab) {
+  Speech.stopAll();
+  if (tab === "stats") renderStats();
+  if (tab === "practice") renderTiles();
+  if (tab === "profile") paintSettings();
+  show(tab);
 }
 
 /* ---------------- પહેલી વારની સ્ક્રીન (નામ) ---------------- */
@@ -220,7 +259,7 @@ function openWelcome() {
 function finishWelcome(name, via) {
   setUser(name, via || "typed");
   relocalize();          // «નમસ્તે, રવિ» વગેરે ફરી લખાય
-  show("home");
+  show("practice");
 }
 
 /* Google સાઇન-ઇન — GOOGLE_CLIENT_ID ભરેલો હોય તો જ બટન દેખાય.
@@ -299,7 +338,7 @@ function renderBrief() {
 
 /* «મૉક ઇન્ટરવ્યુ શરૂ કરો» — અહીંથી ખરી પ્રેક્ટિસ ચાલુ થાય */
 function startInterview() {
-  if (!course) { show("home"); return; }
+  if (!course) { show("practice"); return; }
   Speech.prime();                 // પહેલા speak() પહેલાંનો ટૅપ
   // મૉક ઇન્ટરવ્યુ હંમેશા પહેલા પ્રશ્નથી શરૂ થાય
   if (isSequential()) { bucket(course.id).pos = 0; save(); }
@@ -316,8 +355,8 @@ function leaveCourse() {
   Avatar.setState("idle");
   phase = "idle";
   course = null;
-  show("home");
-  renderHome();
+  show("practice");
+  renderDash();
 }
 
 /* ---------------- પ્રશ્ન પસંદગી ---------------- */
@@ -368,6 +407,7 @@ function pickQuestion(advance) {
   $("btnType").classList.remove("on");
   lastResult = null;
 
+  qClockReset();          // આ પ્રશ્નનો સમય અહીંથી ગણાય
   askQuestion();
 }
 
@@ -476,6 +516,7 @@ function submit(text) {
 
   setPhase("scoring");
   $("heard").textContent = ans;
+  const secs = qClockSecs();          // આ પ્રશ્ન પર ગયેલો ખરો સમય
 
   // તપાસ તરત થાય છે; અવતાર «વિચારે» તે દેખાડવા સહેજ થોભો
   setTimeout(() => {
@@ -485,7 +526,7 @@ function submit(text) {
     bucket(course.id).history.push({
       ts: Date.now(), course: course.id, q: current.q, cat: current.cat,
       answer: ans, overall: r.overall, scores: r.scores,
-      weakest: r.weakest, missed: r.missingMust
+      weakest: r.weakest, missed: r.missingMust, secs: secs
     });
     save();
 
@@ -632,12 +673,7 @@ function renderProgress() {
     esc(t("res.thScore")) + "</th></tr></thead><tbody>" + rows + "</tbody></table>";
 }
 
-/* ---------------- સેટિંગ ---------------- */
-
-function openSettings() {
-  paintSettings();
-  show("set");
-}
+/* ---------------- પ્રોફાઇલ અને સેટિંગ ---------------- */
 
 function paintSettings() {
   const s = state.settings;
@@ -646,6 +682,7 @@ function paintSettings() {
   // નામનો પહેલો અક્ષર — ગોળ ચકતીમાં
   $("setAva").textContent = nm ? nm.trim().charAt(0).toUpperCase() : "•";
   $("setVer").textContent = t("set.version", { v: APP_VERSION });
+  Stats.renderProfileStats($("profStats"));
   $("swHands").classList.toggle("on", !!s.hands);
   $("swAsk").classList.toggle("on", !!s.ask);
   $("swFb").classList.toggle("on", !!s.speakFb);
@@ -682,10 +719,12 @@ function toggle(key, el) {
 
 /* ---------------- જોડાણ ---------------- */
 
-$("btnSet").addEventListener("click", openSettings);
-$("btnSetBack").addEventListener("click", () => show("home"));
+/* તળિયેની ટૅબ પટ્ટી */
+Array.prototype.forEach.call($("tabbar").querySelectorAll(".tab"), b =>
+  b.addEventListener("click", () => goTab(b.getAttribute("data-tab"))));
+
 $("btnHelp").addEventListener("click", () => show("help"));
-$("btnHelpBack").addEventListener("click", () => show("set"));
+$("btnHelpBack").addEventListener("click", () => show("profile"));
 
 $("swHands").addEventListener("click", () => toggle("hands"));
 $("swAsk").addEventListener("click", () => toggle("ask"));
@@ -710,23 +749,23 @@ $("btnReset").addEventListener("click", () => {
   if (!confirm(t("set.resetAsk"))) return;
   state.courses = {};
   save();
-  show("home");
   // પ્રેક્ટિસ ચાલુ હોય તો જ નવો પ્રશ્ન લાવો — સૂચના સ્ક્રીન પર હોઈએ તો નહીં
   if (course && !$("scRun").hidden) { renderProgress(); pickQuestion(false); }
   renderBriefIfOpen();
-  renderHome();
+  renderDash();
+  paintSettings();       // પ્રોફાઇલ પરનો સાર પણ ખાલી થાય
 });
 
 $("btnSaveName").addEventListener("click", () => finishWelcome($("uname").value));
-$("btnSkipName").addEventListener("click", () => { show("home"); });
+$("btnSkipName").addEventListener("click", () => { show("practice"); });
 $("uname").addEventListener("keydown", ev => {
   if (ev.key === "Enter") { ev.preventDefault(); finishWelcome($("uname").value); }
 });
 $("btnChangeName").addEventListener("click", openWelcome);
 
-/* પરિચય સ્ક્રીન — «શરૂ કરો» નામ પૂછે, «પછી જોઈશ» સીધા હોમ પર લઈ જાય */
+/* પરિચય સ્ક્રીન — «શરૂ કરો» નામ પૂછે, «પછી જોઈશ» સીધા પ્રેક્ટિસ પર લઈ જાય */
 $("btnGetStarted").addEventListener("click", () => { Speech.prime(); openWelcome(); });
-$("btnMaybeLater").addEventListener("click", () => { Speech.prime(); show("home"); });
+$("btnMaybeLater").addEventListener("click", () => { Speech.prime(); show("practice"); });
 
 $("btnStart").addEventListener("click", startInterview);
 $("btnBriefBack").addEventListener("click", leaveCourse);
@@ -774,11 +813,15 @@ $("btnClear").addEventListener("click", () => {
   if (phase === "listening") { Speech.stopListen(true); setPhase("ready"); }
 });
 
-/* એપ પાછળ જાય તો માઇક અને સ્પીકર બંધ — બેટરી અને પ્રાઇવસી બંને માટે */
+/* એપ પાછળ જાય તો માઇક અને સ્પીકર બંધ — બેટરી અને પ્રાઇવસી બંને માટે.
+   પ્રશ્નનું ઘડિયાળ પણ થોભે, જેથી બંધ પડેલી એપનો સમય ન ગણાય. */
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) {
+    qClockPause();
     Speech.stopAll();
     if (phase === "listening" || phase === "asking") setPhase("ready");
+  } else if (!$("scRun").hidden) {
+    qClockResume();
   }
 });
 
@@ -788,10 +831,14 @@ loadState();
 setLang(state.settings.lang);
 applyI18n();
 paintLang();
-renderHome();
+paintSettings();
+renderDash();
 
-/* નામ ખબર હોય તો સીધા હોમ પર; નહીં તો પહેલાં એપનો પરિચય */
-if (state.user) show("home"); else show("splash");
+/* નામ ખબર ન હોય તો પહેલાં એપનો પરિચય. નામ ખબર હોય તો — પ્રેક્ટિસ કરી
+   હોય તો પ્રગતિ દેખાડો, નહીં તો સીધા પ્રેક્ટિસ ટૅબ પર (ખાલી આલેખ કરતાં
+   કોર્સની યાદી વધુ કામની છે). */
+if (!state.user) show("splash");
+else show(allHistory().length ? "stats" : "practice");
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {

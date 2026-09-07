@@ -486,6 +486,91 @@ details[open]>.lhead .chev{transform:rotate(90deg)}
 .diag{font-size:12.5px;color:var(--muted);line-height:1.7;margin-top:4px}
 .verline{font-size:12.5px;color:var(--muted);margin:0 0 10px}
 
+/* ---------- વિશ્લેષણ — હોમ ડૅશબોર્ડ ---------- */
+.ctitle{font-size:15px;font-weight:700;margin:0;letter-spacing:-.15px}
+.csub{font-size:12px;color:var(--muted);margin:3px 0 15px;line-height:1.45}
+.note{
+  font-size:12.5px;color:var(--muted);line-height:1.6;margin:0;
+  background:#fafbfe;border:1px dashed var(--line);border-radius:var(--rs);padding:14px
+}
+
+/* દરરોજનો સમય — સાત ઊભી પટ્ટી */
+.chart{display:flex;align-items:flex-end;gap:7px;height:134px}
+.cb{
+  flex:1;min-width:0;height:100%;display:flex;flex-direction:column;
+  align-items:center;justify-content:flex-end;gap:5px
+}
+.cb .cbv{font-size:10px;font-weight:800;color:var(--muted);min-height:13px;line-height:1.2}
+.cb i{
+  display:block;width:100%;max-width:32px;min-height:4px;
+  border-radius:8px 8px 4px 4px;background:linear-gradient(180deg,#6d8bf7,#2f4fd0)
+}
+.cb.zero i{background:#e2e7f2}
+.cb.today i{background:linear-gradient(180deg,#93a9fb,#3f5fd8);box-shadow:0 3px 10px rgba(47,79,208,.3)}
+.cb em{font-style:normal;font-size:10.5px;color:var(--muted);font-weight:700}
+
+/* કાર્ડના તળિયે ત્રણ આંકડા */
+.mrow{display:flex;gap:10px;margin-top:15px;padding-top:14px;border-top:1px solid var(--line2)}
+.mrow>div{flex:1;min-width:0}
+.mrow .k{font-size:11px;color:var(--muted);line-height:1.35}
+.mrow .v{font-size:15.5px;font-weight:800;margin-top:2px;letter-spacing:-.3px}
+
+/* ગુણનું વલણ — છેલ્લા જવાબોની રેખા */
+.spark{width:100%;height:auto;display:block;margin-top:14px}
+.spark .ln{fill:none;stroke:var(--accent);stroke-width:2.2;vector-effect:non-scaling-stroke;
+  stroke-linejoin:round;stroke-linecap:round}
+.spark .ar{fill:url(#sparkg);stroke:none}
+.spark .dt{fill:var(--accent)}
+
+.crit.tight{padding:8px 0}
+.crit.tight:first-of-type{padding-top:2px}
+
+/* કોર્સવાર હાર */
+.crow{display:flex;align-items:center;gap:11px;padding:11px 0;border-top:1px solid var(--line2)}
+.crow:first-of-type{border-top:0;padding-top:3px}
+.crow .cn{flex:1;min-width:0}
+.crow .cn b{display:block;font-size:13.5px;font-weight:700;line-height:1.3}
+.crow .cn i{display:block;font-style:normal;font-size:11.5px;color:var(--muted);margin-top:1px}
+.crow .sc{font-size:15px;font-weight:800;flex:none;min-width:34px;text-align:right}
+
+/* સૂચનો */
+.recs{display:flex;flex-direction:column}
+.rec{display:flex;gap:12px;padding:13px 0;border-top:1px solid var(--line2)}
+.rec:first-child{border-top:0;padding-top:2px}
+.rec .li{width:36px;height:36px;border-radius:11px}
+.rec .li .svi{width:19px;height:19px}
+.rec .rt{flex:1;min-width:0}
+.rec b{display:block;font-size:14px;font-weight:700;line-height:1.35}
+.rec p{margin:4px 0 0;font-size:12.5px;color:var(--muted);line-height:1.55}
+
+/* કંઈ પ્રેક્ટિસ કરી ન હોય ત્યારે */
+.emptybox{text-align:center;padding:22px 12px 12px}
+.emptybox .li{width:54px;height:54px;border-radius:17px;margin:0 auto 15px}
+.emptybox .li .svi{width:27px;height:27px}
+.emptybox b{display:block;font-size:18px;font-weight:800;letter-spacing:-.3px}
+.emptybox p{color:var(--muted);font-size:13.5px;margin:9px 0 20px;line-height:1.6}
+
+/* ---------- તળિયેની ટૅબ પટ્ટી ---------- */
+.tabbar{
+  position:fixed;left:0;right:0;bottom:0;z-index:40;
+  background:rgba(255,255,255,.95);
+  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+  box-shadow:0 -1px 0 var(--line)
+}
+.tabinner{
+  max-width:600px;margin:0 auto;display:flex;
+  padding:7px 10px calc(7px + env(safe-area-inset-bottom))
+}
+.tab{
+  flex:1;min-width:0;border:0;background:transparent;color:var(--muted);
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:7px 4px;border-radius:14px;font-size:11px;font-weight:700;font-family:var(--font)
+}
+.tab .svi{width:22px;height:22px}
+.tab.on{color:var(--accent);background:var(--soft)}
+/* ટૅબ પટ્ટી દેખાય ત્યારે લખાણ તેની નીચે ઢંકાઈ ન જાય */
+body.tabs .wrap{padding-bottom:calc(100px + env(safe-area-inset-bottom))}
+
 /* ---------- મદદની સ્ક્રીન ---------- */
 .faq{background:var(--card);border-radius:var(--r);box-shadow:var(--shc);padding:6px 0;margin-top:12px}
 .faq details{border-top:1px solid var(--line2)}
@@ -554,7 +639,32 @@ details[open]>.lhead .chev{transform:rotate(90deg)}
   <symbol id="i-trash" viewBox="0 0 24 24">
     <path d="M4 7h16M9.5 7V4.6h5V7M6.6 7l1 13h8.8l1-13M10.4 11v5.6M13.6 11v5.6"/>
   </symbol>
+  <symbol id="i-home" viewBox="0 0 24 24">
+    <path d="M3.5 10.4 12 3.6l8.5 6.8V20a.9.9 0 0 1-.9.9H4.4a.9.9 0 0 1-.9-.9z"/>
+    <path d="M9.4 20.9v-6.3h5.2v6.3"/>
+  </symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7.5 4.6 19 12 7.5 19.4z"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.2V12l3.4 2.1"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M4.5 12.6 9 17.1 19.5 6.6"/></symbol>
 </defs></svg>
+
+<!-- ============ તળિયેની ટૅબ પટ્ટી ============ -->
+<nav class="tabbar" id="tabbar" hidden>
+  <div class="tabinner">
+    <button class="tab" data-tab="stats">
+      <svg class="svi" aria-hidden="true"><use href="#i-home"/></svg>
+      <span data-i18n="tab.home">Home</span>
+    </button>
+    <button class="tab" data-tab="practice">
+      <svg class="svi" aria-hidden="true"><use href="#i-play"/></svg>
+      <span data-i18n="tab.practice">Practice</span>
+    </button>
+    <button class="tab" data-tab="profile">
+      <svg class="svi" aria-hidden="true"><use href="#i-user"/></svg>
+      <span data-i18n="tab.profile">Profile</span>
+    </button>
+  </div>
+</nav>
 
 <!-- ============ પરિચય સ્ક્રીન — એપ પહેલી વાર ખૂલે ત્યારે ============ -->
 <div id="scSplash" hidden>
@@ -619,32 +729,22 @@ details[open]>.lhead .chev{transform:rotate(90deg)}
   </div>
 </div>
 
-<!-- ============ હોમ સ્ક્રીન ============ -->
-<div id="scHome" hidden>
+<!-- ============ હોમ — પ્રગતિનું વિશ્લેષણ (પહેલો ટૅબ) ============ -->
+<div id="scStats" hidden>
   <div class="bar">
     <div class="logo sm"><svg class="svi" aria-hidden="true"><use href="#i-logo"/></svg></div>
     <h1 data-i18n="app.name">Interview Practice</h1>
-    <button class="ib" id="btnSet" data-i18n-aria="run.settings" aria-label="Settings">
-      <svg class="svi" aria-hidden="true"><use href="#i-gear"/></svg>
-    </button>
   </div>
   <div class="wrap">
     <div class="hero">
-      <p class="big" id="homeHeading" data-i18n="home.heading">Which course do you want to practise?</p>
-      <p class="lead" data-i18n="app.tagline">Questions in English · Answer aloud in English · Feedback in English</p>
+      <p class="big" id="statsHeading" data-i18n="home.heading">Your progress</p>
+      <p class="lead" data-i18n="stats.lead">How your practice is going</p>
     </div>
 
-    <!-- આખી પ્રગતિ — સૌથી ઉપર, જેથી પહેલી નજરે દેખાય -->
-    <div class="statpanel">
-      <div class="sc"><div class="v" id="hCount">0</div><div class="k" data-i18n="st.answered">Answered</div></div>
-      <div class="sc"><div class="v" id="hAvg">—</div><div class="k" data-i18n="st.avg">Average score</div></div>
-      <div class="sc"><div class="v sm" id="hWeak">—</div><div class="k" data-i18n="st.weak">Needs work</div></div>
-    </div>
+    <!-- આખું ડૅશબોર્ડ stats.js બનાવે છે -->
+    <div id="statsBody"></div>
 
-    <h2 class="sec" data-i18n="home.chooseCat">Choose a category</h2>
-    <div class="tiles" id="tiles"></div>
-
-    <!-- ભાષાની પસંદગી સ્ક્રીનના તળિયે — સેટિંગમાં પણ છે -->
+    <!-- ભાષાની પસંદગી — પ્રોફાઇલમાં પણ છે -->
     <div class="langbar">
       <span class="cap" data-i18n="home.lang">App language</span>
       <div class="langseg" id="langSeg">
@@ -653,6 +753,27 @@ details[open]>.lhead .chev{transform:rotate(90deg)}
         <button data-l="hi">हिन्दी</button>
       </div>
     </div>
+
+    <div class="foot">
+      <span data-i18n="home.foot1">The app works without internet.</span><br>
+      <span data-i18n="home.foot2">Scoring is automatic.</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============ પ્રેક્ટિસ — બધા મોડ (બીજો ટૅબ) ============ -->
+<div id="scPractice" hidden>
+  <div class="bar">
+    <div class="logo sm"><svg class="svi" aria-hidden="true"><use href="#i-logo"/></svg></div>
+    <h1 data-i18n="app.name">Interview Practice</h1>
+  </div>
+  <div class="wrap">
+    <div class="hero">
+      <p class="big" data-i18n="prac.heading">Choose a category</p>
+      <p class="lead" data-i18n="prac.lead">Questions in English · Answer aloud in English</p>
+    </div>
+
+    <div class="tiles" id="tiles"></div>
 
     <div class="foot">
       <span data-i18n="home.foot1">The app works without internet.</span><br>
@@ -756,13 +877,10 @@ details[open]>.lhead .chev{transform:rotate(90deg)}
   </div>
 </div>
 
-<!-- ============ સેટિંગ સ્ક્રીન ============ -->
-<div id="scSet" hidden>
-  <div class="bar solid">
-    <button class="ib" id="btnSetBack" data-i18n-aria="run.back" aria-label="Back">
-      <svg class="svi" aria-hidden="true"><use href="#i-back"/></svg>
-    </button>
-    <h1 data-i18n="set.title">Settings</h1>
+<!-- ============ પ્રોફાઇલ — ઓળખ અને સેટિંગ (ત્રીજો ટૅબ) ============ -->
+<div id="scProfile" hidden>
+  <div class="bar">
+    <h1 data-i18n="prof.title">Profile</h1>
   </div>
   <div class="wrap">
 
@@ -774,6 +892,9 @@ details[open]>.lhead .chev{transform:rotate(90deg)}
       </span>
       <svg class="svi sm chev" aria-hidden="true"><use href="#i-next"/></svg>
     </button>
+
+    <!-- પ્રેક્ટિસનો ટૂંકો સાર — stats.js ભરે છે -->
+    <div class="statpanel" id="profStats" style="margin-top:10px"></div>
 
     <h2 class="grp" data-i18n="set.grpApp">App settings</h2>
     <div class="group">
@@ -923,6 +1044,7 @@ details[open]>.lhead .chev{transform:rotate(90deg)}
 <script src="./bank-nursing.js"></script>
 <script src="./bank-welding.js"></script>
 <script src="./scoring.js"></script>
+<script src="./stats.js"></script>
 <script src="./speech.js"></script>
 <script src="./avatar.js"></script>
 <script src="./app.js"></script>
