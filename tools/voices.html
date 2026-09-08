@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Voice previewer — Interview Prep</title>
+<style>
+:root{
+  --bg:#eef3fd; --card:#fff; --ink:#101a33; --muted:#6c7c99; --faint:#8b98b4;
+  --line:#eef1f7; --accent:#2f5fe0; --accent-d:#2447c4; --soft:#e6ecfe;
+  --good:#12915f; --goodtint:#e2f5ec; --warn:#c07d09; --warntint:#fdf1dc;
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;font-family:var(--font);color:var(--ink);font-size:15px;line-height:1.55;
+  background:linear-gradient(180deg,#eef3fd 0%,#f8fbff 55%,#eff4fe 100%) no-repeat fixed;
+}
+.wrap{max-width:620px;margin:0 auto;padding:28px 18px 60px}
+h1{font-size:28px;font-weight:800;letter-spacing:-.6px;margin:0 0 6px}
+.lead{color:var(--muted);margin:0 0 20px;font-size:14.5px}
+.card{background:var(--card);border-radius:18px;box-shadow:0 6px 18px rgba(28,54,120,.06);padding:16px;margin-bottom:14px}
+h2{font-size:13px;font-weight:600;color:#7d8aa5;margin:22px 4px 8px;text-transform:none}
+label.f{display:block;font-size:12.5px;font-weight:600;color:#5b6b8c;margin-bottom:7px}
+.seg{display:flex;gap:5px;background:#eef2fa;padding:4px;border-radius:14px}
+.seg button{flex:1;border:0;background:transparent;padding:9px 4px;border-radius:10px;
+  font-size:13px;font-weight:600;color:var(--faint);font-family:var(--font);cursor:pointer}
+.seg button.on{background:#fff;color:var(--accent-d);font-weight:650;box-shadow:0 1px 3px rgba(28,54,120,.12)}
+textarea{width:100%;min-height:72px;font:inherit;font-size:14.5px;padding:11px 12px;
+  border:1px solid rgba(20,40,90,.12);border-radius:13px;background:#fbfcfe;resize:vertical;color:var(--ink)}
+.vrow{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.vrow:first-child{border-top:0}
+.vmeta{flex:1;min-width:0}
+.vname{font-size:14.5px;font-weight:650;line-height:1.25;word-break:break-word}
+.vsub{font-size:12px;color:var(--muted);margin-top:2px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.tag{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:20px;letter-spacing:.2px}
+.tag.pick{background:var(--soft);color:var(--accent-d)}
+.tag.off{background:var(--goodtint);color:var(--good)}
+.tag.net{background:var(--warntint);color:var(--warn)}
+.play{flex:none;border:0;cursor:pointer;width:44px;height:44px;border-radius:22px;
+  background:linear-gradient(180deg,#3f6ce6,#2447c4);color:#fff;
+  box-shadow:0 6px 14px rgba(36,71,196,.28);display:flex;align-items:center;justify-content:center}
+.play:active{transform:translateY(1px)}
+.play.busy{background:#c62f22;box-shadow:0 6px 14px rgba(198,47,34,.26)}
+.play svg{width:18px;height:18px;fill:#fff}
+.empty{color:var(--muted);font-size:13.5px;padding:10px 0}
+.note{font-size:12.5px;color:var(--muted);line-height:1.6;background:#fbfcfe;
+  border:1px solid rgba(20,40,90,.1);border-radius:13px;padding:13px;margin-top:6px}
+code{background:#eef2fa;padding:1px 5px;border-radius:5px;font-size:12.5px}
+.bar{display:flex;gap:8px;align-items:center;margin-top:12px}
+.bar button{flex:1;border:0;border-radius:13px;padding:12px;font:inherit;font-weight:650;cursor:pointer;
+  background:#fff;color:var(--ink);box-shadow:0 4px 12px rgba(28,54,120,.08)}
+.chosen{background:var(--soft);border-radius:13px;padding:12px 13px;font-size:13px;margin-top:10px;display:none}
+.chosen b{display:block;font-size:12px;color:var(--accent-d);margin-bottom:3px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Voice previewer</h1>
+  <p class="lead">Every voice installed on <em>this</em> device, speaking the app's own text.
+    Voices differ per phone — test on the handset students will actually use.</p>
+
+  <div class="card">
+    <label class="f" for="txt">What the voice should say</label>
+    <textarea id="txt"></textarea>
+    <div class="bar">
+      <button type="button" data-s="en">English question</button>
+      <button type="button" data-s="gu">ગુજરાતી મૂલ્યાંકન</button>
+      <button type="button" data-s="hi">हिन्दी मूल्यांकन</button>
+    </div>
+    <div style="margin-top:14px">
+      <label class="f">Speaking speed (the app's three settings)</label>
+      <div class="seg" id="rate">
+        <button type="button" data-r="0.75">Slow</button>
+        <button type="button" data-r="0.92" class="on">Normal</button>
+        <button type="button" data-r="1.1">Fast</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="out"></div>
+
+  <div class="chosen" id="chosen"><b>Tell Claude this</b><span id="chosenTxt"></span></div>
+
+  <div class="note" id="info">Reading the voice list…</div>
+  <div class="note">
+    <b>Nothing under English, or the voice sounds robotic?</b><br>
+    On Android: Settings → General management → Text-to-speech → install the
+    <em>Speech Recognition &amp; Synthesis by Google</em> engine, then download the
+    English (India) voice. Gujarati and Hindi voices are downloaded the same way —
+    the app silently skips speaking feedback when the matching voice is missing.
+  </div>
+</div>
+
+<script>
+/* આ પાનું એપનો ભાગ નથી — ફક્ત તપાસ માટે. એપ જે રીતે વોઇસ પસંદ કરે છે
+   તે જ ક્રમ અહીં વાપર્યો છે, જેથી «એપ કયો વોઇસ વાપરશે» સાચું દેખાય. */
+"use strict";
+
+var SAMPLES = {
+  en: "Tell me about yourself. Give me a short self-introduction.",
+  gu: "તમને દસમાંથી છ પોઇન્ટ આઠ ગુણ મળ્યા. પૂરાં વાક્યમાં જવાબ આપો અને થોડું ધીમે બોલો.",
+  hi: "आपको दस में से छह दशमलव आठ अंक मिले। पूरे वाक्य में जवाब दें और थोड़ा धीरे बोलें।"
+};
+
+/* speech.js માંનો એ જ ક્રમ — બદલો તો બંને જગ્યાએ બદલજો */
+var VOICE_PREFS = {
+  en: ["en-in", "en-gb", "en-au", "en-us", "en"],
+  gu: ["gu-in", "gu"],
+  hi: ["hi-in", "hi"]
+};
+
+var synth = window.speechSynthesis || null;
+var voices = [];
+var rate = 0.92;
+var speaking = null;
+
+function norm(l) { return String(l || "").toLowerCase().replace("_", "-"); }
+
+function pickFor(lang) {
+  var prefs = VOICE_PREFS[lang] || [];
+  for (var i = 0; i < prefs.length; i++) {
+    for (var j = 0; j < voices.length; j++) {
+      if (norm(voices[j].lang).indexOf(prefs[i]) === 0) return voices[j];
+    }
+  }
+  return null;
+}
+
+function groupOf(v) {
+  var l = norm(v.lang);
+  if (l.indexOf("en") === 0) return "en";
+  if (l.indexOf("gu") === 0) return "gu";
+  if (l.indexOf("hi") === 0) return "hi";
+  return "other";
+}
+
+function stop() {
+  try { synth.cancel(); } catch (e) {}
+  speaking = null;
+  paintPlaying();
+}
+
+function play(idx) {
+  if (!synth) return;
+  if (speaking === idx) { stop(); return; }
+  stop();
+  var v = voices[idx];
+  var u = new SpeechSynthesisUtterance(document.getElementById("txt").value || SAMPLES.en);
+  u.voice = v;
+  u.lang = v.lang;
+  u.rate = rate;
+  u.onend = function () { if (speaking === idx) { speaking = null; paintPlaying(); } };
+  u.onerror = u.onend;
+  speaking = idx;
+  paintPlaying();
+  showChosen(v);
+  try { synth.speak(u); } catch (e) { stop(); }
+}
+
+function paintPlaying() {
+  var btns = document.querySelectorAll(".play");
+  for (var i = 0; i < btns.length; i++) {
+    var on = String(speaking) === btns[i].getAttribute("data-i");
+    btns[i].className = "play" + (on ? " busy" : "");
+    btns[i].innerHTML = on
+      ? '<svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>'
+      : '<svg viewBox="0 0 24 24"><path d="M8 5.5 19 12 8 18.5z"/></svg>';
+  }
+}
+
+function showChosen(v) {
+  document.getElementById("chosen").style.display = "block";
+  document.getElementById("chosenTxt").textContent =
+    v.name + "  —  " + v.lang + (v.localService ? "  (works offline)" : "  (needs internet)");
+}
+
+var LABEL = { en: "English — the app asks questions in these",
+              gu: "ગુજરાતી — feedback voice", hi: "हिन्दी — feedback voice",
+              other: "Other languages installed" };
+
+function render() {
+  var out = document.getElementById("out");
+  if (!synth) { out.innerHTML = '<div class="card"><div class="empty">This browser has no speech synthesis at all.</div></div>'; return; }
+  if (!voices.length) { out.innerHTML = '<div class="card"><div class="empty">No voices found yet…</div></div>'; return; }
+
+  var picks = { en: pickFor("en"), gu: pickFor("gu"), hi: pickFor("hi") };
+  var groups = { en: [], gu: [], hi: [], other: [] };
+  voices.forEach(function (v, i) { groups[groupOf(v)].push(i); });
+
+  var html = "";
+  ["en", "gu", "hi", "other"].forEach(function (g) {
+    if (!groups[g].length) {
+      if (g !== "other") {
+        html += "<h2>" + LABEL[g] + '</h2><div class="card"><div class="empty">' +
+          "No " + g.toUpperCase() + " voice on this device — the app stays silent for this language.</div></div>";
+      }
+      return;
+    }
+    html += "<h2>" + LABEL[g] + "</h2><div class=\"card\">";
+    groups[g].forEach(function (i) {
+      var v = voices[i];
+      var isPick = picks[g] === v;
+      html += '<div class="vrow"><div class="vmeta"><div class="vname">' + esc(v.name) + "</div>" +
+        '<div class="vsub"><span>' + esc(v.lang) + "</span>" +
+        (isPick ? '<span class="tag pick">APP USES THIS</span>' : "") +
+        (v.localService ? '<span class="tag off">OFFLINE</span>' : '<span class="tag net">NEEDS INTERNET</span>') +
+        "</div></div>" +
+        '<button class="play" data-i="' + i + '" aria-label="Play"></button></div>';
+    });
+    html += "</div>";
+  });
+  out.innerHTML = html;
+  paintPlaying();
+
+  var btns = out.querySelectorAll(".play");
+  for (var k = 0; k < btns.length; k++) {
+    btns[k].addEventListener("click", function () { play(parseInt(this.getAttribute("data-i"), 10)); });
+  }
+
+  document.getElementById("info").innerHTML =
+    "<b>" + voices.length + " voices</b> on this device · " +
+    groups.en.length + " English, " + groups.gu.length + " Gujarati, " + groups.hi.length + " Hindi<br>" +
+    esc(navigator.userAgent);
+}
+
+function esc(s) {
+  return String(s).replace(/[&<>"]/g, function (m) {
+    return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[m];
+  });
+}
+
+function refresh() {
+  try { voices = synth.getVoices() || []; } catch (e) { voices = []; }
+  voices.sort(function (a, b) { return norm(a.lang).localeCompare(norm(b.lang)) || a.name.localeCompare(b.name); });
+  render();
+}
+
+/* વોઇસની યાદી પહેલી વાર ખાલી આવે છે — એપ પણ આ જ રીતે રાહ જુએ છે */
+if (synth) {
+  refresh();
+  if (synth.addEventListener) synth.addEventListener("voiceschanged", refresh);
+  else synth.onvoiceschanged = refresh;
+  var tries = 0;
+  var poll = setInterval(function () { refresh(); if (voices.length || ++tries > 12) clearInterval(poll); }, 400);
+}
+
+document.getElementById("txt").value = SAMPLES.en;
+var sampleBtns = document.querySelectorAll(".bar button");
+for (var i = 0; i < sampleBtns.length; i++) {
+  sampleBtns[i].addEventListener("click", function () {
+    document.getElementById("txt").value = SAMPLES[this.getAttribute("data-s")];
+  });
+}
+var rateBtns = document.querySelectorAll("#rate button");
+for (var j = 0; j < rateBtns.length; j++) {
+  rateBtns[j].addEventListener("click", function () {
+    rate = parseFloat(this.getAttribute("data-r"));
+    for (var k = 0; k < rateBtns.length; k++) rateBtns[k].className = "";
+    this.className = "on";
+  });
+}
+window.addEventListener("beforeunload", stop);
+</script>
+</body>
+</html>
