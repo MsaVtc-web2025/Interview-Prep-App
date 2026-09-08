@@ -117,12 +117,32 @@ var speaking = null;
 
 function norm(l) { return String(l || "").toLowerCase().replace("_", "-"); }
 
+/* નામથી ઓળખીતા સારા વોઇસ — speech.js માંનું જ VOICE_NAMES */
+var VOICE_NAMES = {
+  hi: ["google हिन्दी", "google hindi"],
+  gu: ["google ગુજરાતી", "google gujarati"]
+};
+
+function byName(list, names) {
+  if (!names) return null;
+  for (var i = 0; i < names.length; i++) {
+    for (var j = 0; j < list.length; j++) {
+      if (String(list[j].name || "").toLowerCase().indexOf(names[i]) >= 0) return list[j];
+    }
+  }
+  return null;
+}
+
+/* speech.js નો જ ક્રમ: ભાષા → offline પહેલો → નામથી ઓળખીતો → જે મળે તે */
 function pickFor(lang) {
   var prefs = VOICE_PREFS[lang] || [];
+  var names = VOICE_NAMES[lang];
   for (var i = 0; i < prefs.length; i++) {
-    for (var j = 0; j < voices.length; j++) {
-      if (norm(voices[j].lang).indexOf(prefs[i]) === 0) return voices[j];
-    }
+    var matches = voices.filter(function (v) { return norm(v.lang).indexOf(prefs[i]) === 0; });
+    if (!matches.length) continue;
+    var local = matches.filter(function (v) { return v.localService; });
+    if (local.length) return byName(local, names) || local[0];
+    return byName(matches, names) || matches[0];
   }
   return null;
 }

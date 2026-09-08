@@ -43,15 +43,7 @@ const Speech = (function () {
     }, 400);
   }
 
-  /* પસંદગીના ક્રમમાં પહેલો મળતો વોઇસ */
-  function pickVoice(prefs) {
-    if (!voices.length) refreshVoices();
-    for (const p of prefs) {
-      const v = voices.find(v => v.lang && v.lang.toLowerCase().replace("_", "-").indexOf(p) === 0);
-      if (v) return v;
-    }
-    return null;
-  }
+  function normLang(l) { return String(l || "").toLowerCase().replace("_", "-"); }
 
   const VOICE_PREFS = {
     en: ["en-in", "en-gb", "en-au", "en-us", "en"],
@@ -59,7 +51,51 @@ const Speech = (function () {
     hi: ["hi-in", "hi"]
   };
 
-  function voiceFor(lang) { return pickVoice(VOICE_PREFS[lang] || VOICE_PREFS.en); }
+  /* નામથી ઓળખીતા સારા વોઇસ. ફોનમાં એકથી વધુ હિન્દી વોઇસ હોય ત્યારે
+     «Google हिन्दी» જ વપરાય તે માટે. નામ લિપિ પ્રમાણે બદલાય છે, તેથી
+     બંને રીતે તપાસીએ છીએ. */
+  const VOICE_NAMES = {
+    hi: ["google हिन्दी", "google hindi"],
+    gu: ["google ગુજરાતી", "google gujarati"]
+  };
+
+  function byName(list, names) {
+    if (!names) return null;
+    for (const n of names) {
+      const hit = list.filter(v => String(v.name || "").toLowerCase().indexOf(n) >= 0)[0];
+      if (hit) return hit;
+    }
+    return null;
+  }
+
+  /* વોઇસ પસંદ કરવાનો ક્રમ:
+     1. ભાષા બરાબર મળે (hi-in પહેલાં, પછી hi)
+     2. એમાંથી ફોનમાં જ ચાલતો (offline) વોઇસ પહેલો — ઇન્ટરનેટ વગર પણ બોલે
+     3. offline ન હોય તો નામથી ઓળખીતો સારો વોઇસ (Google हिन्दी)
+     4. તે પણ ન હોય તો જે મળે તે પહેલો
+     ડિઝાઇનનો નિર્ણય: વિદ્યાર્થીને પસંદ કરવાનું આપતા નથી — જાતે જ સૌથી
+     સારો વોઇસ લેવાય, જેથી ખોટો વોઇસ પસંદ થવાની શક્યતા જ ન રહે. */
+  function pickVoice(prefs, names) {
+    if (!voices.length) refreshVoices();
+    for (const p of prefs) {
+      const matches = voices.filter(v => v.lang && normLang(v.lang).indexOf(p) === 0);
+      if (!matches.length) continue;
+      const local = matches.filter(v => v.localService);
+      if (local.length) return byName(local, names) || local[0];
+      return byName(matches, names) || matches[0];
+    }
+    return null;
+  }
+
+  function voiceFor(lang) {
+    return pickVoice(VOICE_PREFS[lang] || VOICE_PREFS.en, VOICE_NAMES[lang]);
+  }
+
+  /* આ વોઇસ ઇન્ટરનેટ વગર બોલે છે? (Google ના વોઇસ નેટવર્ક પર ચાલે છે) */
+  function voiceIsOffline(lang) {
+    const v = voiceFor(lang);
+    return !!(v && v.localService);
+  }
 
   /* ગુજરાતી વોઇસ ફોનમાં નાખેલો છે કે નહીં — ન હોય તો એપ ગુજરાતી બોલવાનું છોડી દે છે */
   function hasVoice(lang) { return !!voiceFor(lang); }
@@ -366,7 +402,7 @@ const Speech = (function () {
 
   return {
     // બોલવું
-    speak, cancelSpeech, isSpeaking, prime, hasVoice, supported, toChunks,
+    speak, cancelSpeech, isSpeaking, prime, hasVoice, voiceFor, voiceIsOffline, supported, toChunks,
     // સાંભળવું
     listen, stopListen, isListening, micSupported,
     // બંને
