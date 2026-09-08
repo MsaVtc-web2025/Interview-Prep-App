@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<style>
+body{margin:0;background:#e9eef7}
+a{color:#2f5fe0;text-decoration:none}
+a:hover{color:#1f47b8}
+textarea,button{font-family:inherit}
+textarea:focus{outline:2px solid rgba(47,95,224,.35);outline-offset:1px}
+::-webkit-scrollbar{width:0}
+</style>
+</helmet>
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:48px 24px;box-sizing:border-box;background:radial-gradient(900px 600px at 20% 0%,#eaf1ff 0%,#e9eef7 60%),#e9eef7;font-family:-apple-system,'SF Pro Text',system-ui,sans-serif">
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" width="{{ deviceW }}" height="{{ deviceH }}" style="width:402px;height:874px;flex:none" hint-size="402px,874px">
+
+<sc-if value="{{ isOnboard }}" hint-placeholder-val="{{ true }}">
+<div style="position:relative;height:100%;overflow:hidden;display:flex;flex-direction:column;background:linear-gradient(165deg,#e6edfc 0%,#f5f9ff 42%,#e9f0fd 100%)">
+  <div style="position:absolute;top:-80px;left:-60px;width:340px;height:340px;border-radius:50%;background:radial-gradient(circle,rgba(150,180,255,.55),rgba(150,180,255,0) 70%)"></div>
+  <div style="position:absolute;bottom:120px;right:-90px;width:320px;height:320px;border-radius:50%;background:radial-gradient(circle,rgba(120,205,255,.4),rgba(120,205,255,0) 70%)"></div>
+  <div style="position:relative;flex:1;display:flex;flex-direction:column;padding:118px 30px 0;box-sizing:border-box">
+    <div style="width:96px;height:96px;border-radius:28px;background:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.95);box-shadow:0 14px 34px rgba(40,70,150,.16);display:flex;align-items:center;justify-content:center">
+      <svg width="52" height="52" viewBox="0 0 48 48" fill="none">
+        <path d="M24 6c-6 0-10 4.4-10 9.6 0 3.4 1.7 5.7 4.4 7.4-2.7 1.7-4.4 4-4.4 7.4C14 35.6 18 40 24 40" stroke="#2f5fe0" stroke-width="4.5" stroke-linecap="round" />
+        <path d="M24 6c6 0 10 4.4 10 9.6 0 3.4-1.7 5.7-4.4 7.4 2.7 1.7 4.4 4 4.4 7.4C34 35.6 30 40 24 40" stroke="#6f8ef5" stroke-width="4.5" stroke-linecap="round" />
+      </svg>
+    </div>
+    <h1 style="margin:34px 0 12px;font-size:36px;line-height:1.05;font-weight:800;letter-spacing:-.8px;color:#101a33">Interview Prep</h1>
+    <p style="margin:0;font-size:21px;line-height:1.35;font-weight:500;color:#5b6b8c">Practice today.<br />A brighter tomorrow.</p>
+    <div style="display:flex;flex-direction:column;gap:22px;margin-top:44px">
+      <div style="display:flex;gap:16px;align-items:center">
+        <div style="width:46px;height:46px;flex:none;border-radius:15px;background:#e6ecfe;display:flex;align-items:center;justify-content:center">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2f5fe0" stroke-width="2.2" stroke-linecap="round"><path d="M6 20V10M12 20V4M18 20v-7" /></svg>
+        </div>
+        <div>
+          <div style="font-size:16px;font-weight:650;color:#101a33">Real interview questions</div>
+          <div style="font-size:14px;color:#6c7c99;margin-top:2px">Across roles and industries</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:16px;align-items:center">
+        <div style="width:46px;height:46px;flex:none;border-radius:15px;background:#e2f5ec;display:flex;align-items:center;justify-content:center">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#12915f" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg>
+        </div>
+        <div>
+          <div style="font-size:16px;font-weight:650;color:#101a33">Speak and improve</div>
+          <div style="font-size:14px;color:#6c7c99;margin-top:2px">Get instant feedback</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:16px;align-items:center">
+        <div style="width:46px;height:46px;flex:none;border-radius:15px;background:#ece6fe;display:flex;align-items:center;justify-content:center">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6446d8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8" /><path d="M15 7h6v6" /></svg>
+        </div>
+        <div>
+          <div style="font-size:16px;font-weight:650;color:#101a33">Build your confidence</div>
+          <div style="font-size:14px;color:#6c7c99;margin-top:2px">Be ready for what's next</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="position:relative;padding:0 30px 46px;display:flex;flex-direction:column;gap:18px">
+    <button type="button" onClick="{{ go.home }}" style="height:60px;border:none;border-radius:30px;background:linear-gradient(180deg,#3f6ce6,#2447c4);color:#fff;font-size:18px;font-weight:650;letter-spacing:-.2px;box-shadow:0 12px 26px rgba(36,71,196,.34);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;padding:0 24px" style-hover="filter:brightness(1.06)" style-active="transform:translateY(1px)">
+      Get Started
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6" /></svg>
+    </button>
+    <button type="button" onClick="{{ go.home }}" style="background:none;border:none;color:#5b6b8c;font-size:16px;font-weight:550;cursor:pointer;padding:4px" style-hover="color:#2f5fe0">Maybe later</button>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+<div style="height:100%;display:flex;flex-direction:column;background:linear-gradient(180deg,#eef3fd 0%,#f8fbff 55%,#eff4fe 100%)">
+  <div style="flex:1;overflow:auto;padding:66px 20px 108px">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <svg width="30" height="30" viewBox="0 0 48 48" fill="none">
+        <path d="M24 6c-6 0-10 4.4-10 9.6 0 3.4 1.7 5.7 4.4 7.4-2.7 1.7-4.4 4-4.4 7.4C14 35.6 18 40 24 40" stroke="#2f5fe0" stroke-width="5" stroke-linecap="round" />
+        <path d="M24 6c6 0 10 4.4 10 9.6 0 3.4-1.7 5.7-4.4 7.4 2.7 1.7 4.4 4 4.4 7.4C34 35.6 30 40 24 40" stroke="#6f8ef5" stroke-width="5" stroke-linecap="round" />
+      </svg>
+      <button type="button" onClick="{{ go.settings }}" style="background:none;border:none;padding:6px;cursor:pointer;line-height:0" style-hover="opacity:.6">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#33415c" stroke-width="1.9"><circle cx="12" cy="12" r="3.2" /><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-2.87 1.2V21a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 7 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 3 15a1.7 1.7 0 0 0-1.55-1H1.3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 3 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 7 4.6h.08A1.7 1.7 0 0 0 8.7 3.05V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1.02 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9v.08a1.7 1.7 0 0 0 1.55 1.02H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" transform="translate(1 1) scale(.92)" /></svg>
+      </button>
+    </div>
+    <sc-if value="{{ tabHome }}" hint-placeholder-val="{{ true }}">
+    <h1 style="margin:16px 0 6px;font-size:34px;font-weight:800;letter-spacing:-.8px;color:#101a33">Hello, Max</h1>
+    <p style="margin:0 0 20px;font-size:17px;font-weight:500;color:#66779a">Practice. Improve. Get Hired.</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;background:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.9);border-radius:22px;box-shadow:0 8px 22px rgba(28,54,120,.07);overflow:hidden">
+      <div style="padding:16px 8px;text-align:center;background:linear-gradient(180deg,rgba(226,245,236,.75),rgba(226,245,236,.25))">
+        <div style="font-size:24px;font-weight:750;color:#101a33">{{ answered }}</div>
+        <div style="font-size:12px;color:#6c7c99;margin-top:2px">Answered</div>
+      </div>
+      <div style="padding:16px 8px;text-align:center;border-left:1px solid rgba(20,40,90,.07);border-right:1px solid rgba(20,40,90,.07)">
+        <div style="font-size:24px;font-weight:750;color:#e08a10">{{ avg }}</div>
+        <div style="font-size:12px;color:#6c7c99;margin-top:2px">Average score</div>
+      </div>
+      <div style="padding:14px 8px;text-align:center;background:linear-gradient(180deg,rgba(230,236,254,.8),rgba(230,236,254,.3))">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2f5fe0" stroke-width="2.2" stroke-linecap="round"><path d="M6 20V11M12 20V5M18 20v-6" /></svg>
+        <div style="font-size:12px;font-weight:650;color:#101a33;margin-top:3px">Fluency</div>
+        <div style="font-size:11px;color:#6c7c99">Needs work</div>
+      </div>
+    </div>
+
+    <div style="margin-top:14px;padding:16px;background:rgba(255,255,255,.82);border:1px solid rgba(255,255,255,.92);border-radius:22px;box-shadow:0 8px 22px rgba(28,54,120,.07)">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
+        <div style="font-size:15px;font-weight:700;color:#101a33">This week</div>
+        <div style="font-size:12.5px;font-weight:600;color:#12915f">+0.8 vs last week</div>
+      </div>
+      <div style="display:flex;align-items:stretch;gap:9px;height:96px;margin:14px 0 6px">
+        <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;height:100%">
+          <div style="width:100%;height:34%;border-radius:7px;background:#dfe6f7"></div>
+          <span style="font-size:11px;color:#8b98b4">M</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;height:100%">
+          <div style="width:100%;height:52%;border-radius:7px;background:#c3d1f4"></div>
+          <span style="font-size:11px;color:#8b98b4">T</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;height:100%">
+          <div style="width:100%;height:20%;border-radius:7px;background:#e6ebf5"></div>
+          <span style="font-size:11px;color:#8b98b4">W</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;height:100%">
+          <div style="width:100%;height:66%;border-radius:7px;background:#9fb6ee"></div>
+          <span style="font-size:11px;color:#8b98b4">T</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;height:100%">
+          <div style="width:100%;height:44%;border-radius:7px;background:#c3d1f4"></div>
+          <span style="font-size:11px;color:#8b98b4">F</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;height:100%">
+          <div style="width:100%;height:82%;border-radius:7px;background:#3f6ce6"></div>
+          <span style="font-size:11px;font-weight:650;color:#2447c4">S</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;height:100%">
+          <div style="width:100%;height:8%;border-radius:7px;background:#eef1f7"></div>
+          <span style="font-size:11px;color:#8b98b4">S</span>
+        </div>
+      </div>
+      <div style="font-size:12.5px;color:#6c7c99">{{ answered }} answers · 28 minutes of speaking practice</div>
+    </div>
+
+    <h2 style="margin:24px 0 10px;font-size:17px;font-weight:700;color:#101a33">Your skills</h2>
+    <div style="padding:16px;background:rgba(255,255,255,.82);border:1px solid rgba(255,255,255,.92);border-radius:22px;box-shadow:0 8px 22px rgba(28,54,120,.07);display:flex;flex-direction:column;gap:14px">
+      <div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between">
+          <span style="font-size:14.5px;font-weight:650;color:#101a33">Clear communication</span>
+          <span style="font-size:14.5px;font-weight:700;color:#c07d09">6.9</span>
+        </div>
+        <div style="height:7px;border-radius:4px;background:#eef1f7;margin-top:7px;overflow:hidden">
+          <div style="height:100%;width:69%;border-radius:4px;background:#e59a12"></div>
+        </div>
+      </div>
+      <div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between">
+          <span style="font-size:14.5px;font-weight:650;color:#101a33">Complete sentences</span>
+          <span style="font-size:14.5px;font-weight:700;color:#12915f">10.0</span>
+        </div>
+        <div style="height:7px;border-radius:4px;background:#eef1f7;margin-top:7px;overflow:hidden">
+          <div style="height:100%;width:100%;border-radius:4px;background:#22a06b"></div>
+        </div>
+      </div>
+      <div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between">
+          <span style="font-size:14.5px;font-weight:650;color:#101a33">Fluency</span>
+          <span style="font-size:14.5px;font-weight:700;color:#c0392b">4.2</span>
+        </div>
+        <div style="height:7px;border-radius:4px;background:#eef1f7;margin-top:7px;overflow:hidden">
+          <div style="height:100%;width:42%;border-radius:4px;background:#d1372a"></div>
+        </div>
+      </div>
+      <div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between">
+          <span style="font-size:14.5px;font-weight:650;color:#101a33">Vocabulary</span>
+          <span style="font-size:14.5px;font-weight:700;color:#c07d09">6.1</span>
+        </div>
+        <div style="height:7px;border-radius:4px;background:#eef1f7;margin-top:7px;overflow:hidden">
+          <div style="height:100%;width:61%;border-radius:4px;background:#e59a12"></div>
+        </div>
+      </div>
+    </div>
+
+    <h2 style="margin:24px 0 10px;font-size:17px;font-weight:700;color:#101a33">Recent answers</h2>
+    <div style="background:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.92);border-radius:22px;box-shadow:0 8px 22px rgba(28,54,120,.07);overflow:hidden">
+      <div style="display:flex;align-items:center;gap:12px;padding:14px 16px">
+        <div style="width:38px;height:38px;flex:none;border-radius:12px;background:#fdf1dc;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#c07d09">5.8</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14.5px;font-weight:650;color:#101a33">Self-introduction</div>
+          <div style="font-size:12.5px;color:#6c7c99">Interview (general) · today</div>
+        </div>
+      </div>
+      <div style="height:1px;background:#eef1f7;margin-left:66px"></div>
+      <div style="display:flex;align-items:center;gap:12px;padding:14px 16px">
+        <div style="width:38px;height:38px;flex:none;border-radius:12px;background:#e2f5ec;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#12915f">7.4</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14.5px;font-weight:650;color:#101a33">Strengths</div>
+          <div style="font-size:12.5px;color:#6c7c99">Interview (general) · yesterday</div>
+        </div>
+      </div>
+      <div style="height:1px;background:#eef1f7;margin-left:66px"></div>
+      <div style="display:flex;align-items:center;gap:12px;padding:14px 16px">
+        <div style="width:38px;height:38px;flex:none;border-radius:12px;background:#fdeaea;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#d1372a">4.6</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14.5px;font-weight:650;color:#101a33">Pressure</div>
+          <div style="font-size:12.5px;color:#6c7c99">Interview (general) · 2 days ago</div>
+        </div>
+      </div>
+    </div>
+
+    <button type="button" onClick="{{ tab.practice }}" style="margin-top:18px;width:100%;height:54px;border:none;border-radius:18px;background:linear-gradient(180deg,#3f6ce6,#2447c4);color:#fff;font-size:16.5px;font-weight:650;box-shadow:0 10px 22px rgba(36,71,196,.28);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px" style-hover="filter:brightness(1.06)" style-active="transform:translateY(1px)">
+      Keep practising
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6" /></svg>
+    </button>
+    </sc-if>
+
+    <sc-if value="{{ tabPractice }}" hint-placeholder-val="{{ true }}">
+    <h1 style="margin:16px 0 6px;font-size:34px;font-weight:800;letter-spacing:-.8px;color:#101a33">Practice</h1>
+    <p style="margin:0 0 22px;font-size:17px;font-weight:500;color:#66779a">Pick a set and start answering.</p>
+    <h2 style="margin:0 0 12px;font-size:17px;font-weight:700;color:#101a33">Choose a category</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <button type="button" onClick="{{ pick.general }}" style="text-align:left;cursor:pointer;padding:14px;border:1px solid rgba(255,255,255,.9);border-radius:20px;background:rgba(255,255,255,.82);box-shadow:0 6px 18px rgba(28,54,120,.06);display:flex;flex-direction:column;gap:6px" style-hover="box-shadow:0 10px 24px rgba(28,54,120,.13);transform:translateY(-1px)">
+        <div style="width:38px;height:38px;border-radius:12px;background:#fdece2;display:flex;align-items:center;justify-content:center;margin-bottom:2px">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c2643a" stroke-width="2" stroke-linecap="round"><rect x="2.5" y="7" width="19" height="13" rx="2.5" /><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M2.5 12.5h19" /></svg>
+        </div>
+        <div style="font-size:15.5px;font-weight:700;color:#101a33">Interview (general)</div>
+        <div style="font-size:12.5px;line-height:1.35;color:#6c7c99">Questions asked in every interview</div>
+        <div style="font-size:12.5px;font-weight:600;color:#12915f;margin-top:2px">{{ answered }} answered · avg {{ avg }}</div>
+      </button>
+      <button type="button" onClick="{{ pick.computer }}" style="text-align:left;cursor:pointer;padding:14px;border:1px solid rgba(255,255,255,.9);border-radius:20px;background:rgba(255,255,255,.82);box-shadow:0 6px 18px rgba(28,54,120,.06);display:flex;flex-direction:column;gap:6px" style-hover="box-shadow:0 10px 24px rgba(28,54,120,.13);transform:translateY(-1px)">
+        <div style="width:38px;height:38px;border-radius:12px;background:#e4eefe;display:flex;align-items:center;justify-content:center;margin-bottom:2px">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2f5fe0" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="12" rx="2" /><path d="M2 20h20" /></svg>
+        </div>
+        <div style="font-size:15.5px;font-weight:700;color:#101a33">Computer</div>
+        <div style="font-size:12.5px;line-height:1.35;color:#6c7c99">Office, Excel, internet and hardware</div>
+        <div style="font-size:12.5px;font-weight:600;color:#2f5fe0;margin-top:2px">8 questions</div>
+      </button>
+      <button type="button" onClick="{{ pick.cnc }}" style="text-align:left;cursor:pointer;padding:14px;border:1px solid rgba(255,255,255,.9);border-radius:20px;background:rgba(255,255,255,.82);box-shadow:0 6px 18px rgba(28,54,120,.06);display:flex;flex-direction:column;gap:6px" style-hover="box-shadow:0 10px 24px rgba(28,54,120,.13);transform:translateY(-1px)">
+        <div style="width:38px;height:38px;border-radius:12px;background:#eceff4;display:flex;align-items:center;justify-content:center;margin-bottom:2px">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#54627c" stroke-width="2"><circle cx="12" cy="12" r="3.4" /><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1" stroke-linecap="round" /></svg>
+        </div>
+        <div style="font-size:15.5px;font-weight:700;color:#101a33">CNC machining</div>
+        <div style="font-size:12.5px;line-height:1.35;color:#6c7c99">Machine setting, programs and safety</div>
+        <div style="font-size:12.5px;font-weight:600;color:#2f5fe0;margin-top:2px">8 questions</div>
+      </button>
+      <button type="button" onClick="{{ pick.electrician }}" style="text-align:left;cursor:pointer;padding:14px;border:1px solid rgba(255,255,255,.9);border-radius:20px;background:rgba(255,255,255,.82);box-shadow:0 6px 18px rgba(28,54,120,.06);display:flex;flex-direction:column;gap:6px" style-hover="box-shadow:0 10px 24px rgba(28,54,120,.13);transform:translateY(-1px)">
+        <div style="width:38px;height:38px;border-radius:12px;background:#fdf1dc;display:flex;align-items:center;justify-content:center;margin-bottom:2px">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d99205" stroke-width="2" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z" /></svg>
+        </div>
+        <div style="font-size:15.5px;font-weight:700;color:#101a33">Electrician</div>
+        <div style="font-size:12.5px;line-height:1.35;color:#6c7c99">Wiring, safety and fault finding</div>
+        <div style="font-size:12.5px;font-weight:600;color:#2f5fe0;margin-top:2px">8 questions</div>
+      </button>
+      <button type="button" onClick="{{ pick.automobile }}" style="text-align:left;cursor:pointer;padding:14px;border:1px solid rgba(255,255,255,.9);border-radius:20px;background:rgba(255,255,255,.82);box-shadow:0 6px 18px rgba(28,54,120,.06);display:flex;flex-direction:column;gap:6px" style-hover="box-shadow:0 10px 24px rgba(28,54,120,.13);transform:translateY(-1px)">
+        <div style="width:38px;height:38px;border-radius:12px;background:#e7e9fb;display:flex;align-items:center;justify-content:center;margin-bottom:2px">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5a5fd6" stroke-width="2" stroke-linecap="round"><path d="M4 16v3M20 16v3M3 16h18v-4l-2-5H5L3 12z" /><circle cx="7.5" cy="16" r="1.2" /><circle cx="16.5" cy="16" r="1.2" /></svg>
+        </div>
+        <div style="font-size:15.5px;font-weight:700;color:#101a33">Automobile</div>
+        <div style="font-size:12.5px;line-height:1.35;color:#6c7c99">Engine, brakes, service and diagnosis</div>
+        <div style="font-size:12.5px;font-weight:600;color:#2f5fe0;margin-top:2px">8 questions</div>
+      </button>
+      <button type="button" onClick="{{ pick.evehicle }}" style="text-align:left;cursor:pointer;padding:14px;border:1px solid rgba(255,255,255,.9);border-radius:20px;background:rgba(255,255,255,.82);box-shadow:0 6px 18px rgba(28,54,120,.06);display:flex;flex-direction:column;gap:6px" style-hover="box-shadow:0 10px 24px rgba(28,54,120,.13);transform:translateY(-1px)">
+        <div style="width:38px;height:38px;border-radius:12px;background:#e2f5ec;display:flex;align-items:center;justify-content:center;margin-bottom:2px">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#12915f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 4c0 9-5.5 14-14 14 0-8 5-13 14-14z" /><path d="M4 20c1.5-4 4-6.5 7-8" /></svg>
+        </div>
+        <div style="font-size:15.5px;font-weight:700;color:#101a33">E-vehicle</div>
+        <div style="font-size:12.5px;line-height:1.35;color:#6c7c99">Battery, motor, charging and HV safety</div>
+        <div style="font-size:12.5px;font-weight:600;color:#2f5fe0;margin-top:2px">8 questions</div>
+      </button>
+    </div>
+    </sc-if>
+  </div>
+  <div style="position:absolute;left:14px;right:14px;bottom:26px;height:66px;display:grid;grid-template-columns:1fr 1fr 1fr;align-items:center;background:rgba(255,255,255,.72);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border:1px solid rgba(255,255,255,.9);border-radius:26px;box-shadow:0 10px 28px rgba(28,54,120,.12)">
+    <sc-if value="{{ tabHome }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0;margin:0 10px;border-radius:18px;background:#e6ecfe">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#2447c4" stroke-width="2.1" stroke-linejoin="round"><path d="M3.5 10.5 12 4l8.5 6.5V20a1 1 0 0 1-1 1h-15a1 1 0 0 1-1-1z" /></svg>
+      <span style="font-size:11px;font-weight:650;color:#2447c4">Home</span>
+    </div>
+    </sc-if>
+    <sc-if value="{{ tabPractice }}" hint-placeholder-val="{{ false }}">
+    <button type="button" onClick="{{ tab.home }}" style="background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0" style-hover="opacity:.6">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#8b98b4" stroke-width="2.1" stroke-linejoin="round"><path d="M3.5 10.5 12 4l8.5 6.5V20a1 1 0 0 1-1 1h-15a1 1 0 0 1-1-1z" /></svg>
+      <span style="font-size:11px;font-weight:550;color:#8b98b4">Home</span>
+    </button>
+    </sc-if>
+    <sc-if value="{{ tabHome }}" hint-placeholder-val="{{ true }}">
+    <button type="button" onClick="{{ tab.practice }}" style="background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0" style-hover="opacity:.6">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="#8b98b4" stroke="none"><path d="M7 4.5 19 12 7 19.5z" /></svg>
+      <span style="font-size:11px;font-weight:550;color:#8b98b4">Practice</span>
+    </button>
+    </sc-if>
+    <sc-if value="{{ tabPractice }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0;margin:0 10px;border-radius:18px;background:#e6ecfe">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="#2447c4" stroke="none"><path d="M7 4.5 19 12 7 19.5z" /></svg>
+      <span style="font-size:11px;font-weight:650;color:#2447c4">Practice</span>
+    </div>
+    </sc-if>
+    <button type="button" onClick="{{ go.settings }}" style="background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0" style-hover="opacity:.6">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#8b98b4" stroke-width="2.1" stroke-linecap="round"><circle cx="12" cy="8" r="3.6" /><path d="M4.5 20c1.3-3.6 4.1-5.4 7.5-5.4s6.2 1.8 7.5 5.4" /></svg>
+      <span style="font-size:11px;font-weight:550;color:#8b98b4">Profile</span>
+    </button>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isPractice }}" hint-placeholder-val="{{ true }}">
+<div style="height:100%;overflow:auto;background:linear-gradient(180deg,#eef3fd 0%,#f8fbff 60%,#eff4fe 100%);padding:62px 16px 40px;box-sizing:border-box">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px">
+    <button type="button" onClick="{{ tab.practice }}" style="width:40px;height:40px;flex:none;border-radius:20px;border:1px solid rgba(255,255,255,.9);background:rgba(255,255,255,.85);box-shadow:0 4px 12px rgba(28,54,120,.08);cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="background:#fff">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#33415c" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4 7 12l8 8" /></svg>
+    </button>
+    <div style="font-size:17px;font-weight:700;color:#101a33;text-align:center;flex:1">{{ catName }}</div>
+    <div style="flex:none;padding:7px 13px;border-radius:16px;background:#e6ecfe;font-size:13px;font-weight:650;color:#2447c4">{{ progress }}</div>
+  </div>
+
+  <div style="background:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.95);border-radius:24px;box-shadow:0 8px 22px rgba(28,54,120,.07);padding:18px 18px 20px;text-align:center">
+    <span style="display:inline-block;padding:5px 12px;border-radius:14px;background:#eef1f7;font-size:12px;font-weight:600;color:#5b6b8c">{{ qTag }}</span>
+    <sc-if value="{{ showIntro }}" hint-placeholder-val="{{ true }}">
+      <p style="margin:12px 0 0;font-size:14.5px;line-height:1.45;font-style:italic;color:#6c7c99">Hello Max. Thank you for coming in today. Let's begin.</p>
+    </sc-if>
+    <h2 style="margin:12px 0 16px;font-size:21px;line-height:1.3;font-weight:750;letter-spacing:-.3px;color:#101a33;text-wrap:pretty">{{ question }}</h2>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <button type="button" onClick="{{ hear }}" style="display:flex;align-items:center;gap:7px;padding:9px 15px;border-radius:18px;border:1px solid rgba(20,40,90,.07);background:#f2f5fb;font-size:13px;font-weight:600;color:#33415c;cursor:pointer" style-hover="background:#e6ecfe;color:#2447c4">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z" /><path d="M17 9.5a3.5 3.5 0 0 1 0 5" /></svg>
+        {{ hearLabel }}
+      </button>
+      <button type="button" onClick="{{ another }}" style="display:flex;align-items:center;gap:7px;padding:9px 15px;border-radius:18px;border:1px solid rgba(20,40,90,.07);background:#f2f5fb;font-size:13px;font-weight:600;color:#33415c;cursor:pointer" style-hover="background:#e6ecfe;color:#2447c4">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-13.7-5.3L4 8" /><path d="M4 4v4h4" /><path d="M4 13a8 8 0 0 0 13.7 5.3L20 16" /><path d="M20 20v-4h-4" /></svg>
+        Another question
+      </button>
+    </div>
+  </div>
+
+  <div style="margin-top:14px;background:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.95);border-radius:24px;box-shadow:0 8px 22px rgba(28,54,120,.07);padding:16px">
+    <div style="font-size:13px;font-weight:600;color:#5b6b8c;margin-bottom:8px">Your answer (in English)</div>
+    <textarea rows="3" value="{{ answer }}" onChange="{{ onAnswer }}" placeholder="Speak or type your answer…" style="width:100%;box-sizing:border-box;resize:none;border:1px solid rgba(20,40,90,.12);border-radius:14px;background:#fbfcfe;padding:12px 13px;font-size:15px;line-height:1.45;color:#101a33"></textarea>
+    <button type="button" onClick="{{ next }}" style="margin-top:12px;width:100%;height:54px;border:none;border-radius:16px;background:linear-gradient(180deg,#3f6ce6,#2447c4);color:#fff;font-size:17px;font-weight:650;box-shadow:0 10px 22px rgba(36,71,196,.3);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px" style-hover="filter:brightness(1.06)" style-active="transform:translateY(1px)">
+      {{ nextLabel }}
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6" /></svg>
+    </button>
+    <div style="display:flex;align-items:center;justify-content:center;gap:22px;margin-top:12px">
+      <button type="button" onClick="{{ hear }}" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:6px;font-size:13.5px;font-weight:600;color:#5b6b8c;padding:2px" style-hover="color:#2447c4">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="2" /><path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10" stroke-linecap="round" /></svg>
+        Type instead
+      </button>
+      <button type="button" onClick="{{ clear }}" style="background:none;border:none;cursor:pointer;font-size:13.5px;font-weight:600;color:#5b6b8c;padding:2px" style-hover="color:#c0392b">Clear</button>
+    </div>
+  </div>
+
+  <sc-if value="{{ scored }}" hint-placeholder-val="{{ true }}">
+  <div style="margin-top:14px;background:rgba(255,255,255,.9);border:1px solid rgba(255,255,255,.95);border-radius:24px;box-shadow:0 8px 22px rgba(28,54,120,.07);padding:18px">
+    <div style="display:flex;align-items:center;gap:16px">
+      <div style="position:relative;width:64px;height:64px;flex:none">
+        <svg width="64" height="64" viewBox="0 0 64 64">
+          <circle cx="32" cy="32" r="27" fill="none" stroke="#eef1f7" stroke-width="7" />
+          <circle cx="32" cy="32" r="27" fill="none" stroke="#e59a12" stroke-width="7" stroke-linecap="round" stroke-dasharray="{{ ringDash }}" transform="rotate(-90 32 32)" />
+        </svg>
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:750;color:#c07d09">{{ score }}</div>
+      </div>
+      <div>
+        <div style="font-size:17px;font-weight:750;color:#101a33">{{ score }} out of 10</div>
+        <div style="font-size:13px;line-height:1.4;color:#6c7c99;margin-top:3px">{{ scoreMeta }}</div>
+      </div>
+    </div>
+    <div style="height:1px;background:rgba(20,40,90,.08);margin:16px 0 14px"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <span style="font-size:14.5px;font-weight:700;color:#101a33">Clear communication</span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:84px;height:7px;border-radius:4px;background:#eef1f7;overflow:hidden">
+          <div style="height:100%;border-radius:4px;background:#e59a12;width:{{ bar1 }}"></div>
+        </div>
+        <span style="font-size:14.5px;font-weight:700;color:#c07d09;min-width:30px;text-align:right">{{ m1 }}</span>
+      </div>
+    </div>
+    <p style="margin:6px 0 16px;font-size:13px;line-height:1.45;color:#6c7c99">{{ m1note }}</p>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <span style="font-size:14.5px;font-weight:700;color:#101a33">Complete sentences</span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:84px;height:7px;border-radius:4px;background:#eef1f7;overflow:hidden">
+          <div style="height:100%;border-radius:4px;background:#22a06b;width:{{ bar2 }}"></div>
+        </div>
+        <span style="font-size:14.5px;font-weight:700;color:#12915f;min-width:30px;text-align:right">{{ m2 }}</span>
+      </div>
+    </div>
+    <p style="margin:6px 0 0;font-size:13px;line-height:1.45;color:#6c7c99">{{ m2note }}</p>
+  </div>
+  </sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ isSettings }}" hint-placeholder-val="{{ true }}">
+<div style="height:100%;overflow:auto;background:linear-gradient(180deg,#eff4fe 0%,#f8fbff 100%);padding:62px 16px 40px;box-sizing:border-box">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+    <button type="button" onClick="{{ go.home }}" style="width:40px;height:40px;flex:none;border-radius:20px;border:1px solid rgba(255,255,255,.9);background:rgba(255,255,255,.85);box-shadow:0 4px 12px rgba(28,54,120,.08);cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="background:#fff">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#33415c" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4 7 12l8 8" /></svg>
+    </button>
+    <div style="flex:1;text-align:center;font-size:17px;font-weight:700;color:#101a33;margin-right:40px">Settings</div>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:14px;padding:16px;background:#fff;border-radius:20px;box-shadow:0 6px 18px rgba(28,54,120,.06);cursor:pointer" style-hover="box-shadow:0 10px 24px rgba(28,54,120,.12)">
+    <div style="width:52px;height:52px;border-radius:26px;background:#e6ecfe;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#2447c4">M</div>
+    <div style="flex:1">
+      <div style="font-size:17px;font-weight:700;color:#101a33">Max</div>
+      <div style="font-size:14px;color:#6c7c99;margin-top:1px">max@example.com</div>
+    </div>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#b3bccd" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 4 8 8-8 8" /></svg>
+  </div>
+
+  <div style="font-size:13px;font-weight:600;color:#7d8aa5;margin:22px 4px 8px">App settings</div>
+  <div style="background:#fff;border-radius:20px;box-shadow:0 6px 18px rgba(28,54,120,.06);overflow:hidden">
+    <div style="display:flex;align-items:center;gap:13px;padding:15px 16px;cursor:pointer" style-hover="background:#f5f8ff">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#33415c" stroke-width="1.9"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c2.5 2.6 3.8 5.7 3.8 9S14.5 18.4 12 21c-2.5-2.6-3.8-5.7-3.8-9S9.5 5.6 12 3z" /></svg>
+      <span style="flex:1;font-size:16px;color:#101a33">App language</span>
+      <span style="font-size:15px;color:#8b98b4">English</span>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#b3bccd" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 4 8 8-8 8" /></svg>
+    </div>
+    <div style="height:1px;background:#eef1f7;margin-left:49px"></div>
+    <div style="display:flex;align-items:center;gap:13px;padding:15px 16px;cursor:pointer" style-hover="background:#f5f8ff">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#33415c" stroke-width="1.9" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg>
+      <span style="flex:1;font-size:16px;color:#101a33">Voice settings</span>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#b3bccd" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 4 8 8-8 8" /></svg>
+    </div>
+    <div style="height:1px;background:#eef1f7;margin-left:49px"></div>
+    <div style="display:flex;align-items:center;gap:13px;padding:15px 16px;cursor:pointer" style-hover="background:#f5f8ff">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#33415c" stroke-width="1.9" stroke-linecap="round"><path d="M6 20V11M12 20V5M18 20v-6" /></svg>
+      <span style="flex:1;font-size:16px;color:#101a33">Feedback preferences</span>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#b3bccd" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 4 8 8-8 8" /></svg>
+    </div>
+  </div>
+
+  <div style="font-size:13px;font-weight:600;color:#7d8aa5;margin:22px 4px 8px">Account</div>
+  <div style="background:#fff;border-radius:20px;box-shadow:0 6px 18px rgba(28,54,120,.06);overflow:hidden">
+    <div style="display:flex;align-items:center;gap:13px;padding:15px 16px;cursor:pointer" style-hover="background:#f5f8ff">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#33415c" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="8" r="3.6" /><path d="M4.5 20c1.3-3.6 4.1-5.4 7.5-5.4s6.2 1.8 7.5 5.4" /></svg>
+      <span style="flex:1;font-size:16px;color:#101a33">Edit profile</span>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#b3bccd" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 4 8 8-8 8" /></svg>
+    </div>
+    <div style="height:1px;background:#eef1f7;margin-left:49px"></div>
+    <div style="display:flex;align-items:center;gap:13px;padding:15px 16px;cursor:pointer" style-hover="background:#f5f8ff">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e0a01a" stroke-width="1.9" stroke-linejoin="round"><path d="M3 7l4.5 4L12 4l4.5 7L21 7l-2 11H5z" /></svg>
+      <span style="flex:1;font-size:16px;color:#101a33">Upgrade to Pro</span>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#b3bccd" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 4 8 8-8 8" /></svg>
+    </div>
+    <div style="height:1px;background:#eef1f7;margin-left:49px"></div>
+    <div style="display:flex;align-items:center;gap:13px;padding:15px 16px;cursor:pointer" style-hover="background:#f5f8ff">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#33415c" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a8 8 0 0 1 13.7-5.3L20 8" /><path d="M20 4v4h-4" /><path d="M20 13a8 8 0 0 1-13.7 5.3L4 16" /><path d="M4 20v-4h4" /></svg>
+      <span style="flex:1;font-size:16px;color:#101a33">Restore purchases</span>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#b3bccd" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 4 8 8-8 8" /></svg>
+    </div>
+  </div>
+
+  <div style="font-size:13px;font-weight:600;color:#7d8aa5;margin:22px 4px 8px">Support</div>
+  <div style="background:#fff;border-radius:20px;box-shadow:0 6px 18px rgba(28,54,120,.06);overflow:hidden">
+    <div style="display:flex;align-items:center;gap:13px;padding:15px 16px;cursor:pointer" style-hover="background:#f5f8ff">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#33415c" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9" /><path d="M9.5 9.5a2.6 2.6 0 1 1 3.4 2.5c-.6.2-.9.8-.9 1.4v.4M12 17h.01" /></svg>
+      <span style="flex:1;font-size:16px;color:#101a33">Help &amp; FAQ</span>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#b3bccd" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 4 8 8-8 8" /></svg>
+    </div>
+    <div style="height:1px;background:#eef1f7;margin-left:49px"></div>
+    <div style="display:flex;align-items:center;gap:13px;padding:15px 16px;cursor:pointer" style-hover="background:#f5f8ff">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#33415c" stroke-width="1.9" stroke-linejoin="round"><path d="M4 5h16v11H8l-4 4z" /></svg>
+      <span style="flex:1;font-size:16px;color:#101a33">Send feedback</span>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#b3bccd" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 4 8 8-8 8" /></svg>
+    </div>
+    <div style="height:1px;background:#eef1f7;margin-left:49px"></div>
+    <div style="display:flex;align-items:center;gap:13px;padding:15px 16px;cursor:pointer" style-hover="background:#f5f8ff">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#33415c" stroke-width="1.9" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6z" /><path d="M14 3v4h4" /></svg>
+      <span style="flex:1;font-size:16px;color:#101a33">Privacy policy</span>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#b3bccd" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 4 8 8-8 8" /></svg>
+    </div>
+    <div style="height:1px;background:#eef1f7;margin-left:49px"></div>
+    <div style="display:flex;align-items:center;gap:13px;padding:15px 16px;cursor:pointer" style-hover="background:#f5f8ff">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#33415c" stroke-width="1.9" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4-3 7.5-7 9-4-1.5-7-5-7-9V6z" /></svg>
+      <span style="flex:1;font-size:16px;color:#101a33">Terms of use</span>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#b3bccd" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 4 8 8-8 8" /></svg>
+    </div>
+  </div>
+
+  <button type="button" onClick="{{ go.onboard }}" style="margin-top:24px;width:100%;height:54px;border:none;border-radius:18px;background:#fdeaea;color:#d1372a;font-size:16px;font-weight:650;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px" style-hover="background:#fadede">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d1372a" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h5v16h-5" /><path d="M10 8l-4 4 4 4M6 12h9" /></svg>
+    Sign out
+  </button>
+</div>
+</sc-if>
+
+</x-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:520,&quot;height&quot;:980},&quot;startScreen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Onboarding&quot;,&quot;Home&quot;,&quot;Practice&quot;,&quot;Settings&quot;],&quot;default&quot;:&quot;Onboarding&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Prototype&quot;}}">
+const CATS = {
+  general: { name: 'Interview (general)', tag: 'Self-introduction', qs: [
+    ['Self-introduction', 'Tell me about yourself. Give me a short self-introduction.'],
+    ['Motivation', 'Why do you want to work with us?'],
+    ['Strengths', 'What are your two strongest skills, and how did you build them?'],
+    ['Teamwork', 'Describe a time you disagreed with a colleague. What did you do?'],
+    ['Pressure', 'How do you keep working well when a deadline is tight?'],
+    ['Mistakes', 'Tell me about a mistake you made at work and what you learned.'],
+    ['Experience', 'Walk me through your last job, day to day.'],
+    ['Goals', 'Where would you like to be in three years?'],
+    ['Availability', 'When can you start, and what shifts can you work?'],
+    ['Closing', 'Is there anything you would like to ask us?'],
+  ]},
+  computer: { name: 'Computer', tag: 'Office software', qs: [
+    ['Office software', 'Which programs do you use most, and what do you do in them?'],
+    ['Spreadsheets', 'How would you find and remove duplicate rows in a spreadsheet?'],
+    ['Files', 'How do you organise and back up your work files?'],
+    ['Email', 'How do you handle an email attachment you were not expecting?'],
+    ['Hardware', 'A computer will not start. What do you check first?'],
+    ['Network', 'The internet is down for one desk only. How do you find the fault?'],
+    ['Security', 'What makes a password strong, and how do you keep it safe?'],
+    ['Support', 'Explain a technical problem to someone who is not technical.'],
+  ]},
+  cnc: { name: 'CNC machining', tag: 'Machine setting', qs: [
+    ['Machine setting', 'Walk me through setting up a machine for a new part.'],
+    ['Programs', 'How do you check a program before you run the first piece?'],
+    ['Tooling', 'How do you decide when a tool needs changing?'],
+    ['Measuring', 'Which measuring instruments do you use, and how often do you check them?'],
+    ['Tolerances', 'A part is 0.05 mm out of tolerance. What do you do?'],
+    ['Materials', 'How do your settings change between steel and aluminium?'],
+    ['Safety', 'What safety checks do you make before starting a cycle?'],
+    ['Maintenance', 'What daily maintenance do you do on your machine?'],
+  ]},
+  electrician: { name: 'Electrician', tag: 'Wiring', qs: [
+    ['Wiring', 'Describe how you would wire a new socket circuit.'],
+    ['Fault finding', 'A circuit breaker keeps tripping. How do you find the cause?'],
+    ['Safety', 'What is your process for making a circuit safe to work on?'],
+    ['Testing', 'Which tests do you run before energising an installation?'],
+    ['Regulations', 'How do you keep up with regulations and standards?'],
+    ['Reading drawings', 'How do you work from an electrical drawing on site?'],
+    ['Tools', 'Which test instruments do you own and use daily?'],
+    ['Customers', 'How do you explain a repair and its cost to a customer?'],
+  ]},
+  automobile: { name: 'Automobile', tag: 'Diagnosis', qs: [
+    ['Diagnosis', 'A customer reports a noise when braking. How do you diagnose it?'],
+    ['Engine', 'Describe a full engine service, step by step.'],
+    ['Brakes', 'How do you check brake pads and discs for wear?'],
+    ['Electrics', 'How do you test a battery and charging system?'],
+    ['Diagnostics', 'How do you use fault codes without replacing parts blindly?'],
+    ['Suspension', 'What do you look for on a suspension inspection?'],
+    ['Safety', 'What are your safety rules when working under a lifted vehicle?'],
+    ['Customers', 'How do you explain an expensive repair to a customer?'],
+  ]},
+  evehicle: { name: 'E-vehicle', tag: 'HV safety', qs: [
+    ['HV safety', 'What steps do you take before working on a high-voltage system?'],
+    ['Battery', 'How do you check the state of health of a traction battery?'],
+    ['Charging', 'A vehicle will not accept a charge. How do you find the fault?'],
+    ['Motors', 'Explain how an electric drive motor is cooled.'],
+    ['Diagnostics', 'Which tools do you use to read high-voltage system data?'],
+    ['Thermal', 'What are the signs of a thermal problem in a battery pack?'],
+    ['Regulations', 'What qualifications are needed to work on high-voltage systems?'],
+    ['Customers', 'How do you advise a customer on charging habits and range?'],
+  ]},
+};
+
+class Component extends DCLogic {
+  state = { screen: null, tab: 'home', cat: 'general', qi: 0, answer: '', scored: false, score: 5.8, spoke: false, done: 5 };
+
+  screen() {
+    if (this.state.screen) return this.state.screen;
+    const s = (this.props.startScreen || 'Onboarding').toLowerCase();
+    if (s.indexOf('home') === 0) return 'home';
+    if (s.indexOf('practice') === 0) return 'practice';
+    if (s.indexOf('settings') === 0) return 'settings';
+    return 'onboard';
+  }
+
+  set(patch) { this.setState(patch); }
+
+  grade(text) {
+    const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+    const sentences = (text.match(/[.!?]/g) || []).length;
+    const raw = 3.2 + Math.min(words, 60) * 0.075 + Math.min(sentences, 4) * 0.35;
+    return { words, score: Math.max(2.5, Math.min(9.8, Math.round(raw * 10) / 10)) };
+  }
+
+  renderVals() {
+    const st = this.state;
+    const screen = this.screen();
+    const cat = CATS[st.cat] || CATS.general;
+    const total = cat.qs.length;
+    const q = cat.qs[st.qi % total];
+    const g = this.grade(st.answer);
+    const score = st.scored ? st.score : g.score;
+    const m1 = Math.max(2.5, Math.min(9.9, Math.round((score - 0.4) * 10) / 10));
+    const m2 = Math.max(3, Math.min(10, Math.round((score + 1.6) * 10) / 10));
+    const goTo = (s) => () => this.set({ screen: s });
+
+    return {
+      deviceW: 402,
+      deviceH: 874,
+      isOnboard: screen === 'onboard',
+      isHome: screen === 'home',
+      isPractice: screen === 'practice',
+      isSettings: screen === 'settings',
+      go: { onboard: goTo('onboard'), home: goTo('home'), settings: goTo('settings') },
+      tab: {
+        home: () => this.set({ screen: 'home', tab: 'home' }),
+        practice: () => this.set({ screen: 'home', tab: 'practice' }),
+      },
+      tabHome: st.tab !== 'practice',
+      tabPractice: st.tab === 'practice',
+      pick: Object.keys(CATS).reduce((acc, k) => {
+        acc[k] = () => this.set({ screen: 'practice', tab: 'practice', cat: k, qi: 0, answer: '', scored: false });
+        return acc;
+      }, {}),
+      catName: cat.name,
+      qTag: q[0],
+      question: q[1],
+      showIntro: st.qi === 0 && st.cat === 'general',
+      progress: (st.qi + 1) + '/' + total,
+      answer: st.answer,
+      onAnswer: (e) => this.set({ answer: e.target.value, scored: false }),
+      clear: () => this.set({ answer: '', scored: false }),
+      hear: () => this.set({ spoke: !st.spoke }),
+      hearLabel: st.spoke ? 'Playing…' : 'Hear it again',
+      another: () => this.set({ qi: (st.qi + 1) % total, answer: '', scored: false }),
+      nextLabel: st.scored ? 'Next question' : 'Submit answer',
+      next: () => {
+        if (!st.scored) {
+          if (!st.answer.trim()) return;
+          this.set({ scored: true, score: g.score, done: st.done + 1 });
+        } else {
+          this.set({ qi: (st.qi + 1) % total, answer: '', scored: false });
+        }
+      },
+      scored: st.scored,
+      score: score.toFixed(1),
+      scoreMeta: q[0] + ' · ' + g.words + ' words · ' + Math.round(Math.min(95, 12 + g.words * 2)) + '% of key points',
+      ringDash: (Math.round(score / 10 * 169.6 * 10) / 10) + ' 169.6',
+      m1: m1.toFixed(1),
+      m2: m2.toFixed(1),
+      bar1: Math.round(m1 * 10) + '%',
+      bar2: Math.round(m2 * 10) + '%',
+      m1note: g.words < 25 ? 'You can be understood, but add a little more detail and use fewer filler words.' : 'Clear and easy to follow. Keep the pace steady and pause between points.',
+      m2note: 'Every sentence is complete and well formed.',
+      answered: st.done,
+      avg: '6.3',
+    };
+  }
+}
+</script>
+</body>
+</html>

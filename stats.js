@@ -31,6 +31,11 @@ const Stats = (function () {
 
   function mean(a) { return a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0; }
 
+  /* પટ્ટીનો રંગ લખાણના રંગ કરતાં થોડો ઘાટો — ડિઝાઇન એમ જ કરે છે */
+  function barFor(n) {
+    return n >= 7.5 ? "var(--goodbar)" : n >= 5 ? "var(--midbar)" : "var(--lowbar)";
+  }
+
   /* સમય વાંચી શકાય તેવો — એક કલાકથી વધુ હોય તો દશાંશ કલાકમાં */
   function fmtDur(min) {
     if (!min) return "—";
@@ -60,6 +65,7 @@ const Stats = (function () {
     const wkKeys = Object.keys(wk);
     const weekAvgMin = wkKeys.length ? mean(wkKeys.map(k => wk[k])) / 60 : 0;
     const thisWeekMin = (wk[startOfWeek(Date.now())] || 0) / 60;
+    const lastWeekMin = (wk[startOfWeek(Date.now() - 7 * DAY)] || 0) / 60;
 
     // સળંગ કેટલા દિવસ પ્રેક્ટિસ કરી — સમય નહીં, જવાબ ગણીએ
     const seen = {};
@@ -100,7 +106,7 @@ const Stats = (function () {
       hist: hist, n: hist.length, timedN: timed.length,
       avg: mean(hist.map(e => e.overall)),
       hours: totalSecs / 3600, days: days,
-      weekAvgMin: weekAvgMin, thisWeekMin: thisWeekMin,
+      weekAvgMin: weekAvgMin, thisWeekMin: thisWeekMin, lastWeekMin: lastWeekMin,
       streak: streak, crit: crit, courses: courses, byMode: byMode,
       trend: trend, delta: delta
     };
@@ -113,14 +119,26 @@ const Stats = (function () {
            '</div><div class="k">' + esc(k) + "</div></div>";
   }
 
+  /* પહેલી પટ્ટી ડિઝાઇન પ્રમાણે: જવાબ · સરેરાશ · સૌથી નબળો માપદંડ.
+     ત્રીજા ખાનામાં આંકડો નહીં, ચિહ્ન અને માપદંડનું નામ આવે છે. */
   function panels(s) {
+    const weak = s.crit.slice().sort((a, b) => a.v - b.v)[0];
+    const weakCell =
+      '<div class="sc">' +
+        '<svg class="svi" aria-hidden="true" style="width:20px;height:20px;margin:0 auto;color:' +
+          (weak ? colorFor(weak.v) : "var(--accent)") + '"><use href="#i-chart"/></svg>' +
+        '<div style="font-size:12px;font-weight:650;margin-top:3px">' +
+          esc(weak ? weak.label : "—") + "</div>" +
+        '<div style="font-size:11px;color:var(--muted)">' + esc(t("st.weak")) + "</div>" +
+      "</div>";
+
     return '<div class="statpanel">' +
         cell(s.n, t("st.answered")) +
         cell(s.avg ? '<span style="color:' + colorFor(s.avg) + '">' + s.avg.toFixed(1) + "</span>" : "—", t("st.avg")) +
-        cell(s.hours ? s.hours.toFixed(1) : "—", t("st.hours")) +
+        weakCell +
       "</div>" +
-      '<div class="statpanel" style="margin-top:10px">' +
-        cell(esc(fmtDur(s.thisWeekMin)), t("stats.thisWeek"), "sm") +
+      '<div class="statpanel" style="margin-top:12px">' +
+        cell(s.hours ? s.hours.toFixed(1) : "—", t("st.hours")) +
         cell(esc(fmtDur(s.weekAvgMin)), t("stats.weekAvg"), "sm") +
         cell(s.streak || "—", t("st.streakLab")) +
       "</div>";
@@ -164,50 +182,93 @@ const Stats = (function () {
     const dots = vals.map((v, i) =>
       '<circle class="dt" cx="' + (P + i * step).toFixed(1) + '" cy="' + y(v).toFixed(1) + '" r="2.6"/>').join("");
 
+    /* ભરણ સીધું rgba થી. CSS માં fill:url(#gradient) કેટલાક સંદર્ભમાં
+       ઉકેલાતું નથી અને આખો ભાગ કાળો દેખાઈ જાય છે. */
     return '<svg class="spark" viewBox="0 0 ' + W + " " + H + '" aria-hidden="true">' +
-      '<defs><linearGradient id="sparkg" x1="0" y1="0" x2="0" y2="1">' +
-        '<stop offset="0" stop-color="' + "#2f4fd0" + '" stop-opacity=".45"/>' +
-        '<stop offset="1" stop-color="#2f4fd0" stop-opacity="0"/>' +
-      "</linearGradient></defs>" +
       '<polygon class="ar" points="' + P + "," + (H - P) + " " + pts.join(" ") + " " + (W - P) + "," + (H - P) + '"/>' +
       '<polyline class="ln" points="' + pts.join(" ") + '"/>' + dots + "</svg>";
   }
 
   /* દરરોજ કેટલો સમય — સાત ઊભી પટ્ટી */
   function timeCard(s) {
-    let body;
+    let body, foot;
+
     if (!s.timedN) {
       body = '<p class="note">' + esc(t("stats.noTime")) + "</p>";
+      foot = "";
     } else {
-      const top = Math.max.apply(null, s.days.map(d => d.min).concat([5]));
+      // ડિઝાઇનમાં પટ્ટીનો રંગ ઊંચાઈ પ્રમાણે આછાથી ઘાટો થાય છે અને
+      // સૌથી ઊંચો દિવસ પૂરો accent રંગનો હોય છે
+      const top = Math.max.apply(null, s.days.map(d => d.min));
+      const scale = Math.max(top, 5);
       body = '<div class="chart">' + s.days.map(d => {
-        const pct = Math.max(3, Math.round(d.min / top * 100));
-        const lab = DAY_KEYS[new Date(d.ts).getDay()];
-        return '<div class="cb' + (d.min ? "" : " zero") + (d.today ? " today" : "") + '">' +
-          '<span class="cbv">' + (d.min ? Math.max(1, Math.round(d.min)) : "") + "</span>" +
+        const pct = d.min ? Math.max(6, Math.round(d.min / scale * 100)) : 6;
+        const r = top ? d.min / top : 0;
+        let cls = "cb";
+        if (!d.min) cls += " zero";
+        else if (r > 0.999) cls += " top";
+        else if (r >= 0.66) cls += " q3";
+        else if (r >= 0.33) cls += " q2";
+        return '<div class="' + cls + '">' +
           '<i style="height:' + pct + '%"></i>' +
-          "<em>" + esc(t(lab)) + "</em></div>";
+          "<em>" + esc(t(DAY_KEYS[new Date(d.ts).getDay()])) + "</em></div>";
       }).join("") + "</div>";
+      foot = '<div class="cfoot">' +
+        esc(t("stats.weekFoot", { n: s.n, dur: fmtDur(s.thisWeekMin) })) + "</div>";
     }
-    return '<div class="card"><p class="ctitle">' + esc(t("stats.time")) + "</p>" +
-      '<p class="csub">' + esc(t("stats.timeD")) + "</p>" + body +
-      '<div class="mrow">' +
-        '<div><div class="k">' + esc(t("stats.thisWeek")) + '</div><div class="v">' + esc(fmtDur(s.thisWeekMin)) + "</div></div>" +
-        '<div><div class="k">' + esc(t("stats.weekAvg")) + '</div><div class="v">' + esc(fmtDur(s.weekAvgMin)) + "</div></div>" +
-      "</div></div>";
+
+    // ગયા અઠવાડિયા સામે કેટલો ફેર — ડિઝાઇનમાં જમણી ટોચે આ લખાણ છે
+    let delta = "";
+    if (s.timedN && s.lastWeekMin > 0) {
+      const d = s.thisWeekMin - s.lastWeekMin;
+      const cls = d >= 1 ? "up" : d <= -1 ? "dn" : "flat";
+      delta = '<span class="cdelta ' + cls + '">' +
+        esc(t("stats.vsLast", { d: (d > 0 ? "+" : "") + Math.round(d) })) + "</span>";
+    }
+
+    return '<div class="card">' +
+      '<div class="chead"><p class="ctitle">' + esc(t("stats.thisWeek")) + "</p>" + delta + "</div>" +
+      body + foot + "</div>";
+  }
+
+  /* તાજા જવાબ — ગુણનું ચોકઠું, વિભાગ, કોર્સ અને દિવસ */
+  function recentCard(s) {
+    const rows = s.hist.slice().reverse().slice(0, 3).map(e => {
+      const c = getCourse(e.course);
+      const tint = e.overall >= 7.5 ? "var(--goodtint)" : e.overall >= 5 ? "var(--midtint)" : "var(--lowtint)";
+      return '<div class="ra">' +
+        '<span class="rs" style="background:' + tint + ";color:" + colorFor(e.overall) + '">' +
+          e.overall.toFixed(1) + "</span>" +
+        '<span class="rt"><b>' + esc(tCat(e.cat)) + "</b><i>" +
+          esc((c ? tCourse(c, "name") : e.course) + " · " + relDay(e.ts)) + "</i></span>" +
+      "</div>";
+    }).join("");
+    return '<h2 class="sec">' + esc(t("stats.recent")) + "</h2>" +
+      '<div class="card tight">' + rows + "</div>";
+  }
+
+  /* «આજે», «ગઈકાલે», «૩ દિવસ પહેલાં» */
+  function relDay(ts) {
+    const days = Math.round((startOfDay(Date.now()) - startOfDay(ts)) / DAY);
+    if (days <= 0) return t("rel.today");
+    if (days === 1) return t("rel.yesterday");
+    return t("rel.days", { n: days });
   }
 
   /* માપદંડવાર — પરિણામ કાર્ડ જેવી જ પટ્ટીઓ, જેથી ઓળખીતું લાગે */
   function critCard(s) {
     if (!s.crit.length) return "";
+    /* ડિઝાઇનમાં નામ અને ગુણ એક લીટીમાં ઉપર, પટ્ટી નીચે આખી પહોળી —
+       પરિણામ કાર્ડની પટ્ટીઓથી અલગ ઘાટ છે. */
     const rows = s.crit.slice().sort((a, b) => b.v - a.v).map(c =>
-      '<div class="crit tight"><div class="cline">' +
-        '<span class="cname">' + esc(c.label) + "</span>" +
-        '<span class="bar2"><i style="width:' + (c.v * 10).toFixed(0) + "%;background:" + colorFor(c.v) + '"></i></span>' +
-        '<span class="cnum" style="color:' + colorFor(c.v) + '">' + c.v.toFixed(1) + "</span>" +
-      "</div></div>").join("");
-    return '<div class="card"><p class="ctitle">' + esc(t("stats.byCrit")) + "</p>" +
-      '<p class="csub">' + esc(t("stats.byCritD")) + "</p>" + rows + "</div>";
+      '<div class="skill"><div class="sl">' +
+        '<span class="sn">' + esc(c.label) + "</span>" +
+        '<span class="sv" style="color:' + colorFor(c.v) + '">' + c.v.toFixed(1) + "</span>" +
+      "</div>" +
+      '<div class="st"><i style="width:' + (c.v * 10).toFixed(0) + "%;background:" + barFor(c.v) + '"></i></div>' +
+      "</div>").join("");
+    return '<h2 class="sec">' + esc(t("stats.byCrit")) + "</h2>" +
+      '<div class="card"><div class="skills">' + rows + "</div></div>";
   }
 
   /* પ્રશ્નના પ્રકાર પ્રમાણે — સામાન્ય ઇન્ટરવ્યુ અને તકનીકી */
@@ -216,8 +277,9 @@ const Stats = (function () {
       cell(m.n ? '<span style="color:' + colorFor(m.avg) + '">' + m.avg.toFixed(1) + "</span>" : "—",
            t(m.mode === "interview" ? "stats.modeInterview" : "stats.modeTech") +
            (m.n ? " · " + t("stats.nAns", { n: m.n }) : ""))).join("");
+    // બે જ ખાનાં છે, તેથી બે કૉલમની પટ્ટી — નહીં તો ત્રીજું ખાલી દેખાય
     return '<div class="card"><p class="ctitle">' + esc(t("stats.byMode")) + "</p>" +
-      '<p class="csub">' + esc(t("stats.byModeD")) + '</p><div class="statpanel">' + c + "</div></div>";
+      '<p class="csub">' + esc(t("stats.byModeD")) + '</p><div class="statpanel two">' + c + "</div></div>";
   }
 
   /* કોર્સવાર — શરૂ કરેલા કોર્સ પહેલાં, પછી બાકીના */
@@ -303,8 +365,16 @@ const Stats = (function () {
       if (g && onPractise) g.addEventListener("click", onPractise);
       return s;
     }
-    el.innerHTML = panels(s) + overallCard(s) + timeCard(s) +
-                   critCard(s) + modeCard(s) + courseCard(s) + recCard(s);
+    /* ડિઝાઇનનો ક્રમ: આંકડા → આ અઠવાડિયે → તમારી કુશળતા → તાજા જવાબ,
+       પછી અગાઉથી હતાં તે વધારાનાં કાર્ડ, અને છેલ્લે «પ્રેક્ટિસ ચાલુ રાખો». */
+    el.innerHTML = panels(s) + timeCard(s) + critCard(s) + recentCard(s) +
+                   overallCard(s) + modeCard(s) + courseCard(s) + recCard(s) +
+                   '<button class="act" id="statsGo" style="margin-top:4px">' +
+                     '<span>' + esc(t("btn.keepPractising")) + "</span>" +
+                     '<svg class="svi xs" aria-hidden="true"><use href="#i-arrow"/></svg>' +
+                   "</button>";
+    const g = document.getElementById("statsGo");
+    if (g && onPractise) g.addEventListener("click", onPractise);
     return s;
   }
 

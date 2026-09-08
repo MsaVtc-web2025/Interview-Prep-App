@@ -10,127 +10,167 @@
 <style>
 :root{
   color-scheme: light;
-  --bg:#eef2fa; --bg2:#f6f8fd; --card:#fff; --ink:#0f1729; --muted:#697386;
-  --line:#e6eaf3; --line2:#eef1f7;
-  --accent:#2f4fd0; --accent-d:#2440a8; --soft:#e9eefc;
-  --good:#1f8a4c; --mid:#c07d0a; --low:#c0392b; --rec:#d64541;
-  --sh:0 1px 2px rgba(16,24,40,.04), 0 0 0 1px rgba(16,24,40,.045);
-  --shc:0 2px 12px rgba(16,24,40,.055), 0 0 0 1px rgba(16,24,40,.035);
-  --sh2:0 12px 34px rgba(16,24,40,.12), 0 0 0 1px rgba(16,24,40,.04);
-  --r:16px; --rs:12px; --rl:20px;
+  /* રંગ Claude Design ના «Interview Prep App» કૅન્વાસ પરથી જ લીધા છે */
+  --bg:#eef3fd; --card:rgba(255,255,255,.82); --cardsolid:#fff;
+  --cardline:rgba(255,255,255,.92);
+  --ink:#101a33; --muted:#6c7c99; --lead:#66779a; --lab:#5b6b8c;
+  --faint:#8b98b4; --chev:#b3bccd; --grp:#7d8aa5; --icon:#33415c;
+  --line:#eef1f7; --hair:rgba(20,40,90,.08);
+  --accent:#2f5fe0; --accent-d:#2447c4; --soft:#e6ecfe;
+  --grad:linear-gradient(180deg,#3f6ce6,#2447c4);
+  --good:#12915f; --goodbar:#22a06b; --goodtint:#e2f5ec;
+  --mid:#c07d09;  --midbar:#e59a12;  --midtint:#fdf1dc;
+  --low:#c0392b;  --lowbar:#d1372a;  --lowtint:#fdeaea;
+  --rec:#d1372a;
+  --sh:0 4px 12px rgba(28,54,120,.08);
+  --shc:0 8px 22px rgba(28,54,120,.07);
+  --shs:0 6px 18px rgba(28,54,120,.06);
+  --shb:0 10px 22px rgba(36,71,196,.28);
+  --r:22px; --rs:14px; --rl:24px; --rb:18px;
   /* ઇન્ટરફેસનો ફોન્ટ — ભાષા બદલાય ત્યારે i18n.js આ બદલે છે.
      બધા ફોન્ટ સિસ્ટમના છે, તેથી એપ ઓફલાઇન પણ બરાબર દેખાય. */
-  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Arial,sans-serif;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{overscroll-behavior-y:none}
+html{background:var(--bg)}
 body{
   margin:0;color:var(--ink);
-  background:var(--bg);
-  background-image:linear-gradient(180deg,#f4f7fd 0,var(--bg) 320px);
-  background-repeat:no-repeat;background-attachment:fixed;
+  background:linear-gradient(180deg,#eef3fd 0%,#f8fbff 55%,#eff4fe 100%) no-repeat;
+  background-attachment:fixed;
   font-family:var(--font);
   font-size:15px;line-height:1.6;
 }
-.lat{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+.lat{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Arial,sans-serif}
 /* ભાષાંતર બાકી હોય એવું ગુજરાતી લખાણ — ઇન્ટરફેસ બીજી ભાષામાં હોય ત્યારે પણ સાચો ફોન્ટ */
 .guscript{font-family:"Noto Sans Gujarati","Shruti",sans-serif}
-.wrap{max-width:600px;margin:0 auto;padding:0 16px 44px}
+.wrap{max-width:600px;margin:0 auto;padding:0 20px 44px}
 [hidden]{display:none !important}
 
 /* ---------- લીટીથી દોરેલાં ચિહ્ન (SVG સ્પ્રાઇટ) ---------- */
 .sprite{position:absolute;width:0;height:0;overflow:hidden}
 .svi{
   width:22px;height:22px;display:block;flex:none;
-  fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round
+  fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round
 }
-.svi.sm{width:18px;height:18px}
+.svi.sm{width:15px;height:15px;stroke-width:2.4}
 .svi.xs{width:15px;height:15px;stroke-width:2}
 
 /* ---------- લોગો ---------- */
 .logo{
-  width:44px;height:44px;border-radius:13px;flex:none;
-  background:linear-gradient(145deg,#5b7cf5,#2f4fd0 65%,#2a3fb0);
-  color:#fff;display:flex;align-items:center;justify-content:center;
-  box-shadow:0 4px 14px rgba(47,79,208,.32)
+  width:44px;height:44px;border-radius:14px;flex:none;
+  background:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.95);
+  box-shadow:0 8px 20px rgba(40,70,150,.14);
+  color:var(--accent);display:flex;align-items:center;justify-content:center
 }
-.logo .svi{width:24px;height:24px;stroke-width:1.9}
-.logo.lg{width:78px;height:78px;border-radius:22px}
-.logo.lg .svi{width:40px;height:40px}
-.logo.sm{width:32px;height:32px;border-radius:10px}
-.logo.sm .svi{width:19px;height:19px}
+.logo .svi{width:26px;height:26px;stroke-width:4.5;stroke-linejoin:round}
+/* બે કમાનના પોતાના રંગ — currentColor થી નહીં */
+.logo .svi .a1{stroke:#2f5fe0}
+.logo .svi .a2{stroke:#6f8ef5}
+.logo.lg{width:96px;height:96px;border-radius:28px;box-shadow:0 14px 34px rgba(40,70,150,.16)}
+.logo.lg .svi{width:52px;height:52px}
+.logo.sm{width:30px;height:30px;border-radius:0;background:none;border:0;box-shadow:none}
+.logo.sm .svi{width:30px;height:30px;stroke-width:5}
 
 /* ---------- ટોપ બાર ---------- */
 .bar{
   display:flex;align-items:center;gap:11px;
-  padding:12px 16px;padding-top:calc(12px + env(safe-area-inset-top));
-  position:sticky;top:0;z-index:30;background:var(--bg)
+  padding:16px 20px 10px;padding-top:calc(16px + env(safe-area-inset-top));
+  position:sticky;top:0;z-index:30;background:#eef3fd
 }
-.bar.solid{box-shadow:0 1px 0 var(--line)}
-.bar h1{margin:0;font-size:16.5px;font-weight:700;flex:1;min-width:0;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar.solid{background:#eff4fe}
+.bar h1{margin:0;font-size:17px;font-weight:700;flex:1;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink)}
 .bar h1.mid{text-align:center}
+/* ગોળ કાચ જેવું બટન — ડિઝાઇનમાં પાછળ જવાનું બટન આવું છે */
 .ib{
-  border:0;background:transparent;padding:9px;flex:none;
-  border-radius:11px;color:var(--ink);cursor:pointer;min-width:42px;min-height:42px;
+  width:40px;height:40px;flex:none;padding:0;cursor:pointer;
+  border-radius:20px;border:1px solid rgba(255,255,255,.9);
+  background:rgba(255,255,255,.85);box-shadow:var(--sh);color:var(--icon);
   display:flex;align-items:center;justify-content:center
 }
-.ib:active{background:var(--line)}
+.ib:active{background:#fff}
+.ib .svi{width:16px;height:16px;stroke-width:2.6}
 .pill{
-  font-size:12px;font-weight:700;color:var(--accent);background:var(--soft);
-  padding:6px 11px;border-radius:20px;flex:none
+  font-size:13px;font-weight:700;color:var(--accent-d);background:var(--soft);
+  padding:7px 13px;border-radius:16px;flex:none
 }
 
 /* ---------- કાર્ડ અને વિભાગ ---------- */
-.card{background:var(--card);border-radius:var(--r);padding:17px;margin-bottom:12px;box-shadow:var(--shc)}
-.card.flat{background:transparent;box-shadow:none;padding:0}
-h2.sec{font-size:15px;margin:24px 0 11px;color:var(--ink);font-weight:700;letter-spacing:-.1px}
+.card{
+  background:var(--card);border:1px solid var(--cardline);border-radius:var(--r);
+  padding:16px;margin-bottom:14px;box-shadow:var(--shc)
+}
+.card.flat{background:transparent;box-shadow:none;border:0;padding:0}
+/* આ કાર્ડમાં padding નથી — અંદરની હાર પોતે padding રાખે છે */
+.card.tight{padding:0;overflow:hidden}
+h2.sec{font-size:17px;margin:24px 0 10px;color:var(--ink);font-weight:700}
 
 /* પેસ્ટલ ચોકઠામાં ઇમોજી — કોર્સ અને સૂચનાની યાદી માટે */
 .chip{
-  width:42px;height:42px;border-radius:13px;flex:none;
+  width:38px;height:38px;border-radius:12px;flex:none;
   display:flex;align-items:center;justify-content:center;
-  font-size:21px;line-height:1;background:var(--soft)
+  font-size:19px;line-height:1;background:var(--soft)
 }
-.chip.t1{background:#fceee3} .chip.t2{background:#e6eeff} .chip.t3{background:#ebeef4}
-.chip.t4{background:#fff3d8} .chip.t5{background:#efe9fe} .chip.t6{background:#e3f5ea}
-.chip.t7{background:#e8ecfd} .chip.t8{background:#ffe9e0}
+.chip.t1{background:#fdece2} .chip.t2{background:#e4eefe} .chip.t3{background:#eceff4}
+.chip.t4{background:#fdf1dc} .chip.t5{background:#e7e9fb} .chip.t6{background:#e2f5ec}
+.chip.t7{background:#e6ecfe} .chip.t8{background:#fdece2}
 .chip.sm{width:34px;height:34px;border-radius:11px;font-size:16px}
 
 /* ---------- પહેલી સ્ક્રીન — એપનો પરિચય ---------- */
 #scSplash{
+  position:relative;overflow:hidden;
   min-height:100vh;min-height:100dvh;
-  background:linear-gradient(168deg,#e9f0ff 0%,#f3efff 46%,#eaf1ff 100%)
+  background:linear-gradient(165deg,#e6edfc 0%,#f5f9ff 42%,#e9f0fd 100%)
+}
+/* બે ધૂંધળાં વર્તુળ — ડિઝાઇનની સજાવટ */
+#scSplash::before,#scSplash::after{
+  content:"";position:absolute;border-radius:50%;pointer-events:none
+}
+#scSplash::before{
+  top:-80px;left:-60px;width:340px;height:340px;
+  background:radial-gradient(circle,rgba(150,180,255,.55),rgba(150,180,255,0) 70%)
+}
+#scSplash::after{
+  bottom:120px;right:-90px;width:320px;height:320px;
+  background:radial-gradient(circle,rgba(120,205,255,.4),rgba(120,205,255,0) 70%)
 }
 .splashwrap{
+  position:relative;z-index:1;
   display:flex;flex-direction:column;
   min-height:100vh;min-height:100dvh;
-  padding-top:calc(34px + env(safe-area-inset-top))
+  padding:0 30px calc(46px + env(safe-area-inset-bottom));
+  padding-top:calc(90px + env(safe-area-inset-top))
 }
-.splash h1{font-size:31px;font-weight:800;margin:30px 0 0;line-height:1.22;letter-spacing:-.6px}
-.splash .lead{font-size:17px;color:#4a5568;margin:11px 0 0;line-height:1.5}
-.feats{list-style:none;margin:34px 0 0;padding:0;display:flex;flex-direction:column;gap:16px}
-.feats li{display:flex;gap:13px;align-items:center}
-.feats b{display:block;font-size:15px;font-weight:700;line-height:1.35}
-.feats i{display:block;font-size:13px;color:var(--muted);font-style:normal;line-height:1.45}
+.splash h1{font-size:36px;font-weight:800;margin:34px 0 12px;line-height:1.05;letter-spacing:-.8px}
+.splash .lead{font-size:21px;color:var(--lab);margin:0;line-height:1.35;font-weight:500}
+.feats{list-style:none;margin:44px 0 0;padding:0;display:flex;flex-direction:column;gap:22px}
+.feats li{display:flex;gap:16px;align-items:center}
+.feats b{display:block;font-size:16px;font-weight:650;line-height:1.3;color:var(--ink)}
+.feats i{display:block;font-size:14px;color:var(--muted);font-style:normal;margin-top:2px}
 .li{
-  width:42px;height:42px;border-radius:13px;flex:none;
+  width:46px;height:46px;border-radius:15px;flex:none;
   display:flex;align-items:center;justify-content:center
 }
-.li.blue{background:#e6ecfd;color:#2f4fd0}
-.li.green{background:#e3f5ea;color:#1a7a44}
-.li.purple{background:#efe9fe;color:#6642cf}
-.li.gray{background:#ebeef4;color:#5a6474}
-.li.amber{background:#fff2d8;color:#9d6a08}
-.li.red{background:#fdeae7;color:#b8392c}
+.li .svi{stroke-width:2.2}
+.li.blue{background:#e6ecfe;color:var(--accent)}
+.li.green{background:#e2f5ec;color:#12915f}
+.li.purple{background:#ece6fe;color:#6446d8}
+.li.gray{background:#eceff4;color:#54627c}
+.li.amber{background:#fdf1dc;color:#d99205}
+.li.red{background:#fdeaea;color:var(--rec)}
 
 /* સ્ક્રીનની નીચે ચીપકેલું બટન — પરિચય અને સૂચના બંને સ્ક્રીન વાપરે છે */
 .startbar{
-  margin-top:auto;padding:26px 0 calc(10px + env(safe-area-inset-bottom));
-  position:sticky;bottom:0;display:flex;flex-direction:column;gap:4px
+  margin-top:auto;padding:44px 0 0;
+  display:flex;flex-direction:column;gap:18px
 }
-#scSplash .startbar{background:none}
-#scBrief .startbar{background:linear-gradient(to top,var(--bg) 58%,rgba(238,242,250,0))}
+#scBrief .startbar{
+  position:sticky;bottom:0;padding:22px 0 calc(6px + env(safe-area-inset-bottom));
+  background:linear-gradient(to top,#f4f8ff 58%,rgba(244,248,255,0))
+}
+/* પરિચયનું મોટું ગોળ બટન */
+.act.pill{height:60px;border-radius:30px;font-size:18px;box-shadow:0 12px 26px rgba(36,71,196,.34)}
 
 /* ---------- નામ પૂછવાની સ્ક્રીન ---------- */
 .wel{
@@ -138,123 +178,131 @@ h2.sec{font-size:15px;margin:24px 0 11px;color:var(--ink);font-weight:700;letter
   min-height:calc(100vh - 40px);min-height:calc(100dvh - 40px);
   padding:28px 0 20px
 }
-.wel h1{font-size:26px;font-weight:800;margin:20px 0 0;line-height:1.26;letter-spacing:-.4px;text-wrap:balance}
-.wel .lead{font-size:14.5px;color:var(--muted);margin:10px 0 0;line-height:1.6}
-.wel .fld{margin-top:26px}
+.wel h1{font-size:34px;font-weight:800;margin:24px 0 0;line-height:1.08;letter-spacing:-.8px}
+.wel .lead{font-size:17px;color:var(--lead);margin:10px 0 0;line-height:1.4;font-weight:500}
+.wel .fld{margin-top:28px}
 .wel input{
-  width:100%;font-size:17px;padding:15px;border:1px solid var(--line);border-radius:var(--rs);
-  background:var(--card);color:var(--ink);font-family:var(--font);box-shadow:var(--sh)
+  width:100%;font-size:16px;padding:15px 14px;border:1px solid rgba(20,40,90,.12);
+  border-radius:var(--rs);background:#fbfcfe;color:var(--ink);font-family:var(--font)
 }
-.wel input:focus{outline:3px solid var(--soft);border-color:var(--accent)}
-.wel .why{font-size:12px;color:var(--muted);margin:11px 2px 0;line-height:1.55}
+.wel input:focus{outline:2px solid rgba(47,95,224,.35);outline-offset:1px;border-color:var(--accent)}
+.wel .why{font-size:12.5px;color:var(--muted);margin:11px 2px 0;line-height:1.5}
 .wel .or{
   display:flex;align-items:center;gap:12px;margin:20px 0;
-  font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px
+  font-size:11.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.5px
 }
 .wel .or::before,.wel .or::after{content:"";height:1px;background:var(--line);flex:1}
 #gbtn{display:flex;justify-content:center;min-height:44px}
 
-/* ---------- હોમ સ્ક્રીન ---------- */
-.hero{padding:4px 0 18px}
-.hero .big{font-size:27px;font-weight:800;line-height:1.24;margin:0;letter-spacing:-.5px;text-wrap:balance}
-.hero .lead{font-size:13.5px;color:var(--muted);margin:7px 0 0;line-height:1.5}
+/* ---------- હોમ અને પ્રેક્ટિસ ---------- */
+.hero{padding:0 0 20px}
+.hero .big{font-size:34px;font-weight:800;line-height:1.08;margin:16px 0 6px;letter-spacing:-.8px}
+.hero .lead{font-size:17px;color:var(--lead);margin:0;line-height:1.35;font-weight:500}
 
-/* ત્રણ આંકડાની પટ્ટી — એક જ કાર્ડમાં, પાતળી લીટીથી અલગ */
+/* ત્રણ આંકડાની પટ્ટી — વચલું ખાનું પાતળી લીટીથી અલગ */
 .statpanel{
-  display:flex;background:var(--card);border-radius:var(--r);
-  box-shadow:var(--shc);overflow:hidden
+  display:grid;grid-template-columns:1fr 1fr 1fr;
+  background:var(--card);border:1px solid var(--cardline);
+  border-radius:var(--r);box-shadow:var(--shc);overflow:hidden
 }
-.statpanel .sc{
-  flex:1;min-width:0;padding:14px 8px;text-align:center;border-left:1px solid var(--line2)
+.statpanel .sc{padding:16px 8px;text-align:center;min-width:0}
+.statpanel .sc:first-child{
+  background:linear-gradient(180deg,rgba(226,245,236,.75),rgba(226,245,236,.25))
 }
-.statpanel .sc:first-child{border-left:0;background:linear-gradient(180deg,#f4f8ff,#fff)}
-.statpanel .v{font-size:23px;font-weight:800;line-height:1.2;letter-spacing:-.5px}
-.statpanel .v.sm{font-size:13.5px;line-height:1.35;padding:5px 0 3px;font-weight:700}
-.statpanel .k{font-size:11px;color:var(--muted);margin-top:1px;line-height:1.35}
+.statpanel .sc:nth-child(2){
+  border-left:1px solid rgba(20,40,90,.07);border-right:1px solid rgba(20,40,90,.07)
+}
+.statpanel .sc:last-child{
+  background:linear-gradient(180deg,rgba(230,236,254,.8),rgba(230,236,254,.3))
+}
+.statpanel .v{font-size:24px;font-weight:750;line-height:1.15}
+/* લાંબું નામ (જેમ કે «Accuracy of the answer») ખાનામાં સમાય તે માટે નાનું */
+.statpanel .v.sm{font-size:12.5px;font-weight:650;line-height:1.25;padding:4px 0 2px}
+.statpanel .k{font-size:12px;color:var(--muted);margin-top:2px;line-height:1.3}
+/* ફક્ત બે ખાનાં હોય ત્યારે ત્રીજું ખાલી ન દેખાય */
+.statpanel.two{grid-template-columns:1fr 1fr}
+.statpanel.two .sc:nth-child(2){border-right:0}
+.statpanel.two .sc:last-child{background:linear-gradient(180deg,rgba(230,236,254,.8),rgba(230,236,254,.3))}
 
 /* કોર્સની ટાઇલ */
-.tiles{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .tile{
-  background:var(--card);border:0;border-radius:var(--r);padding:14px;
-  text-align:left;box-shadow:var(--shc);cursor:pointer;width:100%;
-  font:inherit;color:inherit;transition:transform .12s ease;
-  /* ઊભી હાર — જેથી છેલ્લી લીટી બંને ટાઇલમાં એક જ ઊંચાઈએ બેસે */
-  display:flex;flex-direction:column
+  background:var(--card);border:1px solid rgba(255,255,255,.9);border-radius:20px;
+  padding:14px;text-align:left;box-shadow:0 6px 18px rgba(28,54,120,.06);
+  cursor:pointer;width:100%;font:inherit;color:inherit;
+  display:flex;flex-direction:column;gap:6px;
+  transition:box-shadow .15s ease,transform .15s ease
 }
-.tile:active{transform:scale(.982)}
-.tile .nm{font-weight:700;font-size:14.5px;margin-top:11px;line-height:1.3}
-.tile .tg{font-size:11.5px;color:var(--muted);line-height:1.45;margin-top:4px}
-.tile .mt{font-size:11px;color:var(--accent);font-weight:700;margin-top:auto;padding-top:10px}
+.tile:active{box-shadow:0 10px 24px rgba(28,54,120,.13);transform:translateY(-1px)}
+.tile .chip{margin-bottom:2px}
+.tile .nm{font-weight:700;font-size:15.5px;line-height:1.25}
+.tile .tg{font-size:12.5px;color:var(--muted);line-height:1.35}
+.tile .mt{font-size:12.5px;color:var(--accent);font-weight:600;margin-top:auto;padding-top:2px}
 .tile .mt.done{color:var(--good)}
 
 /* ભાષા પસંદગી — હોમ સ્ક્રીનના તળિયે */
-.langbar{display:flex;align-items:center;gap:11px;margin:22px 0 4px}
-.langbar .cap{
-  font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.3px;
-  text-transform:uppercase;flex:none
+.langbar{display:flex;align-items:center;gap:11px;margin:24px 0 4px}
+.langbar .cap{font-size:12px;font-weight:600;color:var(--grp);flex:none}
+.langseg{
+  display:flex;gap:4px;background:rgba(255,255,255,.7);border:1px solid var(--cardline);
+  padding:4px;border-radius:16px;flex:1;box-shadow:var(--shs)
 }
-.langseg{display:flex;gap:4px;background:#e4e9f4;padding:4px;border-radius:13px;flex:1}
 .langseg button{
-  flex:1;border:0;background:transparent;padding:9px 4px;border-radius:10px;
-  font-size:13px;font-weight:700;color:var(--muted);font-family:var(--font)
+  flex:1;border:0;background:transparent;padding:9px 4px;border-radius:12px;
+  font-size:13px;font-weight:600;color:var(--faint);font-family:var(--font)
 }
 .langseg button[data-l="gu"]{font-family:"Noto Sans Gujarati","Shruti",sans-serif}
 .langseg button[data-l="hi"]{font-family:"Noto Sans Devanagari","Nirmala UI","Mangal",sans-serif}
-.langseg button.on{background:var(--card);color:var(--accent);box-shadow:var(--sh)}
+.langseg button.on{background:var(--soft);color:var(--accent-d);font-weight:650}
 
 /* ---------- સૂચના સ્ક્રીન — મૉક ઇન્ટરવ્યુ શરૂ કરતાં પહેલાં ---------- */
 .briefwrap{
   display:flex;flex-direction:column;padding-bottom:6px;
   min-height:calc(100vh - 120px);min-height:calc(100dvh - 120px)
 }
-.brief{padding:12px 0 0}
+.brief{padding:8px 0 0}
 .brief .eyebrow{
-  font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;
+  font-size:12px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;
   color:var(--accent);margin:20px 0 6px
 }
-.brief .nm{font-size:25px;font-weight:800;margin:0;line-height:1.24;letter-spacing:-.4px;text-wrap:balance}
-.brief .meta{font-size:13px;color:var(--muted);margin:7px 0 0}
-
-/* ચાર સૂચનાઓ — એક જ કાર્ડમાં, પાતળી લીટીથી અલગ */
+.brief .nm{font-size:30px;font-weight:800;margin:0;line-height:1.1;letter-spacing:-.7px}
+.brief .meta{font-size:14px;color:var(--muted);margin:8px 0 0}
 .steps{
-  list-style:none;margin:22px 0 0;padding:0;background:var(--card);
+  list-style:none;margin:22px 0 0;padding:0;
+  background:var(--card);border:1px solid var(--cardline);
   border-radius:var(--r);box-shadow:var(--shc);overflow:hidden
 }
 .steps li{
-  display:flex;gap:13px;align-items:center;padding:14px 15px;
-  border-top:1px solid var(--line2);font-size:14px;line-height:1.5
+  display:flex;gap:13px;align-items:center;padding:14px 16px;
+  border-top:1px solid var(--line);font-size:14px;line-height:1.45
 }
 .steps li:first-child{border-top:0}
 
 /* ---------- અવતાર — ઇન્ટરવ્યુ લેનારની વિડિયો-ટાઇલ ---------- */
-.stage{text-align:center;padding:14px 0 4px}
+.stage{text-align:center;padding:6px 0 4px}
 .avatar{width:150px;height:150px;margin:0 auto 22px;position:relative}
 .av-frame{
-  position:absolute;inset:0;border-radius:22px;overflow:hidden;background:var(--soft);
-  box-shadow:0 8px 26px rgba(16,24,40,.15),0 0 0 1px rgba(16,24,40,.05);
+  position:absolute;inset:0;border-radius:26px;overflow:hidden;background:var(--soft);
+  box-shadow:0 10px 26px rgba(28,54,120,.16),0 0 0 1px rgba(255,255,255,.9);
   transition:box-shadow .25s ease
 }
 .av-photo{width:100%;height:100%;object-fit:cover;display:block;transform-origin:center}
 .no-photo .av-photo{display:none}
 .av-fallback{display:none;position:absolute;inset:0}
 .no-photo .av-fallback{display:block}
-
-/* સાંભળતી વખતે ફરતાં વર્તુળ — ટાઇલની બહાર */
 .av-ring,.av-ring2{
-  position:absolute;inset:-7px;border-radius:28px;border:2.5px solid var(--rec);
+  position:absolute;inset:-7px;border-radius:32px;border:2.5px solid var(--rec);
   opacity:0;pointer-events:none
 }
 .is-listening .av-ring{animation:ping 1.7s ease-out infinite}
 .is-listening .av-ring2{animation:ping 1.7s ease-out .85s infinite}
 .is-speaking .av-photo{animation:breathe 2.1s ease-in-out infinite}
-.is-speaking .av-frame{box-shadow:0 8px 26px rgba(47,79,208,.32),0 0 0 2.5px var(--accent)}
-.is-listening .av-frame{box-shadow:0 8px 26px rgba(214,69,65,.24),0 0 0 2.5px var(--rec)}
-
-/* સ્થિતિનો બૅજ — ટાઇલની નીચેની કિનારે */
+.is-speaking .av-frame{box-shadow:0 10px 26px rgba(36,71,196,.3),0 0 0 2.5px var(--accent)}
+.is-listening .av-frame{box-shadow:0 10px 26px rgba(209,55,42,.24),0 0 0 2.5px var(--rec)}
 .av-badge{
   position:absolute;left:50%;bottom:-13px;transform:translateX(-50%);
-  min-width:50px;height:26px;padding:0 12px;border-radius:14px;background:var(--card);
-  box-shadow:0 2px 10px rgba(16,24,40,.18),0 0 0 1px rgba(16,24,40,.05);
+  min-width:50px;height:26px;padding:0 12px;border-radius:14px;background:#fff;
+  box-shadow:0 4px 12px rgba(28,54,120,.16);
   display:none;align-items:center;justify-content:center
 }
 .is-speaking .av-badge,.is-listening .av-badge,.is-thinking .av-badge{display:flex}
@@ -262,21 +310,15 @@ h2.sec{font-size:15px;margin:24px 0 11px;color:var(--ink);font-weight:700;letter
 .is-speaking .b-speak{display:flex}
 .is-listening .b-listen{display:block}
 .is-thinking .b-think{display:flex;align-items:center}
-
-/* બોલે ત્યારે અવાજની પટ્ટીઓ */
 .b-speak i{width:3px;height:14px;border-radius:2px;background:var(--accent);display:block}
 .b-speak i:nth-child(1){animation:wave .9s ease-in-out infinite}
 .b-speak i:nth-child(2){animation:wave .9s ease-in-out .15s infinite}
 .b-speak i:nth-child(3){animation:wave .9s ease-in-out .3s infinite}
-/* સાંભળે ત્યારે લાલ ટપકું */
 .b-listen{width:11px;height:11px;border-radius:50%;background:var(--rec);animation:blip 1.1s infinite}
-/* તપાસે ત્યારે ત્રણ ટપકાં */
-.b-think i{width:6px;height:6px;border-radius:50%;background:var(--muted);display:block}
+.b-think i{width:6px;height:6px;border-radius:50%;background:var(--faint);display:block}
 .b-think i:nth-child(1){animation:bob .9s ease-in-out infinite}
 .b-think i:nth-child(2){animation:bob .9s ease-in-out .15s infinite}
 .b-think i:nth-child(3){animation:bob .9s ease-in-out .3s infinite}
-
-/* ફોટો ન મળે તો દોરેલો ચહેરો દેખાય */
 .av-svg{width:100%;height:100%;display:block}
 .av-face{fill:var(--accent);transform-origin:60px 44px}
 .av-body{fill:var(--accent);opacity:.26}
@@ -296,181 +338,190 @@ h2.sec{font-size:15px;margin:24px 0 11px;color:var(--ink);font-weight:700;letter
   .b-speak i{height:11px}
 }
 
-.status{font-size:13px;font-weight:700;color:var(--muted);min-height:20px}
+.status{font-size:13px;font-weight:650;color:var(--muted);min-height:20px}
 .status.rec{color:var(--rec)}
 .status.ok{color:var(--good)}
 
 /* ---------- પ્રશ્ન ---------- */
-.qbox{text-align:center;padding:2px 2px}
+.card.qcard{border-radius:var(--rl);padding:18px 18px 20px}
+.qbox{text-align:center}
 .qcat{
-  display:inline-block;font-size:11.5px;color:var(--accent);font-weight:700;
-  background:var(--soft);padding:5px 12px;border-radius:20px;margin-bottom:12px
+  display:inline-block;padding:5px 12px;border-radius:var(--rs);background:var(--line);
+  font-size:12px;font-weight:600;color:var(--lab)
 }
 /* ઇન્ટરવ્યુ લેનારનું અભિવાદન — પહેલા પ્રશ્ન પહેલાં (અંગ્રેજીમાં જ) */
-.qgreet{font-size:14px;color:var(--muted);margin:0 0 9px;line-height:1.5;font-style:italic}
-.qtext{font-size:20px;font-weight:700;line-height:1.4;margin:0;letter-spacing:-.3px}
+.qgreet{font-size:14.5px;color:var(--muted);margin:12px 0 0;line-height:1.45;font-style:italic}
+.qtext{font-size:21px;font-weight:750;line-height:1.3;margin:12px 0 0;letter-spacing:-.3px;text-wrap:pretty}
 .qhelp{font-size:12.5px;color:var(--muted);margin-top:10px}
 
 /* ---------- બટન ---------- */
 button{font:inherit;font-weight:600;cursor:pointer}
 .act{
-  width:100%;border:0;border-radius:14px;background:var(--accent);color:#fff;
-  padding:16px;font-size:16px;font-weight:700;min-height:56px;
-  box-shadow:0 5px 16px rgba(47,79,208,.26);
-  display:flex;align-items:center;justify-content:center;gap:8px
+  width:100%;border:0;border-radius:16px;background:var(--grad);color:#fff;
+  padding:0 20px;font-size:17px;font-weight:650;min-height:54px;
+  box-shadow:var(--shb);
+  display:flex;align-items:center;justify-content:center;gap:9px
 }
-.act:active{transform:scale(.99)}
-.act:disabled{opacity:.55;box-shadow:var(--sh)}
-.act.rec{background:var(--rec);box-shadow:0 5px 16px rgba(214,69,65,.26)}
-.act.ghost{background:var(--card);color:var(--ink);box-shadow:var(--shc)}
-.act.danger{background:#fdeae7;color:#b8392c;box-shadow:none;font-size:15px;min-height:52px}
-.act.danger:active{background:#fbdbd6}
+.act:active{transform:translateY(1px)}
+.act:disabled{opacity:.55;box-shadow:none}
+.act.rec{background:linear-gradient(180deg,#e0574a,#c62f22);box-shadow:0 10px 22px rgba(198,47,34,.26)}
+.act.ghost{
+  background:rgba(255,255,255,.9);color:var(--ink);border:1px solid var(--cardline);
+  box-shadow:var(--shs);font-size:16px
+}
+.act.danger{
+  background:var(--lowtint);color:var(--rec);box-shadow:none;
+  border-radius:var(--rb);font-size:16px;min-height:54px
+}
+.act.danger:active{background:#fadede}
+/* સાદું લખાણ-બટન */
 .mini{
-  border:0;background:transparent;color:var(--muted);font-size:13px;font-weight:600;
-  padding:10px 12px;border-radius:10px
+  border:0;background:none;color:var(--lab);font-size:13.5px;font-weight:600;
+  padding:4px;border-radius:8px
 }
-.mini:active{background:var(--line)}
-.mini.on{color:var(--accent);background:var(--soft)}
-.mini.blk{color:var(--ink);font-weight:700;font-size:14px}
+.mini:active{color:var(--accent-d)}
+.mini.on{color:var(--accent-d)}
+.mini.blk{color:var(--lab);font-size:16px;font-weight:550}
+.mini.danger{color:var(--rec)}
+.mini.ico{display:inline-flex;align-items:center;gap:6px}
 /* ગોળ પટ્ટી જેવું નાનું બટન — ચિહ્ન સાથે */
 .chipbtn{
-  border:0;background:#f1f4fa;color:var(--muted);font-size:12.5px;font-weight:700;
-  padding:9px 14px;border-radius:20px;display:inline-flex;align-items:center;gap:7px
+  border:1px solid rgba(20,40,90,.07);background:#f2f5fb;color:var(--icon);
+  font-size:13px;font-weight:600;padding:9px 15px;border-radius:var(--rb);
+  display:inline-flex;align-items:center;gap:7px
 }
-.chipbtn:active{background:var(--line)}
-.chipbtn.on{background:var(--soft);color:var(--accent)}
-.row{display:flex;gap:7px;align-items:center;justify-content:center;flex-wrap:wrap}
-.row.tight{gap:6px}
-.stack{display:flex;flex-direction:column;gap:9px}
+.chipbtn:active{background:var(--soft);color:var(--accent-d)}
+.chipbtn.on{background:var(--soft);color:var(--accent-d)}
+.row{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
+.row.tight{gap:22px}
+.stack{display:flex;flex-direction:column;gap:10px}
 
 /* ---------- જવાબનું ખાનું ---------- */
 textarea{
-  width:100%;min-height:104px;font-size:16px;line-height:1.55;padding:13px;
-  border:1px solid var(--line);border-radius:var(--rs);resize:vertical;
-  background:var(--card);color:var(--ink);
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif
+  width:100%;min-height:96px;font-size:15px;line-height:1.45;padding:12px 13px;
+  border:1px solid rgba(20,40,90,.12);border-radius:var(--rs);resize:none;
+  background:#fbfcfe;color:var(--ink);font-family:var(--font)
 }
-textarea:focus{outline:3px solid var(--soft);border-color:var(--accent)}
+textarea:focus{outline:2px solid rgba(47,95,224,.35);outline-offset:1px}
 .heard{
-  background:#fafbfe;border:1px solid var(--line);border-radius:var(--rs);padding:13px 14px;
-  font-size:14.5px;line-height:1.55;min-height:60px;color:var(--ink);
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
-  text-align:left;white-space:pre-wrap;word-break:break-word
+  background:#fbfcfe;border:1px solid rgba(20,40,90,.12);border-radius:var(--rs);
+  padding:12px 13px;font-size:15px;line-height:1.45;min-height:66px;color:var(--ink);
+  font-family:var(--font);text-align:left;white-space:pre-wrap;word-break:break-word
 }
-.heard:empty::before{content:"…";color:var(--muted)}
-.lab{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;display:block;text-align:left}
+.heard:empty::before{content:"…";color:var(--faint)}
+.lab{font-size:13px;font-weight:600;color:var(--lab);margin-bottom:8px;display:block;text-align:left}
 .hint{font-size:12.5px;color:var(--muted);margin-top:10px;text-align:center}
 .hint.warn{
-  color:#8a5a00;background:#fff7e8;border:1px solid #f2e2bd;
+  color:#8a5a00;background:#fdf7e8;border:1px solid #f2e2bd;
   padding:11px 13px;border-radius:var(--rs);text-align:left
 }
 
 /* ---------- પરિણામ ---------- */
-.score{display:flex;align-items:center;gap:15px}
-.ring{width:76px;height:76px;flex:none;position:relative}
-.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
-.ring .bgc{fill:none;stroke:var(--line);stroke-width:8}
-.ring .fgc{fill:none;stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset .6s ease}
+.score{display:flex;align-items:center;gap:16px}
+.ring{width:64px;height:64px;flex:none;position:relative}
+.ring svg{width:100%;height:100%}
+.ring .bgc{fill:none;stroke:var(--line);stroke-width:7}
+.ring .fgc{fill:none;stroke-width:7;stroke-linecap:round;transition:stroke-dashoffset .6s ease}
 .ring b{
   position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-  font-size:21px;font-weight:800
+  font-size:19px;font-weight:750
 }
-.score .txt .t{font-size:16px;font-weight:800;letter-spacing:-.2px}
-.score .txt .s{font-size:12.5px;color:var(--muted);line-height:1.45}
+.score .txt .t{font-size:17px;font-weight:750}
+.score .txt .s{font-size:13px;color:var(--muted);line-height:1.4;margin-top:3px}
 
-.crit{padding:12px 0;border-top:1px solid var(--line2)}
-.crit:first-of-type{border-top:0;padding-top:16px}
-.cline{display:flex;align-items:center;gap:11px}
-.cname{font-weight:700;flex:1;font-size:14px}
-.bar2{height:7px;background:var(--line);border-radius:5px;overflow:hidden;width:86px;flex:none}
-.bar2 i{display:block;height:100%;border-radius:5px}
-.cnum{font-weight:800;min-width:36px;text-align:right;font-size:14.5px}
-.cnote{color:var(--muted);font-size:12.5px;margin-top:5px;line-height:1.5}
+.crit{padding:0;margin-top:16px}
+.crit:first-of-type{margin-top:0;padding-top:16px;border-top:1px solid var(--hair)}
+.cline{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.cname{font-size:14.5px;font-weight:700;color:var(--ink)}
+.cbars{display:flex;align-items:center;gap:10px;flex:none}
+.bar2{width:84px;height:7px;border-radius:4px;background:var(--line);overflow:hidden;flex:none}
+.bar2 i{display:block;height:100%;border-radius:4px}
+.cnum{font-size:14.5px;font-weight:700;min-width:30px;text-align:right}
+.cnote{color:var(--muted);font-size:13px;line-height:1.45;margin:6px 0 0}
 
-.box{border-radius:var(--rs);padding:13px 15px;margin-top:12px;font-size:14px;text-align:left}
+.box{border-radius:var(--rs);padding:13px 15px;margin-top:14px;font-size:14px;text-align:left}
 .box b{display:block;margin-bottom:5px;font-size:12px;letter-spacing:.2px;font-weight:700}
-.box.adv{background:var(--soft)} .box.adv b{color:var(--accent)}
-.box.tip{background:#fff8e8} .box.tip b{color:#8a5a00}
-.box.gerr{background:#fdeceb} .box.gerr b{color:#922}
+.box.adv{background:var(--soft)} .box.adv b{color:var(--accent-d)}
+.box.tip{background:#fdf7e8} .box.tip b{color:#8a5a00}
+.box.gerr{background:var(--lowtint)} .box.gerr b{color:#a32b1e}
 .box.gerr ul{margin:6px 0 0;padding-inline-start:18px}
 .box.gerr li{margin-bottom:4px;font-size:13.5px}
-.box.safe{background:#fdecea;border:1.5px solid #e8a6a0}
-.box.safe b{color:#a1281c}
+.box.safe{background:var(--lowtint);border:1.5px solid #f0b3ac}
+.box.safe b{color:#a32b1e}
 .box.safe ul{margin:6px 0 0;padding-inline-start:18px}
 .box.safe li{margin-bottom:4px;font-size:14px;font-weight:600}
 
-details.model{margin-top:12px;border-radius:var(--rs);padding:13px 15px;background:#fafbfe;box-shadow:var(--sh)}
-details.model summary{cursor:pointer;font-weight:700;font-size:14px;color:var(--accent);list-style:none}
+details.model{margin-top:14px;border-radius:var(--rs);padding:13px 15px;background:#fbfcfe;border:1px solid rgba(20,40,90,.08)}
+details.model summary{cursor:pointer;font-weight:700;font-size:14px;color:var(--accent-d);list-style:none}
 details.model summary::-webkit-details-marker{display:none}
 details.model summary::after{content:" ▾";font-size:11px}
 details.model[open] summary::after{content:" ▴"}
 details.model .gu{margin:10px 0 0;font-size:14px;text-align:left}
-details.model .enlab{font-size:11.5px;color:var(--muted);margin-top:12px;display:block;text-align:left}
+details.model .enlab{font-size:11.5px;color:var(--faint);margin-top:12px;display:block;text-align:left}
 details.model .en{
-  margin:6px 0 0;padding:12px 13px;background:var(--card);border-radius:var(--rs);box-shadow:var(--sh);
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
-  font-size:14px;line-height:1.55;text-align:left
+  margin:6px 0 0;padding:12px 13px;background:#fff;border-radius:12px;
+  font-family:var(--font);font-size:14px;line-height:1.5;text-align:left
 }
 
 /* ---------- પ્રગતિનું કોષ્ટક ---------- */
 table{width:100%;border-collapse:collapse;font-size:13px}
-th,td{text-align:right;padding:9px 6px;border-bottom:1px solid var(--line2)}
+th,td{text-align:right;padding:9px 6px;border-bottom:1px solid var(--line)}
 tr:last-child td{border-bottom:0}
-th{color:var(--muted);font-size:11px;font-weight:700}
-td.n{font-weight:800}
+th{color:var(--muted);font-size:11.5px;font-weight:600}
+td.n{font-weight:750}
 .empty{color:var(--muted);font-size:13.5px;text-align:center;padding:14px 0}
-.err{background:#fdeceb;color:#922;padding:12px 14px;border-radius:var(--rs);font-size:13.5px}
+.err{background:var(--lowtint);color:#a32b1e;padding:12px 14px;border-radius:var(--rs);font-size:13.5px}
 
-/* ---------- સેટિંગ સ્ક્રીન ---------- */
-/* નામની પટ્ટી */
+/* ---------- પ્રોફાઇલ / સેટિંગ ---------- */
+/* આ સ્ક્રીનનાં કાર્ડ ડિઝાઇનમાં ઘન સફેદ છે, પારદર્શક નહીં */
 .prow{
-  display:flex;align-items:center;gap:13px;width:100%;text-align:left;
-  background:var(--card);border:0;border-radius:var(--r);padding:14px 15px;
-  box-shadow:var(--shc);color:inherit;font:inherit;margin:4px 0 6px
+  display:flex;align-items:center;gap:14px;width:100%;text-align:left;
+  background:var(--cardsolid);border:0;border-radius:20px;padding:16px;
+  box-shadow:var(--shs);color:inherit;font:inherit;margin:0 0 6px;cursor:pointer
 }
-.prow:active{background:#fbfcff}
+.prow:active{box-shadow:0 10px 24px rgba(28,54,120,.12)}
 .ava{
-  width:46px;height:46px;border-radius:50%;flex:none;background:var(--soft);color:var(--accent);
-  display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:800
+  width:52px;height:52px;border-radius:26px;flex:none;background:var(--soft);color:var(--accent-d);
+  display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700
 }
 .prow .pt{flex:1;min-width:0}
-.prow .pt b{display:block;font-size:15.5px;font-weight:700;line-height:1.3}
-.prow .pt i{display:block;font-size:12.5px;color:var(--muted);font-style:normal;line-height:1.4}
+.prow .pt b{display:block;font-size:17px;font-weight:700;line-height:1.25}
+.prow .pt i{display:block;font-size:14px;color:var(--muted);font-style:normal;margin-top:1px}
 
-h2.grp{
-  font-size:11.5px;font-weight:700;color:var(--muted);letter-spacing:.5px;
-  text-transform:uppercase;margin:24px 0 8px 4px
+h2.grp{font-size:13px;font-weight:600;color:var(--grp);margin:22px 4px 8px}
+.group{background:var(--cardsolid);border-radius:20px;box-shadow:var(--shs);overflow:hidden}
+
+/* એક પટ્ટી — ચિહ્ન, નામ, કિંમત, તીર. <details> હોય તો ખૂલે.
+   ડિઝાઇનમાં ભાગલા પાડતી લીટી ચિહ્ન પછી શરૂ થાય છે, ડાબી કિનારેથી નહીં. */
+.lrow{display:block;position:relative}
+.lrow + .lrow::before{
+  content:"";position:absolute;left:49px;right:0;top:0;height:1px;background:var(--line)
 }
-.group{background:var(--card);border-radius:var(--r);box-shadow:var(--shc);overflow:hidden}
-
-/* એક પટ્ટી — ચિહ્ન, નામ, કિંમત, તીર. <details> હોય તો ખૂલે. */
-.lrow{border-top:1px solid var(--line2);display:block}
-.lrow:first-child{border-top:0}
 .lhead{
-  display:flex;align-items:center;gap:13px;padding:13px 15px;cursor:pointer;
+  display:flex;align-items:center;gap:13px;padding:15px 16px;cursor:pointer;
   list-style:none;width:100%;background:transparent;border:0;
   text-align:left;font:inherit;color:inherit
 }
 .lhead::-webkit-details-marker{display:none}
-.lhead:active{background:#f7f9fe}
-.lhead .li{width:34px;height:34px;border-radius:11px}
-.lhead .li .svi{width:19px;height:19px}
-.lt{flex:1;min-width:0;font-size:14.5px;font-weight:600}
-.lv{font-size:13px;color:var(--muted);flex:none;font-weight:600}
-.chev{color:#b3bccd;transition:transform .18s ease}
+.lhead:active{background:#f5f8ff}
+.lhead .li{width:20px;height:20px;border-radius:0;background:none;color:var(--icon)}
+.lhead .li .svi{width:20px;height:20px;stroke-width:1.9}
+.lt{flex:1;min-width:0;font-size:16px;font-weight:400;color:var(--ink)}
+.lv{font-size:15px;color:var(--faint);flex:none}
+.chev{color:var(--chev);transition:transform .18s ease;flex:none}
 details[open]>.lhead .chev{transform:rotate(90deg)}
-.lbody{padding:2px 15px 16px 15px}
-.lbody .sub{font-size:12.5px;color:var(--muted);line-height:1.5;margin:0 0 12px}
+.lbody{padding:0 16px 16px 49px}
+.lbody .sub{font-size:13px;color:var(--muted);line-height:1.5;margin:0 0 12px}
 
 /* સેટિંગનું એક ખાનું — સ્વિચ કે પટ્ટીવાળી પસંદગી */
-.opt{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line2)}
-.opt:first-child{border-top:0;padding-top:4px}
+.opt{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.opt:first-child{border-top:0;padding-top:2px}
 .opt.col{display:block}
 .opt .txt{flex:1;min-width:0}
-.opt .txt .t{font-weight:700;font-size:14px}
-.opt .txt .d{font-size:12px;color:var(--muted);line-height:1.45;margin-top:2px}
+.opt .txt .t{font-weight:650;font-size:14.5px}
+.opt .txt .d{font-size:12.5px;color:var(--muted);line-height:1.45;margin-top:2px}
 .sw{
-  width:48px;height:29px;border-radius:20px;background:#d7dce8;border:0;flex:none;
+  width:48px;height:29px;border-radius:20px;background:#dbe1ee;border:0;flex:none;
   position:relative;transition:background .18s;padding:0
 }
 .sw i{
@@ -479,116 +530,139 @@ details[open]>.lhead .chev{transform:rotate(90deg)}
 }
 .sw.on{background:var(--accent)}
 .sw.on i{transform:translateX(19px)}
-.seg{display:flex;gap:5px;background:#eaeef7;padding:4px;border-radius:12px;margin-top:10px}
-.seg button{flex:1;border:0;background:transparent;padding:9px 4px;border-radius:9px;font-size:13px;font-weight:700;color:var(--muted)}
-.seg button.on{background:var(--card);color:var(--accent);box-shadow:var(--sh)}
-.danger{color:var(--low);font-weight:700}
-.diag{font-size:12.5px;color:var(--muted);line-height:1.7;margin-top:4px}
-.verline{font-size:12.5px;color:var(--muted);margin:0 0 10px}
+.seg{display:flex;gap:5px;background:#eef2fa;padding:4px;border-radius:14px;margin-top:10px}
+.seg button{flex:1;border:0;background:transparent;padding:9px 4px;border-radius:10px;font-size:13px;font-weight:600;color:var(--faint)}
+.seg button.on{background:#fff;color:var(--accent-d);font-weight:650;box-shadow:var(--sh)}
+.danger{color:var(--rec);font-weight:650}
+.diag{font-size:13px;color:var(--muted);line-height:1.7;margin-top:4px}
+.verline{font-size:13px;color:var(--muted);margin:0 0 10px}
 
 /* ---------- વિશ્લેષણ — હોમ ડૅશબોર્ડ ---------- */
-.ctitle{font-size:15px;font-weight:700;margin:0;letter-spacing:-.15px}
-.csub{font-size:12px;color:var(--muted);margin:3px 0 15px;line-height:1.45}
+.ctitle{font-size:15px;font-weight:700;margin:0}
+.csub{font-size:12.5px;color:var(--muted);margin:3px 0 14px;line-height:1.4}
 .note{
-  font-size:12.5px;color:var(--muted);line-height:1.6;margin:0;
-  background:#fafbfe;border:1px dashed var(--line);border-radius:var(--rs);padding:14px
+  font-size:13px;color:var(--muted);line-height:1.55;margin:0;
+  background:#fbfcfe;border:1px solid rgba(20,40,90,.1);border-radius:var(--rs);padding:14px
 }
+/* કાર્ડની ટોચે નામ, જમણે એક નાનું આંકડાનું લખાણ */
+.chead{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.cdelta{font-size:12.5px;font-weight:600;flex:none}
+.cdelta.up{color:var(--good)} .cdelta.dn{color:var(--low)} .cdelta.flat{color:var(--muted)}
 
 /* દરરોજનો સમય — સાત ઊભી પટ્ટી */
-.chart{display:flex;align-items:flex-end;gap:7px;height:134px}
+.chart{display:flex;align-items:stretch;gap:9px;height:96px;margin:14px 0 6px}
 .cb{
   flex:1;min-width:0;height:100%;display:flex;flex-direction:column;
-  align-items:center;justify-content:flex-end;gap:5px
+  justify-content:flex-end;align-items:center;gap:6px
 }
-.cb .cbv{font-size:10px;font-weight:800;color:var(--muted);min-height:13px;line-height:1.2}
-.cb i{
-  display:block;width:100%;max-width:32px;min-height:4px;
-  border-radius:8px 8px 4px 4px;background:linear-gradient(180deg,#6d8bf7,#2f4fd0)
-}
-.cb.zero i{background:#e2e7f2}
-.cb.today i{background:linear-gradient(180deg,#93a9fb,#3f5fd8);box-shadow:0 3px 10px rgba(47,79,208,.3)}
-.cb em{font-style:normal;font-size:10.5px;color:var(--muted);font-weight:700}
-
-/* કાર્ડના તળિયે ત્રણ આંકડા */
-.mrow{display:flex;gap:10px;margin-top:15px;padding-top:14px;border-top:1px solid var(--line2)}
-.mrow>div{flex:1;min-width:0}
-.mrow .k{font-size:11px;color:var(--muted);line-height:1.35}
-.mrow .v{font-size:15.5px;font-weight:800;margin-top:2px;letter-spacing:-.3px}
+.cb i{display:block;width:100%;border-radius:7px;background:#dfe6f7;min-height:6px}
+.cb.q2 i{background:#c3d1f4}
+.cb.q3 i{background:#9fb6ee}
+.cb.top i{background:#3f6ce6}
+.cb.zero i{background:#eef1f7}
+.cb em{font-style:normal;font-size:11px;color:var(--faint)}
+.cb.top em{font-weight:650;color:var(--accent-d)}
+.cfoot{font-size:12.5px;color:var(--muted)}
 
 /* ગુણનું વલણ — છેલ્લા જવાબોની રેખા */
-.spark{width:100%;height:auto;display:block;margin-top:14px}
-.spark .ln{fill:none;stroke:var(--accent);stroke-width:2.2;vector-effect:non-scaling-stroke;
-  stroke-linejoin:round;stroke-linecap:round}
-.spark .ar{fill:url(#sparkg);stroke:none}
-.spark .dt{fill:var(--accent)}
+.spark{width:100%;height:64px;display:block;margin-top:16px}
+.spark .ln{
+  fill:none;stroke:var(--accent);stroke-width:2.2;vector-effect:non-scaling-stroke;
+  stroke-linejoin:round;stroke-linecap:round
+}
+.spark .ar{fill:rgba(63,108,230,.14);stroke:none}
+.spark .dt{fill:var(--accent);stroke:none}
 
-.crit.tight{padding:8px 0}
-.crit.tight:first-of-type{padding-top:2px}
+/* «તમારી કુશળતા» — નામ અને ગુણ ઉપર, પટ્ટી નીચે આખી પહોળી */
+.skills{display:flex;flex-direction:column;gap:14px}
+.skill .sl{display:flex;align-items:baseline;justify-content:space-between}
+.skill .sn{font-size:14.5px;font-weight:650;color:var(--ink)}
+.skill .sv{font-size:14.5px;font-weight:700}
+.skill .st{height:7px;border-radius:4px;background:var(--line);margin-top:7px;overflow:hidden}
+.skill .st i{display:block;height:100%;border-radius:4px}
+
+/* તાજા જવાબ — ગુણનું ચોકઠું, નામ, નીચે કોર્સ અને દિવસ */
+.ra{display:flex;align-items:center;gap:12px;padding:14px 16px;position:relative}
+.ra + .ra::before{
+  content:"";position:absolute;left:66px;right:0;top:0;height:1px;background:var(--line)
+}
+.ra .rs{
+  width:38px;height:38px;flex:none;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700
+}
+.ra .rt{flex:1;min-width:0}
+.ra .rt b{display:block;font-size:14.5px;font-weight:650;line-height:1.25}
+.ra .rt i{display:block;font-style:normal;font-size:12.5px;color:var(--muted);margin-top:1px}
 
 /* કોર્સવાર હાર */
-.crow{display:flex;align-items:center;gap:11px;padding:11px 0;border-top:1px solid var(--line2)}
-.crow:first-of-type{border-top:0;padding-top:3px}
+.crow{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.crow:first-of-type{border-top:0;padding-top:2px}
 .crow .cn{flex:1;min-width:0}
-.crow .cn b{display:block;font-size:13.5px;font-weight:700;line-height:1.3}
-.crow .cn i{display:block;font-style:normal;font-size:11.5px;color:var(--muted);margin-top:1px}
-.crow .sc{font-size:15px;font-weight:800;flex:none;min-width:34px;text-align:right}
+.crow .cn b{display:block;font-size:14px;font-weight:650;line-height:1.25}
+.crow .cn i{display:block;font-style:normal;font-size:12px;color:var(--muted);margin-top:1px}
+.crow .sc{font-size:14.5px;font-weight:700;flex:none;min-width:32px;text-align:right}
 
 /* સૂચનો */
 .recs{display:flex;flex-direction:column}
-.rec{display:flex;gap:12px;padding:13px 0;border-top:1px solid var(--line2)}
+.rec{display:flex;gap:12px;padding:14px 0;border-top:1px solid var(--line)}
 .rec:first-child{border-top:0;padding-top:2px}
-.rec .li{width:36px;height:36px;border-radius:11px}
-.rec .li .svi{width:19px;height:19px}
+.rec .li{width:38px;height:38px;border-radius:12px}
+.rec .li .svi{width:19px;height:19px;stroke-width:2}
 .rec .rt{flex:1;min-width:0}
-.rec b{display:block;font-size:14px;font-weight:700;line-height:1.35}
-.rec p{margin:4px 0 0;font-size:12.5px;color:var(--muted);line-height:1.55}
+.rec b{display:block;font-size:14.5px;font-weight:650;line-height:1.3}
+.rec p{margin:4px 0 0;font-size:12.5px;color:var(--muted);line-height:1.5}
 
 /* કંઈ પ્રેક્ટિસ કરી ન હોય ત્યારે */
-.emptybox{text-align:center;padding:22px 12px 12px}
+.emptybox{text-align:center;padding:20px 12px 10px}
 .emptybox .li{width:54px;height:54px;border-radius:17px;margin:0 auto 15px}
-.emptybox .li .svi{width:27px;height:27px}
-.emptybox b{display:block;font-size:18px;font-weight:800;letter-spacing:-.3px}
-.emptybox p{color:var(--muted);font-size:13.5px;margin:9px 0 20px;line-height:1.6}
+.emptybox .li .svi{width:26px;height:26px;stroke-width:2.2}
+.emptybox b{display:block;font-size:19px;font-weight:750;letter-spacing:-.4px}
+.emptybox p{color:var(--muted);font-size:14px;margin:9px 0 20px;line-height:1.5}
 
-/* ---------- તળિયેની ટૅબ પટ્ટી ---------- */
+/* ---------- તળિયેની ટૅબ પટ્ટી — તરતી અને ધૂંધળી ---------- */
 .tabbar{
-  position:fixed;left:0;right:0;bottom:0;z-index:40;
-  background:rgba(255,255,255,.95);
-  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
-  box-shadow:0 -1px 0 var(--line)
+  position:fixed;left:0;right:0;z-index:40;
+  bottom:calc(20px + env(safe-area-inset-bottom));
+  pointer-events:none;background:none
 }
 .tabinner{
-  max-width:600px;margin:0 auto;display:flex;
-  padding:7px 10px calc(7px + env(safe-area-inset-bottom))
+  max-width:560px;margin:0 14px;pointer-events:auto;
+  height:66px;display:grid;grid-template-columns:1fr 1fr 1fr;align-items:center;
+  background:rgba(255,255,255,.72);
+  -webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);
+  border:1px solid rgba(255,255,255,.9);border-radius:26px;
+  box-shadow:0 10px 28px rgba(28,54,120,.12)
 }
+@media (min-width:600px){ .tabinner{margin:0 auto} }
 .tab{
-  flex:1;min-width:0;border:0;background:transparent;color:var(--muted);
+  border:0;background:none;color:var(--faint);
   display:flex;flex-direction:column;align-items:center;gap:3px;
-  padding:7px 4px;border-radius:14px;font-size:11px;font-weight:700;font-family:var(--font)
+  padding:8px 0;margin:0 10px;border-radius:18px;
+  font-size:11px;font-weight:550;font-family:var(--font)
 }
-.tab .svi{width:22px;height:22px}
-.tab.on{color:var(--accent);background:var(--soft)}
+.tab .svi{width:21px;height:21px;stroke-width:2.1}
+.tab.on{color:var(--accent-d);background:var(--soft);font-weight:650}
 /* ટૅબ પટ્ટી દેખાય ત્યારે લખાણ તેની નીચે ઢંકાઈ ન જાય */
-body.tabs .wrap{padding-bottom:calc(100px + env(safe-area-inset-bottom))}
+body.tabs .wrap{padding-bottom:calc(108px + env(safe-area-inset-bottom))}
 
 /* ---------- મદદની સ્ક્રીન ---------- */
-.faq{background:var(--card);border-radius:var(--r);box-shadow:var(--shc);padding:6px 0;margin-top:12px}
-.faq details{border-top:1px solid var(--line2)}
+.faq{background:var(--cardsolid);border-radius:20px;box-shadow:var(--shs);padding:4px 0;margin-top:12px}
+.faq details{border-top:1px solid var(--line)}
 .faq details:first-of-type{border-top:0}
 .faq summary{
-  list-style:none;cursor:pointer;padding:14px 15px;font-size:14.5px;font-weight:700;
-  display:flex;align-items:flex-start;gap:10px;line-height:1.45
+  list-style:none;cursor:pointer;padding:15px 16px;font-size:15px;font-weight:650;
+  display:flex;align-items:flex-start;gap:10px;line-height:1.4
 }
 .faq summary::-webkit-details-marker{display:none}
 .faq summary::after{
-  content:"";flex:none;width:8px;height:8px;margin-top:6px;margin-inline-start:auto;
-  border-right:2px solid #b3bccd;border-bottom:2px solid #b3bccd;
-  transform:rotate(45deg);transition:transform .18s ease
+  content:"";flex:none;width:8px;height:8px;margin-top:5px;margin-inline-start:auto;
+  border-right:2.4px solid var(--chev);border-bottom:2.4px solid var(--chev);
+  transform:rotate(-45deg);transition:transform .18s ease
 }
-.faq details[open] summary::after{transform:rotate(-135deg);margin-top:9px}
-.faq p{margin:0;padding:0 15px 15px;font-size:13.5px;color:var(--muted);line-height:1.62}
+.faq details[open] summary::after{transform:rotate(45deg);margin-top:7px}
+.faq p{margin:0;padding:0 16px 16px;font-size:13.5px;color:var(--muted);line-height:1.6}
 
-.foot{text-align:center;color:var(--muted);font-size:11.5px;margin-top:20px;line-height:1.7}
+.foot{text-align:center;color:var(--faint);font-size:12px;margin-top:22px;line-height:1.7}
 .foot.left{text-align:left;margin-top:12px;padding:0 4px}
 </style>
 </head>
@@ -596,9 +670,10 @@ body.tabs .wrap{padding-bottom:calc(100px + env(safe-area-inset-bottom))}
 
 <!-- ============ લીટીથી દોરેલાં ચિહ્ન — એક જ વાર, પછી <use> વાપરીએ ============ -->
 <svg class="sprite" aria-hidden="true" focusable="false"><defs>
-  <symbol id="i-logo" viewBox="0 0 24 24">
-    <path d="M20.5 11.4a8.5 8.5 0 0 1-12.2 7.7L3.6 20.4l1.3-4.6A8.5 8.5 0 1 1 20.5 11.4z"/>
-    <path d="M9.4 11v1.8M12 8.6v6.6M14.6 11v1.8"/>
+  <!-- એપની ઓળખ — ડિઝાઇનમાં બે સામસામી કમાન, બે રંગમાં -->
+  <symbol id="i-logo" viewBox="0 0 48 48">
+    <path class="a1" d="M24 6c-6 0-10 4.4-10 9.6 0 3.4 1.7 5.7 4.4 7.4-2.7 1.7-4.4 4-4.4 7.4C14 35.6 18 40 24 40"/>
+    <path class="a2" d="M24 6c6 0 10 4.4 10 9.6 0 3.4-1.7 5.7-4.4 7.4 2.7 1.7 4.4 4 4.4 7.4C34 35.6 30 40 24 40"/>
   </symbol>
   <!-- સેટિંગ — ત્રણ સરકતી પટ્ટી (ગિયર નાના માપે ચકલી જેવું દેખાય છે) -->
   <symbol id="i-gear" viewBox="0 0 24 24">
@@ -646,6 +721,7 @@ body.tabs .wrap{padding-bottom:calc(100px + env(safe-area-inset-bottom))}
   <symbol id="i-play" viewBox="0 0 24 24"><path d="M7.5 4.6 19 12 7.5 19.4z"/></symbol>
   <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.2V12l3.4 2.1"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M4.5 12.6 9 17.1 19.5 6.6"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h15M13 6l6 6-6 6"/></symbol>
   <symbol id="i-cloud" viewBox="0 0 24 24">
     <path d="M7 18.5a4 4 0 0 1-.3-8 5.5 5.5 0 0 1 10.5 1.2A3.6 3.6 0 0 1 16.8 18.5z"/>
     <path d="M12 21v-6M9.6 17.4 12 15l2.4 2.4"/>
@@ -696,7 +772,10 @@ body.tabs .wrap{padding-bottom:calc(100px + env(safe-area-inset-bottom))}
       </ul>
     </div>
     <div class="startbar">
-      <button class="act" id="btnGetStarted" data-i18n="btn.getStarted">Get Started</button>
+      <button class="act pill" id="btnGetStarted">
+        <span data-i18n="btn.getStarted">Get started</span>
+        <svg class="svi xs" aria-hidden="true"><use href="#i-arrow"/></svg>
+      </button>
       <button class="mini blk" id="btnMaybeLater" data-i18n="btn.maybeLater">Maybe later</button>
     </div>
   </div>
@@ -831,7 +910,7 @@ body.tabs .wrap{padding-bottom:calc(100px + env(safe-area-inset-bottom))}
       <div class="status" id="status" data-i18n="status.ready">Ready</div>
     </div>
 
-    <div class="card">
+    <div class="card qcard">
       <div class="qbox">
         <div class="qcat" id="qcat">—</div>
         <p class="qgreet lat" id="qgreet" hidden></p>
@@ -856,11 +935,11 @@ body.tabs .wrap{padding-bottom:calc(100px + env(safe-area-inset-bottom))}
         <button class="act" id="btnAct" data-i18n="btn.answer">🎤 Answer</button>
       </div>
       <div class="row tight" style="margin-top:10px">
-        <button class="chipbtn" id="btnType">
+        <button class="mini ico" id="btnType">
           <svg class="svi xs" aria-hidden="true"><use href="#i-keyboard"/></svg>
           <span data-i18n="btn.type">Type instead</span>
         </button>
-        <button class="chipbtn" id="btnClear" data-i18n="btn.clear">Clear</button>
+        <button class="mini" id="btnClear" data-i18n="btn.clear">Clear</button>
       </div>
       <div id="typeWrap" hidden style="margin-top:12px">
         <textarea id="ans" data-i18n-ph="run.typePlaceholder" placeholder="Type your answer in English here."></textarea>
