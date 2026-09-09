@@ -184,6 +184,8 @@ en: {
   "sync.erased": "Deleted {n} record(s) from the server.",
   "welcome.or": "or",
   "home.hello": "Hello, {name}",
+  "q.greet": "Hello. Thank you for coming in today. Let's begin.",
+  "q.greetName": "Hello {name}. Thank you for coming in today. Let's begin.",
   "set.name": "Your name",
   "set.nameNotSet": "Not set",
   "btn.erase": "Erase",
@@ -519,6 +521,8 @@ gu: {
   "sync.erased": "સર્વર પરથી {n} નોંધ ભૂંસાઈ.",
   "welcome.or": "અથવા",
   "home.hello": "નમસ્તે, {name}",
+  "q.greet": "નમસ્તે. આજે આવવા બદલ આભાર. ચાલો શરૂ કરીએ.",
+  "q.greetName": "નમસ્તે {name}. આજે આવવા બદલ આભાર. ચાલો શરૂ કરીએ.",
   "set.name": "તમારું નામ",
   "set.nameNotSet": "નાખ્યું નથી",
   "btn.erase": "ભૂંસો",
@@ -854,6 +858,8 @@ hi: {
   "sync.erased": "सर्वर से {n} रिकॉर्ड मिटाए गए।",
   "welcome.or": "या",
   "home.hello": "नमस्ते, {name}",
+  "q.greet": "नमस्ते। आज आने के लिए धन्यवाद। चलिए शुरू करते हैं।",
+  "q.greetName": "नमस्ते {name}। आज आने के लिए धन्यवाद। चलिए शुरू करते हैं।",
   "set.name": "आपका नाम",
   "set.nameNotSet": "नहीं भरा",
   "btn.erase": "मिटाएँ",
@@ -1047,9 +1053,11 @@ function setLang(id) {
   return LANG;
 }
 
-/* t("key", {n:3}) — કી ન મળે તો English, એ પણ ન મળે તો કી પોતે */
-function t(key, vars) {
-  let s = (STRINGS[LANG] && STRINGS[LANG][key]);
+/* ચોક્કસ ભાષામાં લખાણ. મોટે ભાગે t() વાપરો — આ ત્યાં જોઈએ છે જ્યાં
+   બોલવાની ભાષા ઇન્ટરફેસની ભાષાથી અલગ હોય (દા.ત. હિન્દી વોઇસ ન હોય
+   ત્યારે અંગ્રેજીમાં બોલવું પડે). */
+function tIn(lang, key, vars) {
+  let s = (STRINGS[lang] && STRINGS[lang][key]);
   if (s == null) s = STRINGS.en[key];
   if (s == null) return key;
   if (vars) {
@@ -1059,6 +1067,9 @@ function t(key, vars) {
   }
   return s;
 }
+
+/* t("key", {n:3}) — કી ન મળે તો English, એ પણ ન મળે તો કી પોતે */
+function t(key, vars) { return tIn(LANG, key, vars); }
 
 /* HTML માં data-i18n લખેલા બધા ભાગ ભરી દો */
 function applyI18n(root) {
@@ -1075,5 +1086,5 @@ function applyI18n(root) {
 }
 
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { LANGS, STRINGS, t, setLang, getLang, applyI18n, LANG_VOICE };
+  module.exports = { LANGS, STRINGS, t, tIn, setLang, getLang, applyI18n, LANG_VOICE };
 }

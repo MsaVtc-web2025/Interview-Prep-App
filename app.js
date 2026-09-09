@@ -201,6 +201,57 @@ function qField(q, field) {
   return q[field];
 }
 
+/* ---------------- પ્રશ્નની ભાષા ----------------
+
+   મૂળ નિયમ હજી એ જ છે: વિદ્યાર્થી જવાબ અંગ્રેજીમાં જ આપે છે અને તપાસ
+   અંગ્રેજી પર જ થાય છે. પણ પ્રશ્ન સમજાય નહીં તો જવાબ આપી જ ન શકાય —
+   તેથી જે ભાષામાં એપ ચાલે છે તેમાં પ્રશ્નનો અનુવાદ હોય તો એ દેખાય છે
+   અને એ જ બોલાય છે.
+
+   અનુવાદ પ્રશ્નમાં આ રીતે મુકાય છે:
+       i18n: { hi: { q: "…" } }
+   ન હોય તો અંગ્રેજી પ્રશ્ન જ રહે — એપ કદી ખાલી દેખાતી નથી. */
+
+/* આ પ્રશ્ન ચાલુ ભાષામાં લખાયેલો — અનુવાદ ન હોય તો અંગ્રેજી */
+function qText(q) {
+  const lang = getLang();
+  if (lang !== "en" && q && q.i18n && q.i18n[lang] && q.i18n[lang].q) return q.i18n[lang].q;
+  return q ? q.q : "";
+}
+
+/* આ પ્રશ્નનો અનુવાદ છે? (દેખાવ માટે — લિપિ પ્રમાણે ફોન્ટ બદલવો પડે) */
+function qHasTranslation(q) {
+  const lang = getLang();
+  return lang !== "en" && !!(q && q.i18n && q.i18n[lang] && q.i18n[lang].q);
+}
+
+/* પ્રશ્નનું લખાણ સ્ક્રીન પર મૂકો.
+   .lat વર્ગ લેટિન ફોન્ટ પકડી રાખે છે — દેવનાગરી/ગુજરાતી અનુવાદ હોય
+   ત્યારે એ કાઢી નાખવો પડે, નહીં તો અક્ષર તૂટેલા દેખાય. */
+function paintQuestionText() {
+  if (!current) return;
+  const el = $("qtext");
+  el.textContent = qText(current);
+  el.classList.toggle("lat", !qHasTranslation(current));
+
+  /* પહેલા પ્રશ્ન પહેલાંનું અભિવાદન — હવે ચાલુ ભાષામાં */
+  const g = greetingLine();
+  const ge = $("qgreet");
+  ge.hidden = !g;
+  ge.textContent = g;
+  ge.classList.toggle("lat", getLang() === "en");
+}
+
+/* પ્રશ્ન કઈ ભાષામાં બોલવો.
+   અનુવાદ હોય અને એ ભાષાનો વોઇસ ફોનમાં હોય તો જ એ ભાષામાં બોલાય.
+   વોઇસ ન હોય તો અંગ્રેજીમાં બોલીએ — ચૂપ રહેવા કરતાં એ સારું, અને
+   સ્ક્રીન પર અનુવાદ તો દેખાતો જ રહે છે. */
+function spokenQuestionLang() {
+  const lang = getLang();
+  if (qHasTranslation(current) && Speech.hasVoice(lang)) return lang;
+  return "en";
+}
+
 /* આ પ્રશ્નની સમજૂતી ભાષાંતર થઈ નથી? (તો વિદ્યાર્થીને જણાવીએ) */
 function qIsGuOnly(q) {
   const lang = getLang();
@@ -225,7 +276,8 @@ function relocalize() {
   if (course) {
     renderBrief();
     $("runName").textContent = tCourse(course, "name");
-    if (current) $("qcat").textContent = tCat(current.cat);
+    // ભાષા બદલાય તો પ્રશ્ન પણ એ ભાષામાં ફરી લખાય
+    if (current) { $("qcat").textContent = tCat(current.cat); paintQuestionText(); }
     renderProgress();
     if (lastResult) showResult(lastResult);
     if (!$("scRun").hidden) setPhase(phase === "idle" ? "ready" : phase);
@@ -442,13 +494,7 @@ function pickQuestion(advance) {
   save();
 
   $("qcat").textContent = tCat(current.cat);
-  $("qtext").textContent = current.q;      // પ્રશ્ન હંમેશા અંગ્રેજીમાં
-
-  /* પહેલા પ્રશ્ન પહેલાં ઇન્ટરવ્યુ લેનારનું અભિવાદન — નામ સાથે.
-     આ અંગ્રેજીમાં જ રહે છે, કારણ કે ઇન્ટરવ્યુ લેનાર અંગ્રેજી બોલે છે. */
-  const greet = greetingLine();
-  $("qgreet").hidden = !greet;
-  $("qgreet").textContent = greet;
+  paintQuestionText();
   $("heard").textContent = "";
   $("ans").value = "";
   $("result").hidden = true;
@@ -463,13 +509,15 @@ function pickQuestion(advance) {
 
 /* અભિવાદન — ફક્ત ક્રમવાળા કોર્સના પહેલા પ્રશ્ન પર, અને greet:true હોય તો.
    હંમેશા અંગ્રેજીમાં, કારણ કે ઇન્ટરવ્યુ લેનાર અંગ્રેજી બોલે છે. */
-function greetingLine() {
+/* lang આપો તો એ ભાષામાં — બોલવા માટે વોઇસની ભાષા વપરાય છે, જે
+   સ્ક્રીનની ભાષાથી અલગ હોઈ શકે. અંગ્રેજી વોઇસ દેવનાગરી વાંચે તો
+   ગરબડ થાય, તેથી બોલવાનું અને લખવાનું અલગ રાખ્યું છે. */
+function greetingLine(lang) {
   if (!course || !course.greet || !isSequential()) return "";
   if (bucket(course.id).pos !== 0) return "";
   const fn = firstName();
-  return fn
-    ? "Hello " + fn + ". Thank you for coming in today. Let's begin."
-    : "Hello. Thank you for coming in today. Let's begin.";
+  const l = lang || getLang();
+  return fn ? tIn(l, "q.greetName", { name: fn }) : tIn(l, "q.greet");
 }
 
 /* ---------------- અવતાર પ્રશ્ન પૂછે ---------------- */
@@ -483,7 +531,7 @@ function askQuestion() {
     return;
   }
   setPhase("asking");
-  Speech.speak(spokenQuestion(), { lang: "en", rate: state.settings.rate }).then(() => {
+  Speech.speak(spokenQuestion(), { lang: spokenQuestionLang(), rate: state.settings.rate }).then(() => {
     if (phase !== "asking") return;                // વચ્ચે વિદ્યાર્થીએ કંઈ કર્યું
     if (state.settings.hands && Speech.micSupported()) beginListen();
     else setPhase("ready");
@@ -491,9 +539,14 @@ function askQuestion() {
 }
 
 /* અવતાર જે બોલે — અભિવાદન (હોય તો) અને પછી પ્રશ્ન */
+/* બોલવાનું આખું વાક્ય — અભિવાદન અને પ્રશ્ન, બંને એક જ ભાષામાં.
+   સ્ક્રીન પર જે દેખાય છે તે અલગ હોઈ શકે: અનુવાદ હોય પણ એ ભાષાનો વોઇસ
+   ન હોય તો સ્ક્રીન પર હિન્દી રહે અને બોલાય અંગ્રેજીમાં. */
 function spokenQuestion() {
-  const g = $("qgreet").hidden ? "" : $("qgreet").textContent;
-  return (g ? g + " " : "") + current.q;
+  const lang = spokenQuestionLang();
+  const g = greetingLine(lang);
+  const q = lang === "en" ? current.q : qText(current);
+  return (g ? g + " " : "") + q;
 }
 
 /* ---------------- વિદ્યાર્થી બોલે ---------------- */
@@ -898,7 +951,7 @@ $("btnSkip").addEventListener("click", () => { if (course) pickQuestion(true); }
 $("btnRepeat").addEventListener("click", () => {
   Speech.stopListen(true);
   setPhase("asking");
-  Speech.speak(spokenQuestion(), { lang: "en", rate: state.settings.rate }).then(() => {
+  Speech.speak(spokenQuestion(), { lang: spokenQuestionLang(), rate: state.settings.rate }).then(() => {
     if (phase !== "asking") return;
     if (state.settings.hands && Speech.micSupported()) beginListen();
     else setPhase("ready");
