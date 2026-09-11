@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="gu">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>માઇકની ચકાસણી — speech.js</title>
+
+<!--
+  speech.js નું સાંભળવાનું ભાગ ચકાસે છે, ખરા માઇક વગર.
+
+  કેમ જરૂરી: એન્ડ્રોઇડ Chrome માઇકનું સેશન દર થોડી સેકન્ડે જાતે બંધ કરે છે
+  અને speech.js એને ફરી ચાલુ કરે છે. સેશન બંધ થાય તે ઘડીએ છેલ્લો વાક્યાંશ
+  ઘણી વાર «પાકો» (final) થયો હોતો નથી — ફક્ત કામચલાઉ (interim) હોય છે.
+  એ વાક્યાંશ સચવાય છે કે નહીં તે અહીં તપાસાય છે.
+
+  વાપરવાની રીત: આ ફાઇલ બ્રાઉઝરમાં ખોલો (file:// ચાલે છે). બધી લીટી લીલી
+  હોવી જોઈએ. speech.js બદલો ત્યારે ફરી ખોલીને જોઈ લેવું.
+-->
+
+<style>
+  body{font:15px/1.5 system-ui,Segoe UI,Roboto,sans-serif;margin:0;padding:22px;background:#eef3fd;color:#101a33}
+  h1{font-size:20px;margin:0 0 4px}
+  p.sub{color:#6c7c99;margin:0 0 18px}
+  #sum{font-weight:700;padding:10px 14px;border-radius:12px;margin-bottom:14px;display:inline-block}
+  .ok{background:#e2f5ec;color:#12915f}
+  .bad{background:#fdeaea;color:#c0392b}
+  .case{background:#fff;border-radius:14px;padding:12px 14px;margin-bottom:10px;box-shadow:0 4px 12px rgba(28,54,120,.08)}
+  .nm{font-weight:650;margin-bottom:6px}
+  .nm .tag{font-size:12px;padding:2px 8px;border-radius:8px;margin-inline-end:8px;vertical-align:2px}
+  .row{font-size:13px;color:#5b6b8c;margin-top:3px;word-break:break-word}
+  .row b{color:#101a33;font-weight:600}
+  code{background:#eef1f7;padding:1px 5px;border-radius:5px;font-size:12px}
+  .note{background:#fdf1dc;color:#8a5d06;border-radius:12px;padding:12px 14px;font-size:13px;margin-top:16px}
+</style>
+
+<body>
+<h1>માઇકની ચકાસણી</h1>
+<p class="sub">ખરા માઇક વગર — એન્ડ્રોઇડ જે રીતે સેશન ચાલુ/બંધ કરે છે તે નકલ કરીને</p>
+<div id="sum">ચાલે છે…</div>
+<div id="out"></div>
+
+<script>
+/* ---------- નકલી SpeechRecognition ----------
+   ખરા એન્ડ્રોઇડની જેમ: results[] આખા સેશન માટે ભેગું થતું જાય, છેલ્લું
+   કામચલાઉ પરિણામ જગ્યાએ જ બદલાય, અને સેશન onend થી પૂરું થાય. */
+let SCRIPT = [], sessionNo = 0;
+
+function FakeSR() { this.continuous = false; this.interimResults = false; this.lang = ""; }
+
+FakeSR.prototype.start = function () {
+  const self = this;
+  const spec = SCRIPT[sessionNo++] || { chunks: [], final: null };
+  let t = 5;
+  const at = (ms, fn) => { t += ms; setTimeout(() => { if (!self._dead) fn(); }, t); };
+  const results = [];
+
+  const push = (txt, isFinal) => {
+    const r = [{ transcript: txt }];
+    r.isFinal = isFinal;
+    if (results.length && !results[results.length - 1].isFinal) results[results.length - 1] = r;
+    else results.push(r);
+    self.onresult && self.onresult({ results: results, resultIndex: results.length - 1 });
+  };
+
+  at(0, () => { self.onstart && self.onstart(); });
+  spec.chunks.forEach(txt => at(90, () => push(txt, false)));
+  if (spec.final) at(90, () => push(spec.final, true));
+  at(90, () => { self.onend && self.onend(); });
+};
+FakeSR.prototype.stop  = function () { this._dead = true; };
+FakeSR.prototype.abort = function () { this._dead = true; };
+
+window.SpeechRecognition = window.webkitSpeechRecognition = FakeSR;
+
+/* બોલવાનો ભાગ અહીં ચકાસવાનો નથી — «શાંત છે» એટલું કહી દઈએ */
+window.speechSynthesis = { speaking: false, pending: false, cancel(){}, speak(){},
+                           getVoices(){ return []; }, addEventListener(){}, removeEventListener(){} };
+</script>
+
+<script src="../speech.js"></script>
+
+<script>
+/* ---------- ચકાસણીના દાખલા ---------- */
+const CASES = [
+  { name: "સેશન કામચલાઉ લખાણ સાથે પૂરું થાય — વાક્યાંશ ગુમ ન થવો જોઈએ",
+    script: [
+      { chunks: ["My", "My name", "My name is Ravi"], final: "My name is Ravi" },
+      { chunks: ["and I", "and I am from", "and I am from Surat"], final: null },
+      { chunks: ["I completed my ITI"], final: "I completed my ITI" },
+      { chunks: ["in electrician trade", "in electrician trade last year"], final: null }
+    ],
+    want: "My name is Ravi and I am from Surat I completed my ITI in electrician trade last year" },
+
+  { name: "કામચલાઉ વાક્યાંશ પછી બીજું સેશન આવે — તોય સચવાવું જોઈએ",
+    script: [
+      { chunks: ["My name is Ravi"], final: "My name is Ravi" },
+      { chunks: ["and I am from Surat"], final: null },
+      { chunks: ["I completed my ITI"], final: "I completed my ITI" },
+      { chunks: ["in electrician trade last year"], final: null },
+      { chunks: ["thank you sir"], final: "thank you sir" }
+    ],
+    want: "My name is Ravi and I am from Surat I completed my ITI in electrician trade last year thank you sir" },
+
+  { name: "એન્ડ્રોઇડ વધતું જતું «પાકું» લખાણ ફરી ફરી મોકલે — બમણું ન થવું જોઈએ",
+    script: [
+      { chunks: ["I work"], final: "I work" },
+      { chunks: ["I work in a garage"], final: "I work in a garage" },
+      { chunks: ["near the bus stand"], final: "near the bus stand" }
+    ],
+    want: "I work in a garage near the bus stand" },
+
+  { name: "આખા જવાબમાં એકેય «પાકું» પરિણામ ન આવે",
+    script: [
+      { chunks: ["I am hard working"], final: null },
+      { chunks: ["and I learn quickly"], final: null }
+    ],
+    want: "I am hard working and I learn quickly" },
+
+  { name: "કામચલાઉ લખાણ «પાકા» લખાણથી સુધરે",
+    script: [
+      { chunks: ["I am Prakash"], final: "I am Prakash Patel" },
+      { chunks: ["from Rajkot"], final: "from Rajkot" }
+    ],
+    want: "I am Prakash Patel from Rajkot" },
+
+  { name: "આગળનું સેશન પાછલા સેશનનું કામચલાઉ લખાણ ફરી મોકલે",
+    script: [
+      { chunks: ["I have three years"], final: null },
+      { chunks: ["I have three years of experience"], final: "I have three years of experience" }
+    ],
+    want: "I have three years of experience" },
+
+  { name: "સચવાયેલું કામચલાઉ લખાણ પછીથી «પાકું» થઈને પાછું આવે",
+    script: [
+      { chunks: ["my strength is"], final: null },
+      { chunks: ["my strength is hard work"], final: "my strength is hard work" },
+      { chunks: ["and honesty"], final: null }
+    ],
+    want: "my strength is hard work and honesty" },
+
+  { name: "લાંબો જવાબ, ઘણાં સેશન, એકેય «પાકું» નહીં",
+    script: [
+      { chunks: ["I completed my ITI"], final: null },
+      { chunks: ["in electrician trade"], final: null },
+      { chunks: ["from Surat in 2023"], final: null },
+      { chunks: ["and then I worked"], final: null },
+      { chunks: ["at a motor winding shop"], final: null }
+    ],
+    want: "I completed my ITI in electrician trade from Surat in 2023 and then I worked at a motor winding shop" }
+];
+
+function runCase(script, ms) {
+  SCRIPT = script; sessionNo = 0;
+  return new Promise(resolve => {
+    let last = "";
+    Speech.listen({ lang: "en-IN", onInterim: txt => { last = txt; } });
+    setTimeout(() => { Speech.stopListen(true); resolve(last); }, ms);
+  });
+}
+
+(async function () {
+  const out = document.getElementById("out");
+  let pass = 0;
+  for (const c of CASES) {
+    const got = await runCase(c.script, 4000);
+    const ok = got === c.want;
+    if (ok) pass++;
+    const d = document.createElement("div");
+    d.className = "case";
+    d.innerHTML =
+      '<div class="nm"><span class="tag ' + (ok ? "ok" : "bad") + '">' + (ok ? "બરાબર" : "ખોટું") + "</span>" +
+      c.name + "</div>" +
+      (ok ? "" : '<div class="row"><b>જોઈતું:</b> <code>' + c.want + "</code></div>" +
+                 '<div class="row"><b>મળ્યું:</b> <code>' + got + "</code></div>");
+    out.appendChild(d);
+  }
+  const s = document.getElementById("sum");
+  s.className = pass === CASES.length ? "ok" : "bad";
+  s.textContent = pass + " / " + CASES.length + " બરાબર";
+})();
+</script>
+
+<div class="note">
+  <b>જાણીતી મર્યાદા:</b> વિદ્યાર્થી ખરેખર એક જ શબ્દ સળંગ બે વાર બોલે
+  («very very important») અને એ શબ્દ બે સેશનની સંધિ પર પડે, તો એક «very»
+  ઓછું થાય. બે સેશનની સંધિ પર એન્ડ્રોઇડ શબ્દ ફરી મોકલે છે કે વિદ્યાર્થીએ
+  ફરી બોલ્યો છે — એ ઓળખવાનો કોઈ રસ્તો નથી. આખો વાક્યાંશ બમણો થવા કરતાં
+  એક શબ્દ ઓછો સારો, તેથી આ જાણીજોઈને રાખેલું છે.
+</div>
+</body>
+</html>

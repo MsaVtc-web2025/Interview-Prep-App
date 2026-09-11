@@ -250,8 +250,6 @@ const Speech = (function () {
     return acc.concat(piece);
   }
 
-  function mergeText(a, b) { return mergeWords(toWords(a), toWords(b)).join(" "); }
-
   /* આખું સાંભળેલું લખાણ — દર વખતે ફરીથી બનાવીએ, જૂનામાં ઉમેરતા નથી */
   function fullText() {
     let w = mergeWords(toWords(committed), toWords(sessionFinal));
@@ -259,9 +257,15 @@ const Speech = (function () {
     return w.join(" ");
   }
 
-  /* ચાલુ સેશનનું પાકું લખાણ કાયમી ખાતામાં નાખો (માઇક ફરી ચાલુ થાય તે પહેલાં) */
+  /* ચાલુ સેશનનું લખાણ કાયમી ખાતામાં નાખો (માઇક ફરી ચાલુ થાય તે પહેલાં).
+
+     પાકું (final) લખાણ જ નહીં, કામચલાઉ (interim) પણ સાચવીએ છીએ. એન્ડ્રોઇડ
+     સેશન જાતે બંધ કરે ત્યારે છેલ્લો વાક્યાંશ ઘણી વાર «પાકો» થયા વગર જ રહી
+     જાય છે — ફક્ત પાકું લખાણ સાચવીએ તો એ આખો વાક્યાંશ ગુમ થઈ જાય, અને
+     વિદ્યાર્થીનો અડધો જવાબ જ તપાસાય. કામચલાઉ લખાણ સહેજ કાચું હોઈ શકે, પણ
+     ગુમ થયેલા શબ્દો કરતાં કાચા શબ્દો ઘણા સારા. mergeWords બેવડાતું ટાળે છે. */
   function commitSession() {
-    if (sessionFinal.trim()) committed = mergeText(committed, sessionFinal);
+    committed = fullText();
     sessionFinal = "";
     interimText = "";
   }
@@ -325,7 +329,9 @@ const Speech = (function () {
       clearSilence();
       silenceTimer = setInterval(() => {
         if (!active) return;
-        const words = toWords(mergeText(committed, sessionFinal)).length;
+        // જે લખાણ મોકલવાનું છે તે જ ગણીએ — કામચલાઉ સહિત. નહીં તો જેનો આખો
+        // જવાબ «પાકો» થયો ન હોય તે વિદ્યાર્થી માટે જાતે તપાસવાનું ચાલુ જ ન થાય.
+        const words = toWords(fullText()).length;
         if (words >= 3 && Date.now() - lastVoiceAt > opts.silenceMs) {
           const t = fullText();
           stopListen(true);
@@ -389,8 +395,10 @@ const Speech = (function () {
         if (handlers.onError) handlers.onError("too-many-restarts");
         return;
       }
+      // આ થોભા દરમિયાન માઇક બંધ છે — વિદ્યાર્થી બોલતો રહે તો એટલા શબ્દો
+      // ગુમ થાય. તેથી જૂનું સેશન સમેટાય એટલો જ થોભો રાખીએ, વધારે નહીં.
       clearStartTimer();
-      startTimer = setTimeout(() => { if (active) startRecogniser(); }, 300);
+      startTimer = setTimeout(() => { if (active) startRecogniser(); }, 150);
     };
 
     try { rec.start(); } catch (e) { /* પહેલેથી ચાલુ હોય તો વાંધો નથી */ }
