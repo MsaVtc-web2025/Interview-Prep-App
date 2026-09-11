@@ -281,6 +281,8 @@ en: {
   "err.mic.silent": "The mic is on but nothing is being heard. Speak a little louder, check that the right microphone is selected in your browser, or tap “Type instead”.",
   "err.google": "Google sign-in did not work. Type your name above instead — the app works exactly the same.",
 
+  "nav.exitHint": "Press back once more to close the app.",
+
   "hint.speak": "Speak slowly and clearly, in full sentences. Pausing is fine.",
   "hint.edit": "Fix anything that came out wrong, then tap “Check my answer”.",
 
@@ -618,6 +620,8 @@ gu: {
   "err.mic.silent": "માઇક ચાલુ છે પણ કંઈ સંભળાતું નથી. થોડું મોટેથી બોલો, બ્રાઉઝરમાં સાચો માઇક પસંદ થયો છે તે તપાસો, અથવા «ટાઇપ કરીને લખું» દબાવો.",
   "err.google": "Google થી સાઇન-ઇન થયું નહીં. ઉપર નામ ટાઇપ કરી દો — એપ બરાબર એ જ રીતે ચાલે છે.",
 
+  "nav.exitHint": "એપ બંધ કરવા «પાછળ» ફરી એક વાર દબાવો.",
+
   "hint.speak": "પૂરાં વાક્યોમાં, ધીમે અને સ્પષ્ટ બોલો. વચ્ચે અટકો તો વાંધો નથી.",
   "hint.edit": "ખોટું લખાયું હોય તો સુધારી લો, પછી «જવાબ તપાસો» દબાવો.",
 
@@ -954,6 +958,8 @@ hi: {
   "err.mic.other": "माइक बंद हो गया ({e})। फिर कोशिश करें या टाइप करें।",
   "err.mic.silent": "माइक चालू है पर कुछ सुनाई नहीं दे रहा। थोड़ा ज़ोर से बोलें, ब्राउज़र में सही माइक चुना है यह जाँचें, या «टाइप करके लिखूँ» दबाएँ।",
   "err.google": "Google से साइन-इन नहीं हुआ। ऊपर नाम टाइप कर दें — ऐप बिल्कुल उसी तरह चलता है।",
+
+  "nav.exitHint": "ऐप बंद करने के लिए «पीछे» एक बार और दबाएँ।",
 
   "hint.speak": "पूरे वाक्यों में, धीरे और साफ़ बोलें। बीच में रुकें तो कोई बात नहीं।",
   "hint.edit": "ग़लत लिखा गया हो तो सुधार लें, फिर «जवाब जाँचें» दबाएँ।",

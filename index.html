@@ -645,6 +645,26 @@ details[open]>.lhead .chev{transform:rotate(90deg)}
 /* ટૅબ પટ્ટી દેખાય ત્યારે લખાણ તેની નીચે ઢંકાઈ ન જાય */
 body.tabs .wrap{padding-bottom:calc(108px + env(safe-area-inset-bottom))}
 
+/* ---------- તળિયે થોડી વાર દેખાતો સંદેશો ----------
+   «પાછળ» બટન એપ બંધ કરવાનું છે તે ચેતવવા વપરાય છે. ટૅબ પટ્ટી હોય તો
+   તેની ઉપર રહે, જેથી બંને એકબીજા પર ન ચડે. */
+.toast{
+  position:fixed;left:0;right:0;z-index:60;
+  bottom:calc(34px + env(safe-area-inset-bottom));
+  display:flex;justify-content:center;pointer-events:none;
+  opacity:0;transform:translateY(8px);transition:opacity .2s ease,transform .2s ease
+}
+.toast.on{opacity:1;transform:none}
+body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
+.toast span{
+  max-width:min(420px,calc(100% - 40px));
+  background:rgba(16,26,51,.92);color:#fff;
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  padding:11px 18px;border-radius:16px;
+  font-size:14px;font-weight:550;line-height:1.4;text-align:center;
+  box-shadow:0 8px 22px rgba(16,26,51,.28)
+}
+
 /* ---------- મદદની સ્ક્રીન ---------- */
 .faq{background:var(--cardsolid);border-radius:20px;box-shadow:var(--shs);padding:4px 0;margin-top:12px}
 .faq details{border-top:1px solid var(--line)}
@@ -727,6 +747,9 @@ body.tabs .wrap{padding-bottom:calc(108px + env(safe-area-inset-bottom))}
     <path d="M12 21v-6M9.6 17.4 12 15l2.4 2.4"/>
   </symbol>
 </defs></svg>
+
+<!-- ============ તળિયે થોડી વાર દેખાતો સંદેશો ============ -->
+<div class="toast" id="toast" role="status" aria-live="polite" hidden><span id="toastMsg"></span></div>
 
 <!-- ============ તળિયેની ટૅબ પટ્ટી ============ -->
 <nav class="tabbar" id="tabbar" hidden>

@@ -294,8 +294,12 @@ const SC_ID = {
 /* તળિયેની પટ્ટીવાળા ત્રણ ટૅબ — બાકીની સ્ક્રીન પર પટ્ટી છુપાય છે */
 const TABS = ["stats", "practice", "profile"];
 
+let curScreen = "splash";        // હાલ કઈ સ્ક્રીન ખૂલી છે — «પાછળ» બટન માટે
+
 function show(which) {
   Object.keys(SC_ID).forEach(s => { $(SC_ID[s]).hidden = s !== which; });
+  curScreen = which;
+  armBack();                  // ફોનનું «પાછળ» બટન એપની અંદર જ રહે
 
   const isTab = TABS.indexOf(which) >= 0;
   $("tabbar").hidden = !isTab;
@@ -316,6 +320,63 @@ function goTab(tab) {
   if (tab === "practice") renderTiles();
   if (tab === "profile") paintSettings();
   show(tab);
+}
+
+/* ---------------- ફોનનું «પાછળ» બટન ----------------
+
+   આ એક જ પાનાની એપ છે, તેથી એન્ડ્રોઇડનું «પાછળ» બટન સીધું એપ બંધ કરી
+   દેતું હતું — ભલે વિદ્યાર્થી ઇન્ટરવ્યુની વચ્ચે હોય. હવે એ સ્ક્રીન પરના
+   «પાછળ» બટન જેવું જ કામ કરે છે.
+
+   રીત: history માં આપણી એક વધારાની નોંધ મૂકી રાખીએ છીએ. «પાછળ» એ નોંધ
+   ખાય છે અને આપણને popstate મળે છે — એટલે બ્રાઉઝર એપ છોડતું નથી, અને
+   આપણે જાતે એક પગથિયું ઉપર જઈએ છીએ. ઉપર જતાં show() ફરી નોંધ મૂકી દે
+   છે, તેથી પછીનું «પાછળ» પણ પકડાય.
+
+   તળિયેની ત્રણ ટૅબ મૂળ સ્ક્રીન છે — ત્યાંથી ઉપર જવાનું કંઈ નથી. ત્યાં
+   નોંધ ફરી મૂકતા નથી અને «ફરી દબાવો તો એપ બંધ» એટલું કહીએ છીએ, એટલે
+   એન્ડ્રોઇડની જાણીતી «બે વાર દબાવો» રીત મળી રહે અને ભૂલથી એપ બંધ ન થાય. */
+
+/* દરેક અંદરની સ્ક્રીન પરથી «પાછળ» ક્યાં લઈ જાય — સ્ક્રીન પરના પોતાના
+   «પાછળ» બટન જે કરે છે તે જ, જેથી બંને એકસરખાં વર્તે. */
+const BACK_TO = {
+  splash:  null,                                                  // સૌથી પહેલી સ્ક્રીન
+  welcome: () => { show(state.user ? "practice" : "splash"); },
+  brief:   () => leaveCourse(),      // $("btnBriefBack") જે કરે છે તે જ
+  run:     () => leaveCourse(),      // $("btnBack") જે કરે છે તે જ
+  help:    () => show("profile")     // $("btnHelpBack") જે કરે છે તે જ
+};
+
+/* history માં આપણી નોંધ ન હોય તો મૂકી દો. હોય તો બીજી ઉમેરતા નથી —
+   નહીં તો એક «પાછળ» માટે ઘણી વાર દબાવવું પડે. */
+function armBack() {
+  try {
+    if (!(history.state && history.state.appBack)) history.pushState({ appBack: true }, "");
+  } catch (e) {}
+}
+
+window.addEventListener("popstate", () => {
+  const up = BACK_TO[curScreen];
+  if (up) { up(); return; }          // up() → show() → armBack() ફરી નોંધ મૂકે
+  // મૂળ સ્ક્રીન — નોંધ ફરી મૂકતા નથી, તેથી હવે પછીનું «પાછળ» એપ બંધ કરશે
+  toast(t("nav.exitHint"));
+});
+
+/* તળિયે થોડી વાર દેખાતો સંદેશો */
+let toastTimer = null;
+
+function toast(msg) {
+  const el = $("toast");
+  if (!el) return;
+  $("toastMsg").textContent = msg;
+  el.hidden = false;
+  // hidden કાઢ્યા પછીની ફ્રેમમાં વર્ગ ઉમેરીએ તો જ સરકવાની અસર દેખાય
+  requestAnimationFrame(() => el.classList.add("on"));
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    el.classList.remove("on");
+    toastTimer = setTimeout(() => { el.hidden = true; }, 250);
+  }, 2200);
 }
 
 /* ---------------- પહેલી વારની સ્ક્રીન (નામ) ---------------- */

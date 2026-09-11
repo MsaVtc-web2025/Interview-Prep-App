@@ -267,17 +267,33 @@ const Speech = (function () {
   }
 
   /* ડેસ્કટૉપ Chrome માં speechSynthesis પૂરું બંધ ન થયું હોય ત્યાં સુધી માઇક ચાલુ
-     થાય પણ એક પણ શબ્દ પકડાતો નથી. તેથી synth શાંત થાય તેની રાહ જોઈને જ શરૂ કરીએ. */
+     થાય પણ એક પણ શબ્દ પકડાતો નથી. તેથી synth શાંત થાય તેની રાહ જોઈને જ શરૂ કરીએ.
+
+     એન્ડ્રોઇડમાં એક ડગલું આગળ છે: onend આવી ગયા પછી પણ TTS એન્જિન થોડી વાર
+     ઑડિયોનો કબજો છોડતું નથી. એ છૂટે તે પહેલાં માઇક ચાલુ કરીએ તો પહેલું સેશન
+     તરત જ મરી જાય અને નીચેનો onend એને ફરી ચાલુ કરે — વિદ્યાર્થીને «બીપ…
+     બીપ… બીપ» એમ ત્રણ ટહુકા સંભળાય (ચાલુ, બંધ, ફરી ચાલુ), જોકે જવાબ પછી
+     બરાબર પકડાય છે. તેથી synth શાંત *થઈ ગયા પછી* પણ થોડી વાર શાંત રહે તેની
+     ખાતરી કરીને જ માઇક ખોલીએ છીએ. આ થોભો વિદ્યાર્થીને દેખાતો નથી, પણ
+     વધારાના ટહુકા નીકળી જાય છે. */
+  const SETTLE_MS = 600;      // synth શાંત થયા પછી માઇક ખોલતાં પહેલાંનો થોભો
+
   function whenSynthQuiet(cb) {
     clearStartTimer();
     if (!synth) { startTimer = setTimeout(cb, 0); return; }
     const t0 = Date.now();
+    let quietAt = 0;                        // ક્યારથી શાંત છે
     (function wait() {
-      if (!isSpeaking() || Date.now() - t0 > 1200) {
-        startTimer = setTimeout(cb, 250);   // માઇક ખૂલતાં પહેલાં સહેજ થોભો
+      // હજી બોલાય છે (અને બહુ વાર નથી થઈ) → રાહ જુઓ, અને થોભો ફરી શરૂ ગણો
+      if (isSpeaking() && Date.now() - t0 < 1200) {
+        quietAt = 0;
+        startTimer = setTimeout(wait, 60);
         return;
       }
-      startTimer = setTimeout(wait, 60);
+      if (!quietAt) quietAt = Date.now();
+      const left = SETTLE_MS - (Date.now() - quietAt);
+      if (left > 0) { startTimer = setTimeout(wait, Math.min(left, 100)); return; }
+      startTimer = setTimeout(cb, 0);
     })();
   }
 
