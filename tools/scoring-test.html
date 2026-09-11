@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="gu">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>મૂલ્યાંકનની ચકાસણી — scoring.js</title>
+
+<!--
+  scoring.js ની ચકાસણી. બે ભાગ:
+
+  ૧. બધા કોર્સના બધા નમૂનારૂપ જવાબ (q.en) સારા ગુણ મેળવે છે કે નહીં, અને
+     સલામતીનો દરવાજો ખોટી રીતે તો નથી વાગતો ને.
+  ૨. ખરાબ જવાબને ખરાબ ગુણ મળે છે કે નહીં — ચાવીરૂપ શબ્દોની સૂકી યાદી,
+     «મને ખબર નથી», અને શબ્દની અંદર છુપાયેલા શબ્દો (feedback માં feed).
+
+  વાપરવાની રીત: બ્રાઉઝરમાં ખોલો. બધી લીટી લીલી હોવી જોઈએ.
+  scoring.js કે પ્રશ્ન બેંક બદલો ત્યારે ફરી જોઈ લેવું.
+-->
+
+<style>
+  body{font:15px/1.5 system-ui,Segoe UI,Roboto,sans-serif;margin:0;padding:22px;background:#eef3fd;color:#101a33}
+  h1{font-size:20px;margin:0 0 4px}
+  h2{font-size:15px;margin:22px 0 8px;color:#5b6b8c}
+  p.sub{color:#6c7c99;margin:0 0 18px}
+  #sum{font-weight:700;padding:10px 14px;border-radius:12px;display:inline-block}
+  .ok{background:#e2f5ec;color:#12915f}
+  .bad{background:#fdeaea;color:#c0392b}
+  .case{background:#fff;border-radius:14px;padding:11px 14px;margin-bottom:8px;box-shadow:0 4px 12px rgba(28,54,120,.08)}
+  .tag{font-size:12px;padding:2px 8px;border-radius:8px;margin-inline-end:8px;vertical-align:1px;font-weight:650}
+  .row{font-size:13px;color:#5b6b8c;margin-top:4px}
+  code{background:#eef1f7;padding:1px 5px;border-radius:5px;font-size:12px}
+</style>
+
+<body>
+<h1>મૂલ્યાંકનની ચકાસણી</h1>
+<p class="sub">નમૂનારૂપ જવાબ ઊંચા ગુણ મેળવે, અને ખરાબ જવાબ ઊંચા ગુણ <b>ન</b> મેળવે</p>
+<div id="sum">ચાલે છે…</div>
+<div id="out"></div>
+
+<script src="../i18n.js"></script>
+<script src="../i18n-content.js"></script>
+<script src="../courses.js"></script>
+<script src="../questions.js"></script>
+<script src="../bank-computer.js"></script>
+<script src="../bank-cnc.js"></script>
+<script src="../bank-electrician.js"></script>
+<script src="../bank-automotive.js"></script>
+<script src="../bank-evehicle.js"></script>
+<script src="../bank-nursing.js"></script>
+<script src="../bank-welding.js"></script>
+<script src="../scoring.js"></script>
+
+<script>
+const out = document.getElementById("out");
+let pass = 0, total = 0;
+
+function line(ok, name, detail) {
+  total++; if (ok) pass++;
+  const d = document.createElement("div");
+  d.className = "case";
+  d.innerHTML = '<span class="tag ' + (ok ? "ok" : "bad") + '">' + (ok ? "બરાબર" : "ખોટું") + "</span>" +
+                name + (detail ? '<div class="row">' + detail + "</div>" : "");
+  out.appendChild(d);
+}
+
+function head(txt) { const h = document.createElement("h2"); h.textContent = txt; out.appendChild(h); }
+
+const cnc = COURSES.filter(c => c.id === "cnc")[0];
+const q1  = cnc.questions.filter(q => q.id === 1)[0];   // સલામતીનો પ્રશ્ન
+const q5  = cnc.questions.filter(q => q.id === 5)[0];   // feed rate / cutting speed
+const sc  = (txt, q, mode) => scoreAnswer(txt, q || q5, mode || "technical");
+
+/* ---------- ૧. બધા નમૂનારૂપ જવાબ ---------- */
+head("બધા કોર્સના નમૂનારૂપ જવાબ");
+
+let worst = null, falseSafety = [], falseFlag = [];
+let n = 0, sum = 0;
+COURSES.forEach(c => c.questions.forEach(q => {
+  if (!q.en) return;
+  const r = sc(q.en, q, c.mode);
+  n++; sum += r.overall;
+  if (!worst || r.overall < worst.overall) worst = { overall: r.overall, course: c.id, qid: q.id };
+  if (r.missingMust.length) falseSafety.push(c.id + "#" + q.id);
+  if (r.offTopic || r.noAnswer) falseFlag.push(c.id + "#" + q.id);
+}));
+
+line(worst && worst.overall >= 7.5, n + " નમૂનારૂપ જવાબ — દરેકને ૭.૫ કે વધુ",
+     "સરેરાશ <code>" + (sum / n).toFixed(2) + "</code>, સૌથી ઓછો <code>" +
+     (worst ? worst.overall + "</code> (" + worst.course + " #" + worst.qid + ")" : "—"));
+line(!falseSafety.length, "સલામતીનો દરવાજો ખોટી રીતે વાગતો નથી",
+     falseSafety.length ? "વાગ્યો: <code>" + falseSafety.join(", ") + "</code>" : "");
+line(!falseFlag.length, "કોઈ નમૂનારૂપ જવાબ «વિષય બહાર» કે «ખબર નથી» ગણાતો નથી",
+     falseFlag.length ? "ગણાયો: <code>" + falseFlag.join(", ") + "</code>" : "");
+
+/* ---------- ૨. ખરાબ જવાબ ---------- */
+head("ખરાબ જવાબને ઊંચા ગુણ ન મળે");
+
+const salad = sc("feed speed tool fast finish");
+line(salad.overall < 5.5, "ચાવીરૂપ શબ્દોની સૂકી યાદી — વાક્ય એકેય નહીં",
+     "કુલ <code>" + salad.overall + "</code> (કવરેજ ૧૦૦% હોવા છતાં)");
+
+const dk = sc("I do not know about feed rate but I will learn it");
+line(dk.overall <= 2 && dk.noAnswer, "«મને ખબર નથી» — જવાબ આપ્યો જ નથી",
+     "કુલ <code>" + dk.overall + "</code>, ચોકસાઈ <code>" + dk.scores.accuracy + "</code>");
+
+line(sc("feedback feedback feedback").stats.coverage === 0,
+     "«feedback» એ «feed» તરીકે ગણાતું નથી");
+line(sc("my programme comment summer").stats.coverage === 0,
+     "«programme», «comment», «summer» એ «mm» તરીકે ગણાતાં નથી");
+
+const junk = sc("I gave feedback to my summer programme comment");
+line(junk.stats.coverage === 0, "સંબંધ વગરનું વાક્ય — કવરેજ શૂન્ય",
+     "કવરેજ <code>" + junk.stats.coverage + "%</code>, કુલ <code>" + junk.overall + "</code>");
+
+/* ---------- ૩. સાચા જવાબને નુકસાન ન થાય ---------- */
+head("સાચા જવાબને નુકસાન ન થાય");
+
+const honest = sc("I do not know the exact number but feed rate is how fast the tool moves into the job in mm per minute and cutting speed is the spindle rpm");
+line(honest.overall >= 7.5 && !honest.noAnswer,
+     "«ચોક્કસ આંકડો ખબર નથી, પણ…» — આ સારો જવાબ છે, «ખબર નથી» નહીં",
+     "કુલ <code>" + honest.overall + "</code>");
+
+const infl = sc("The tool feeds into the job at a set rate and the spindle speed decides how fast it rotates in mm per minute for a good finish");
+line(infl.stats.coverage === 100, "«feeds», «rotates» જેવાં રૂપ પણ ગણાય છે",
+     "કવરેજ <code>" + infl.stats.coverage + "%</code>");
+
+const shortOk = sc("Cutting speed is the spindle rotation speed. Feed rate is how fast the tool moves into the job.");
+line(shortOk.overall >= 7.5, "ટૂંકો પણ સાચો જવાબ", "કુલ <code>" + shortOk.overall + "</code>");
+
+/* ---------- ૪. સલામતીનો દરવાજો ---------- */
+head("સલામતીનો દરવાજો");
+
+const noPPE = sc("I close all the guards and doors, I check the coolant level, I check the tool is tight in the holder and the job is clamped in the vice, then I verify the program and zero offset.", q1);
+line(noPPE.missingMust.length === 2 && noPPE.overall <= 6,
+     "ઇમરજન્સી સ્ટોપ અને PPE ચૂક્યા — દરવાજો વાગે અને કુલ ગુણ ૬ થી વધુ નહીં",
+     "ચૂક્યા <code>" + noPPE.missingMust.length + "</code>, કુલ <code>" + noPPE.overall + "</code>");
+
+const fullSafe = sc(q1.en, q1);
+line(!fullSafe.missingMust.length, "પૂરો સલામતી જવાબ — દરવાજો વાગતો નથી",
+     "કુલ <code>" + fullSafe.overall + "</code>");
+
+/* ---------- સાર ---------- */
+const s = document.getElementById("sum");
+s.className = pass === total ? "ok" : "bad";
+s.textContent = pass + " / " + total + " બરાબર";
+</script>
+</body>
+</html>
