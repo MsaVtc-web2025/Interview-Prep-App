@@ -57,7 +57,7 @@ npm install -g wrangler
 wrangler login
 ```
 
-From this folder, create `wrangler.toml`:
+`wrangler.toml` is already in this folder:
 
 ```toml
 name = "interview-judge"
