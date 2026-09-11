@@ -29,7 +29,6 @@ en: {
   "home.lang": "App language",
   "home.chooseCat": "Choose a category",
   "home.progress": "Your overall progress",
-  "home.foot1": "The app works without internet. Speaking your answer needs internet.",
   "home.foot2": "Scoring is automatic — it is guidance, not a final verdict.",
 
   "st.answered": "Answered",
@@ -368,7 +367,6 @@ gu: {
   "home.lang": "એપની ભાષા",
   "home.chooseCat": "વિભાગ પસંદ કરો",
   "home.progress": "તમારી કુલ પ્રગતિ",
-  "home.foot1": "એપ ઇન્ટરનેટ વગર ચાલે છે. બોલીને જવાબ આપવા માટે ઇન્ટરનેટ જોઈએ.",
   "home.foot2": "મૂલ્યાંકન આપોઆપ થાય છે — તે માર્ગદર્શન માટે છે, અંતિમ ચુકાદો નથી.",
 
   "st.answered": "જવાબ આપ્યા",
@@ -707,7 +705,6 @@ hi: {
   "home.lang": "ऐप की भाषा",
   "home.chooseCat": "विभाग चुनें",
   "home.progress": "आपकी कुल प्रगति",
-  "home.foot1": "ऐप इंटरनेट के बिना चलता है। बोलकर जवाब देने के लिए इंटरनेट चाहिए।",
   "home.foot2": "मूल्यांकन अपने आप होता है — यह मार्गदर्शन के लिए है, अंतिम फ़ैसला नहीं।",
 
   "st.answered": "जवाब दिए",
