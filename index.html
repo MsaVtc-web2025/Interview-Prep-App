@@ -645,6 +645,14 @@ details[open]>.lhead .chev{transform:rotate(90deg)}
 /* ટૅબ પટ્ટી દેખાય ત્યારે લખાણ તેની નીચે ઢંકાઈ ન જાય */
 body.tabs .wrap{padding-bottom:calc(108px + env(safe-area-inset-bottom))}
 
+/* ---------- «AI એ તપાસ્યું» એવો બિલ્લો ----------
+   ગુણ કોણે આપ્યા તે વિદ્યાર્થીથી છુપાવવું નહીં. */
+.aibadge{
+  display:inline-block;margin:12px 0 0;padding:5px 11px;
+  background:#efe9fd;color:#5b3fa8;border-radius:10px;
+  font-size:12px;font-weight:650
+}
+
 /* ---------- તળિયે થોડી વાર દેખાતો સંદેશો ----------
    «પાછળ» બટન એપ બંધ કરવાનું છે તે ચેતવવા વપરાય છે. ટૅબ પટ્ટી હોય તો
    તેની ઉપર રહે, જેથી બંને એકબીજા પર ન ચડે. */
@@ -1083,6 +1091,29 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
     </div>
 
     <!-- પ્રગતિનો બૅકઅપ — sync.js માં PB_URL ભરેલું હોય તો જ દેખાય -->
+    <!-- AI મૂલ્યાંકન — judge.js માં JUDGE_URL ભરેલો હોય તો જ દેખાય -->
+    <div id="aiWrap" hidden>
+      <h2 class="grp" data-i18n="ai.grp">AI evaluation</h2>
+      <div class="group">
+        <details class="lrow">
+          <summary class="lhead">
+            <span class="li purple"><svg class="svi" aria-hidden="true"><use href="#i-chart"/></svg></span>
+            <span class="lt" data-i18n="ai.title">Let AI read my answers</span>
+            <span class="lv" id="aiState">—</span>
+            <svg class="svi sm chev" aria-hidden="true"><use href="#i-next"/></svg>
+          </summary>
+          <div class="lbody">
+            <p class="sub" data-i18n="ai.what"></p>
+            <p class="sub warn" data-i18n="ai.sends"></p>
+            <div class="stack">
+              <button class="act ghost" id="btnAiOn" data-i18n="ai.turnOn">Turn on AI evaluation</button>
+              <button class="mini" id="btnAiOff" hidden data-i18n="ai.turnOff">Turn off AI evaluation</button>
+            </div>
+          </div>
+        </details>
+      </div>
+    </div>
+
     <div id="syncWrap" hidden>
       <h2 class="grp" data-i18n="sync.grp">Progress backup</h2>
       <div class="group">
@@ -1179,6 +1210,7 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
 <script src="./stats.js"></script>
 <script src="./vendor/pocketbase.umd.js"></script>
 <script src="./sync.js"></script>
+<script src="./judge.js"></script>
 <script src="./speech.js"></script>
 <script src="./avatar.js"></script>
 <script src="./app.js"></script>

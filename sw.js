@@ -1,7 +1,7 @@
 /* Service worker — caches everything so the app works with no internet.
    NOTE: bump CACHE whenever any file below changes, otherwise installed
    phones keep running the old version. */
-const CACHE = "interview-practice-v21";
+const CACHE = "interview-practice-v22";
 
 const ASSETS = [
   "./",
@@ -21,6 +21,7 @@ const ASSETS = [
   "./stats.js",
   "./vendor/pocketbase.umd.js",
   "./sync.js",
+  "./judge.js",
   "./speech.js",
   "./avatar.js",
   "./app.js",

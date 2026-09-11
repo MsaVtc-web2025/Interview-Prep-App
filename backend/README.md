@@ -20,6 +20,11 @@ table at the bottom of this file tells you what to create by hand.
 is nowhere to put it. That is deliberate — see the header comment in the
 migration.
 
+> **One thing this table does not cover.** The optional AI evaluation feature
+> does send answer text — to a Cloudflare Worker, not here. It is off by default,
+> needs its own separate consent from the student, and never touches this server
+> or this database. See `backend/worker/README.md`.
+
 ## 1. What you need
 
 - A small Linux box. **Oracle Cloud Always Free** (ARM, 4 vCPU / 24 GB) costs

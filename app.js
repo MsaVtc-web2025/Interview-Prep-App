@@ -48,7 +48,7 @@ function newCid() {
    પરવાનગી કે સલામતી આ ટોકન પર આધારિત નથી. */
 const GOOGLE_CLIENT_ID = "604155826405-15oddjk71jr042kbe4bk3j02kdgt547e.apps.googleusercontent.com";
 
-const DEFAULTS = { hands: true, ask: true, speakFb: true, rate: 0.92, silence: 3000, lang: "en" };
+const DEFAULTS = { hands: true, ask: true, speakFb: true, rate: 0.92, silence: 3000, lang: "en", ai: false };
 
 let state = { settings: Object.assign({}, DEFAULTS), courses: {}, user: null };
 
@@ -684,28 +684,43 @@ function submit(text) {
 
   // તપાસ તરત થાય છે; અવતાર «વિચારે» તે દેખાડવા સહેજ થોભો
   setTimeout(() => {
-    const r = scoreAnswer(ans, current, course.mode);
-    lastResult = r;
+    // ઓફલાઇન ગુણ હંમેશાં પહેલાં ગણાય છે — AI ચાલુ હોય તોય. એ જ આધાર છે,
+    // અને AI ન પહોંચે તો એ જ પરિણામ દેખાય છે.
+    const offline = scoreAnswer(ans, current, course.mode);
+    const q = current, c = course;      // વિદ્યાર્થી આગળ વધી જાય તો ઓળખવા માટે
 
-    /* `q` અને `answer` ફક્ત આ ફોનમાં રહે છે. `cid` બૅકઅપ માટે છે —
-       સર્વર (user, cid) પર unique રાખે છે, તેથી કતાર ફરી મોકલાય તો પણ
-       બમણું થતું નથી. sync.js માં કયાં ખાનાં બહાર જાય તે જોઈ લો. */
-    bucket(course.id).history.push({
-      // પ્રશ્નની ઓળખ આંકડો છે, પણ ઓળખ તરીકે વાપરીએ છીએ — તેથી લખાણમાં
-      ts: Date.now(), cid: newCid(), course: course.id,
-      qid: current.id == null ? "" : String(current.id),
-      q: current.q, cat: current.cat,
-      answer: ans, overall: r.overall, scores: r.scores,
-      words: r.stats.words, coverage: r.stats.coverage,
-      weakest: r.weakest, missed: r.missingMust, secs: secs
-    });
-    save();
-    Sync.flush();                  // ચાલુ ન હોય તો કંઈ કરતું નથી
+    function finish(r) {
+      if (current !== q || course !== c) return;   // વચ્ચે બીજો પ્રશ્ન આવી ગયો
+      lastResult = r;
 
-    showResult(r);
-    renderProgress();
-    setPhase("feedback");
-    speakFeedback(r);
+      /* `q` અને `answer` ફક્ત આ ફોનમાં રહે છે. `cid` બૅકઅપ માટે છે —
+         સર્વર (user, cid) પર unique રાખે છે, તેથી કતાર ફરી મોકલાય તો પણ
+         બમણું થતું નથી. sync.js માં કયાં ખાનાં બહાર જાય તે જોઈ લો. */
+      bucket(c.id).history.push({
+        // પ્રશ્નની ઓળખ આંકડો છે, પણ ઓળખ તરીકે વાપરીએ છીએ — તેથી લખાણમાં
+        ts: Date.now(), cid: newCid(), course: c.id,
+        qid: q.id == null ? "" : String(q.id),
+        q: q.q, cat: q.cat,
+        answer: ans, overall: r.overall, scores: r.scores,
+        words: r.stats.words, coverage: r.stats.coverage,
+        weakest: r.weakest, missed: r.missingMust, secs: secs,
+        byAi: !!r.byAi
+      });
+      save();
+      Sync.flush();                  // ચાલુ ન હોય તો કંઈ કરતું નથી
+
+      showResult(r);
+      renderProgress();
+      setPhase("feedback");
+      speakFeedback(r);
+    }
+
+    if (!Judge.active()) { finish(offline); return; }
+
+    // AI વાંચે ત્યાં સુધી વિદ્યાર્થીને ખબર પડે કે કંઈક ચાલી રહ્યું છે
+    $("hint").className = "hint";
+    $("hint").textContent = t("ai.reading");
+    Judge.evaluate(ans, q, c.mode, getLang()).then(j => finish(Judge.merge(offline, j)));
   }, 420);
 }
 
@@ -793,6 +808,9 @@ function showResult(r) {
       r.grammar.map(g => "<li>" + esc(g) + "</li>").join("") + "</ul></div>";
   }
 
+  // AI એ તપાસ્યું હોય તો કહી દઈએ — વિદ્યાર્થીને ખબર હોવી જોઈએ કે ગુણ કોણે આપ્યા
+  if (r.byAi) h += '<div class="aibadge">' + esc(t("ai.badge")) + "</div>";
+
   h += '<div class="box adv"><b>' + esc(t("res.advice")) + "</b>" + esc(r.advice) + "</div>";
   if (r.tip) h += '<div class="box tip"><b>' + esc(t("res.tip")) + '</b><span class="' +
     (qIsGuOnly(current) ? "guscript" : "") + '">' + esc(qField(current, "tip")) + "</span></div>";
@@ -855,6 +873,7 @@ function paintSettings() {
   $("setAva").textContent = nm ? nm.trim().charAt(0).toUpperCase() : "•";
   $("setVer").textContent = t("set.version", { v: APP_VERSION });
   Stats.renderProfileStats($("profStats"));
+  paintAi();
   paintSync();
   $("swHands").classList.toggle("on", !!s.hands);
   $("swAsk").classList.toggle("on", !!s.ask);
@@ -884,6 +903,25 @@ function paintSettings() {
    sync.js માં PB_URL ખાલી હોય તો આખો વિભાગ દેખાતો જ નથી — એપ પહેલાં
    જેવી ઓફલાઇન એપ રહે છે. ભરેલું હોય તો ત્રણ પગથિયાં છે:
    સાઇન-ઇન → સંમતિ → મોકલવાનું ચાલુ. */
+
+/* ---------------- AI મૂલ્યાંકન ----------------
+
+   judge.js માં JUDGE_URL ખાલી હોય તો આખો વિભાગ દેખાતો જ નથી.
+
+   સંમતિ જાણી જોઈને સ્વિચ નથી, બટન છે: વિદ્યાર્થી શું બહાર જાય છે તે
+   વાંચ્યા પછી જ «ચાલુ કરો» દબાવે. આંગળી અડી જવાથી જવાબનું લખાણ બહાર
+   જવું ન જોઈએ. પ્રગતિના બૅકઅપની સંમતિથી આ સાવ અલગ છે. */
+
+function paintAi() {
+  const wrap = $("aiWrap");
+  if (!Judge.enabled()) { wrap.hidden = true; return; }
+  wrap.hidden = false;
+
+  const on = Judge.consented();
+  $("aiState").textContent = t(on ? "ai.stOn" : "ai.stOff");
+  $("btnAiOn").hidden = on;
+  $("btnAiOff").hidden = !on;
+}
 
 function paintSync() {
   const wrap = $("syncWrap");
@@ -935,6 +973,9 @@ function toggle(key, el) {
 /* તળિયેની ટૅબ પટ્ટી */
 Array.prototype.forEach.call($("tabbar").querySelectorAll(".tab"), b =>
   b.addEventListener("click", () => goTab(b.getAttribute("data-tab"))));
+
+$("btnAiOn").addEventListener("click", () => { Judge.setConsent(true); paintAi(); });
+$("btnAiOff").addEventListener("click", () => { Judge.setConsent(false); paintAi(); });
 
 $("btnHelp").addEventListener("click", () => show("help"));
 $("btnHelpBack").addEventListener("click", () => show("profile"));
