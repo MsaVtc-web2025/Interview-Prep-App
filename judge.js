@@ -29,7 +29,7 @@
 /* ⚙ Cloudflare Worker નું સરનામું. ખાલી હોય તો આખી સુવિધા દેખાતી જ નથી
    અને એપ પહેલાં જેવી ઓફલાઇન એપ રહે છે.
    ઉદાહરણ: "https://interview-judge.<તમારું-નામ>.workers.dev"  (છેલ્લે સ્લૅશ નહીં) */
-const JUDGE_URL = "";
+const JUDGE_URL = "https://interview-judge.msa-vtc.workers.dev";
 
 const Judge = (function () {
 
