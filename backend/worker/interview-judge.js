@@ -96,6 +96,65 @@ function json(body, status, headers) {
   });
 }
 
+/* ---- One call to one model -------------------------------------------
+   Returns {ok, data} or {ok:false, error, retry}. Never throws: an abort
+   from our own cap and a dead socket both arrive here as the same thing,
+   and both are worth another go. `retry` says whether trying again could
+   plausibly change the answer — a 400 means our request is wrong, and
+   repeating a wrong request just spends the budget.                     */
+
+async function callGemini(model, key, body, capMs) {
+  const url = "https://generativelanguage.googleapis.com/v1beta/models/" +
+              encodeURIComponent(model) + ":generateContent";
+
+  let ctrl = null, timer = null;
+  try { ctrl = new AbortController(); } catch (e) { ctrl = null; }
+  if (ctrl) timer = setTimeout(() => { try { ctrl.abort(); } catch (e) {} }, capMs);
+
+  try {
+    const opts = {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+      body: JSON.stringify({
+        contents: [{ role: "user", parts: [{ text: buildPrompt(body) }] }],
+        generationConfig: {
+          temperature: 0.2,
+          responseMimeType: "application/json",
+          responseSchema: SCHEMA
+        }
+      })
+    };
+    if (ctrl) opts.signal = ctrl.signal;
+
+    const res = await fetch(url, opts);
+
+    if (!res.ok) {
+      // Never pass the upstream body through — it can echo the key back.
+      return {
+        ok: false,
+        error: "upstream_" + res.status,
+        retry: res.status === 429 || res.status >= 500
+      };
+    }
+
+    const data = await res.json();
+    const text = data &&
+      data.candidates && data.candidates[0] &&
+      data.candidates[0].content && data.candidates[0].content.parts &&
+      data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
+
+    if (!text) return { ok: false, error: "empty_response", retry: true };
+
+    try { return { ok: true, data: JSON.parse(text) }; }
+    catch (e) { return { ok: false, error: "unparsable", retry: true }; }
+
+  } catch (e) {
+    return { ok: false, error: "upstream_unreachable", retry: true };
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 export default {
   async fetch(request, env) {
     const allowed = String(env.ALLOWED_ORIGINS || "")
@@ -137,45 +196,70 @@ export default {
       if (used >= cap) return json({ error: "rate_limited" }, 429, head);
     }
 
-    const model = env.GEMINI_MODEL || "gemini-flash-latest";
-    const url = "https://generativelanguage.googleapis.com/v1beta/models/" +
-                encodeURIComponent(model) + ":generateContent";
+    /* ---- The model chain ---------------------------------------------
+       Gemini's free tier sheds load with 503 far more often than it fails
+       for any other reason: measured against this Worker, 5 of 9 calls came
+       back 503. That is shared serving capacity, not quota, so paying would
+       not remove it — but 503 is retryable by definition, and capacity is
+       tracked per model. So: ask the same model again, then ask a different
+       pool. Roughly, 44% success per call becomes ~90% over four attempts.
 
-    let upstream;
-    try {
-      upstream = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-goog-api-key": env.GEMINI_API_KEY },
-        body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ text: buildPrompt(body) }] }],
-          generationConfig: {
-            temperature: 0.2,
-            responseMimeType: "application/json",
-            responseSchema: SCHEMA
-          }
-        })
-      });
-    } catch (e) {
-      return json({ error: "upstream_unreachable" }, 502, head);
+       BUDGET_MS is the hard ceiling and it is enforced, not summed. Every
+       attempt reads the clock and shrinks its own cap to whatever is left,
+       so adding a model or mistuning a backoff cannot push the total past
+       it. That matters: the client gives up at 25s, and any work finishing
+       after that is discarded without anyone seeing it — the same silent
+       failure the old 12s client timeout was causing.                    */
+
+    const BUDGET_MS      = 22500;   // hard ceiling; stays under the client's 25s
+    const ATTEMPT_MS     = 5000;    // cap per call — also catches a socket that hangs
+    const TRIES_PER_MODEL = 2;
+    const BACKOFF_MS     = 500;
+    const BACKOFF_MAX    = 1000;    // capped: doubling forever outruns the budget
+    const MIN_USEFUL_MS  = 1500;    // too little left to be worth starting
+
+    const FALLBACK_MODEL = "gemini-3.1-flash-lite";
+    const first = env.GEMINI_MODEL || "gemini-3.5-flash";
+    const chain = [first];
+    if (first !== FALLBACK_MODEL) chain.push(FALLBACK_MODEL);
+
+    const t0 = Date.now();
+    const left = () => BUDGET_MS - (Date.now() - t0);
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+    let out = null, lastErr = "upstream_unreachable";
+
+    outer:
+    for (let ci = 0; ci < chain.length; ci++) {
+      const model = chain[ci];
+      let backoff = BACKOFF_MS;          // per model — never carried across pools
+
+      for (let attempt = 0; attempt < TRIES_PER_MODEL; attempt++) {
+        const remain = left();
+        if (remain < MIN_USEFUL_MS) break outer;
+
+        const started = Date.now();
+        const r = await callGemini(model, env.GEMINI_API_KEY, body, Math.min(ATTEMPT_MS, remain));
+
+        /* One line per attempt. `wrangler tail` is the only view into which
+           pool is actually failing, and without the model name and elapsed
+           time the fallback order is guesswork. No answer text is logged. */
+        console.log(JSON.stringify({
+          model: model, attempt: attempt + 1,
+          ms: Date.now() - started, result: r.ok ? "ok" : r.error
+        }));
+
+        if (r.ok) { out = r.data; break outer; }
+        lastErr = r.error;
+        if (!r.retry) break;                       // our fault — next pool won't help either
+        if (left() < MIN_USEFUL_MS + backoff) break outer;
+
+        await sleep(backoff + Math.floor(Math.random() * 300));   // jitter
+        backoff = Math.min(backoff * 2, BACKOFF_MAX);
+      }
     }
 
-    if (!upstream.ok) {
-      // Never pass the upstream body through — it can echo the key back.
-      return json({ error: "upstream_" + upstream.status }, 502, head);
-    }
-
-    let out;
-    try {
-      const data = await upstream.json();
-      const text = data &&
-        data.candidates && data.candidates[0] &&
-        data.candidates[0].content && data.candidates[0].content.parts &&
-        data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
-      if (!text) return json({ error: "empty_response" }, 502, head);
-      out = JSON.parse(text);
-    } catch (e) {
-      return json({ error: "unparsable" }, 502, head);
-    }
+    if (!out) return json({ error: lastErr }, 502, head);
 
     if (rateKey && env.RATE) {
       const used = parseInt((await env.RATE.get(rateKey)) || "0", 10);
