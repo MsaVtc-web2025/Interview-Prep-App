@@ -653,6 +653,31 @@ body.tabs .wrap{padding-bottom:calc(108px + env(safe-area-inset-bottom))}
   font-size:12px;font-weight:650
 }
 
+/* ---------- તપાસ ચાલુ છે, અને અંતેની યાદી ----------
+   જવાબ આપ્યા પછી ગુણ તરત બતાવતા નથી — ઓફલાઇન આંકડો
+   ખોટો હોઈ શકે છે. આ પેટી કહે છે કે તપાસ બાકી છે. */
+.box.pend{
+  background:#fff7e8;border-left:3px solid #e0a33a;color:#6b4a12
+}
+.box.pend b{display:block;margin-bottom:4px;color:#8a5c14}
+
+.offbadge{
+  display:inline-block;margin:12px 0 0;padding:5px 11px;
+  background:#eef1f5;color:#556;border-radius:10px;
+  font-size:12px;font-weight:650
+}
+
+.revcard{margin-bottom:14px}
+.revhead{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.revn{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:26px;height:26px;border-radius:50%;
+  background:#eef1f5;color:#556;font-size:13px;font-weight:700;flex:0 0 auto
+}
+.revscore{font-size:22px;font-weight:800;margin-left:auto}
+.revq{font-size:14px;line-height:1.45;color:#333}
+
+
 /* ---------- તળિયે થોડી વાર દેખાતો સંદેશો ----------
    «પાછળ» બટન એપ બંધ કરવાનું છે તે ચેતવવા વપરાય છે. ટૅબ પટ્ટી હોય તો
    તેની ઉપર રહે, જેથી બંને એકબીજા પર ન ચડે. */
@@ -1191,6 +1216,19 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
     </div>
     <div class="foot">
       <span data-i18n="home.foot2"></span>
+    </div>
+  </div>
+</div>
+
+<div id="scReview" hidden>
+  <div class="bar solid">
+    <h1 data-i18n="rev.title">Your feedback</h1>
+  </div>
+  <div class="wrap">
+    <p class="lead" data-i18n="rev.lead"></p>
+    <div id="revList"></div>
+    <div class="row" style="margin-top:18px">
+      <button class="act" id="btnRevDone" data-i18n="rev.done">Done</button>
     </div>
   </div>
 </div>

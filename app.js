@@ -289,7 +289,8 @@ function relocalize() {
 
 const SC_ID = {
   splash: "scSplash", welcome: "scWelcome", stats: "scStats", practice: "scPractice",
-  brief: "scBrief", run: "scRun", profile: "scProfile", help: "scHelp"
+  brief: "scBrief", run: "scRun", profile: "scProfile", help: "scHelp",
+  review: "scReview"
 };
 /* તળિયેની પટ્ટીવાળા ત્રણ ટૅબ — બાકીની સ્ક્રીન પર પટ્ટી છુપાય છે */
 const TABS = ["stats", "practice", "profile"];
@@ -344,6 +345,7 @@ const BACK_TO = {
   welcome: () => { show(state.user ? "practice" : "splash"); },
   brief:   () => leaveCourse(),      // $("btnBriefBack") જે કરે છે તે જ
   run:     () => leaveCourse(),      // $("btnBack") જે કરે છે તે જ
+  review:  () => closeReview(),      // તપાસ જોઈ લર્ધી — યાદી પર પાછા
   help:    () => show("profile")     // $("btnHelpBack") જે કરે છે તે જ
 };
 
@@ -518,6 +520,11 @@ function leaveCourse() {
   Avatar.setState("idle");
   phase = "idle";
   course = null;
+
+  /* AI તપાસ કરી હોય તો સીધા યાદી પર ન જઈએ — વિદ્યાર્થીએ જવાબ
+     આપ્યા छे पण हजु कशुं जोयुं नथी. बधी तपास अहीं एक साथे देखाय छे. */
+  if (Judge.reviews().length) { openReview(); return; }
+
   show("practice");
   renderDash();
 }
@@ -689,38 +696,48 @@ function submit(text) {
     const offline = scoreAnswer(ans, current, course.mode);
     const q = current, c = course;      // વિદ્યાર્થી આગળ વધી જાય તો ઓળખવા માટે
 
-    function finish(r) {
+    function finish(r, deferred) {
       if (current !== q || course !== c) return;   // વચ્ચે બીજો પ્રશ્ન આવી ગયો
       lastResult = r;
+      const cid = newCid();
 
       /* `q` અને `answer` ફક્ત આ ફોનમાં રહે છે. `cid` બૅકઅપ માટે છે —
          સર્વર (user, cid) પર unique રાખે છે, તેથી કતાર ફરી મોકલાય તો પણ
          બમણું થતું નથી. sync.js માં કયાં ખાનાં બહાર જાય તે જોઈ લો. */
       bucket(c.id).history.push({
         // પ્રશ્નની ઓળખ આંકડો છે, પણ ઓળખ તરીકે વાપરીએ છીએ — તેથી લખાણમાં
-        ts: Date.now(), cid: newCid(), course: c.id,
+        ts: Date.now(), cid: cid, course: c.id,
         qid: q.id == null ? "" : String(q.id),
         q: q.q, cat: q.cat,
         answer: ans, overall: r.overall, scores: r.scores,
         words: r.stats.words, coverage: r.stats.coverage,
         weakest: r.weakest, missed: r.missingMust, secs: secs,
-        byAi: !!r.byAi
+        byAi: !!r.byAi, pending: !!deferred
       });
       save();
-      Sync.flush();                  // ચાલુ ન હોય તો કંઈ કરતું નથી
+      /* તપાસ બાકી હોય ત્યાં સુધી બૅકઅપ મોકલતા નથી. સર્વર (user, cid) પર
+         unique રાખે છે, તેથી ઓફલાઇન આંકડો પહેલાં મોકલી દઈએ તો પછીનો
+         સાચો કદાચ ઉપર ન ચડે. applyReview() તે કામ કરશે. */
+      if (!deferred) Sync.flush();
 
-      showResult(r);
+      if (deferred) {
+        const entry = Judge.review(r, ans, q, c.mode, getLang(), cid);
+        entry.promise.then(() => applyReview(c.id, cid, entry));
+        showPending();
+      } else {
+        showResult(r);
+      }
       renderProgress();
       setPhase("feedback");
-      speakFeedback(r);
+      if (deferred) speakPending(); else speakFeedback(r);
     }
 
     if (!Judge.active()) { finish(offline); return; }
 
-    // AI વાંચે ત્યાં સુધી વિદ્યાર્થીને ખબર પડે કે કંઈક ચાલી રહ્યું છે
-    $("hint").className = "hint";
-    $("hint").textContent = t("ai.reading");
-    Judge.evaluate(ans, q, c.mode, getLang()).then(j => finish(Judge.merge(offline, j)));
+    /* AI चालु छे — पण राह जोवडावता नथी. कारण judge.js नी कतार पासे
+       लख्युं छे: हाथमां जे ओफलाइन आंकडो छे ते खोटो होई शके, अने खोटी
+       शाबाशी बतावीने पछी सुधारवा करतां तपास बाकी छे एम कहेवुं साचुं छे. */
+    finish(offline, true);
   }, 420);
 }
 
@@ -738,6 +755,112 @@ function speakFeedback(r) {
   Speech.speak(msg, { lang: voice, rate: state.settings.rate }).then(() => {
     if (phase === "feedback") Avatar.setState("idle");
   });
+}
+
+/* નમૂનાનો જવાબ — પરિણામમાં અને «તપાસ चालु छे» बंनेमां एक ज ब्लॉक */
+function modelBlock() {
+  return '<details class="model"><summary>' + esc(t("res.model")) + "</summary>" +
+    (qIsGuOnly(current) ? '<span class="enlab" style="margin-top:0">' + esc(t("res.modelGuOnly")) + "</span>" : "") +
+    '<p class="gu' + (qIsGuOnly(current) ? " guscript" : "") + '">' + esc(qField(current, "gu")) + "</p>" +
+    '<span class="enlab">' + esc(t("res.modelEn")) + "</span>" +
+    '<p class="en" id="modelEn">' + esc(current.en) + "</p>" +
+    '<div class="row" style="margin-top:10px;justify-content:flex-start">' +
+    '<button class="mini" id="btnHear">' + esc(t("btn.hearModel")) + "</button></div></details>";
+}
+
+function bindHear() {
+  const b = $("btnHear");
+  if (!b) return;
+  b.addEventListener("click", () => {
+    Speech.stopListen(true);
+    Avatar.setState("speaking");
+    Speech.speak(current.en, { lang: "en", rate: state.settings.rate })
+      .then(() => { if (phase === "feedback") Avatar.setState("idle"); });
+  });
+}
+
+/* તપાસ બાકી छे — गुण बतावता नथी, कारण के हाथमां जे आंकडो छे
+   ते खोटो होई शके छे. खोटी शाबाशी करतां चुप रहेवुं सारुं. */
+function showPending() {
+  const h = '<div class="box pend"><b>' + esc(t("rev.pendTitle")) + "</b>" +
+            esc(t("rev.pendBody")) + "</div>" + modelBlock();
+  $("result").hidden = false;
+  $("result").innerHTML = h;
+  bindHear();
+  $("result").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function speakPending() {
+  const voice = LANG_VOICE[getLang()] || "en";
+  if (!state.settings.speakFb || !Speech.hasVoice(voice)) return;
+  Speech.speak(t("rev.spoken"), { lang: voice, rate: state.settings.rate })
+    .then(() => { if (phase === "feedback") Avatar.setState("idle"); });
+}
+
+/* તપાસ पूरी थाय त्यारे साचवेली नोंध जग्याए ज सुधारो. विद्यार्थी
+   त्यां सुधीमां बीजा प्रश्न पर के बहार पहोंची गयो होय — नोंध तो एनी ए ज
+   रहे छे, तेथी cid थी शोधीए. */
+function applyReview(courseId, cid, entry) {
+  const m = entry && entry.merged;
+  if (!m) return;
+
+  const h = bucket(courseId).history;
+  for (let i = h.length - 1; i >= 0; i--) {
+    if (h[i].cid !== cid) continue;
+    h[i].overall = m.overall;
+    h[i].scores  = m.scores;
+    h[i].weakest = m.weakest;
+    h[i].missed  = m.missingMust;
+    h[i].byAi    = !!m.byAi;
+    h[i].pending = false;
+    break;
+  }
+  save();
+  Sync.flush();
+  if (course && course.id === courseId) renderProgress();
+}
+
+/* ---------------- ईन्टरव्यु पूरो — बधी तपास साथे ---------------- */
+
+function openReview() {
+  show("review");
+  $("revList").scrollTop = 0;
+
+  if (!Judge.pending()) { paintReview(); return; }
+
+  // छेल्ला जवाबनी तपास हजु चालु होई शके — पूरी थवा दईए
+  $("revList").innerHTML = '<div class="box pend">' + esc(t("rev.waiting")) + "</div>";
+  $("btnRevDone").disabled = true;
+  Judge.settle(28000).then(() => { $("btnRevDone").disabled = false; paintReview(); });
+}
+
+function paintReview() {
+  const rows = Judge.reviews();
+  $("btnRevDone").disabled = false;
+
+  if (!rows.length) {
+    $("revList").innerHTML = '<div class="box">' + esc(t("rev.empty")) + "</div>";
+    return;
+  }
+
+  $("revList").innerHTML = rows.map((e, i) => {
+    const r = e.merged || e.offline;
+    const v = (r && typeof r.overall === "number") ? r.overall : 0;
+    return '<div class="card revcard">' +
+      '<div class="revhead"><span class="revn">' + (i + 1) + '</span>' +
+      '<span class="revscore" style="color:' + colorFor(v) + '">' + v.toFixed(1) + "</span></div>" +
+      '<div class="revq">' + esc(e.qText) + "</div>" +
+      (e.byAi ? '<div class="aibadge">' + esc(t("ai.badge")) + "</div>"
+              : '<div class="offbadge">' + esc(t("rev.offline")) + "</div>") +
+      (r && r.advice ? '<div class="box adv">' + esc(r.advice) + "</div>" : "") +
+      "</div>";
+  }).join("");
+}
+
+function closeReview() {
+  Judge.resetReviews();
+  show("practice");
+  renderDash();
 }
 
 /* ---------------- સ્થિતિ પ્રમાણે સ્ક્રીન ---------------- */
@@ -815,25 +938,11 @@ function showResult(r) {
   if (r.tip) h += '<div class="box tip"><b>' + esc(t("res.tip")) + '</b><span class="' +
     (qIsGuOnly(current) ? "guscript" : "") + '">' + esc(qField(current, "tip")) + "</span></div>";
 
-  h += '<details class="model"><summary>' + esc(t("res.model")) + "</summary>" +
-    (qIsGuOnly(current) ? '<span class="enlab" style="margin-top:0">' + esc(t("res.modelGuOnly")) + "</span>" : "") +
-    '<p class="gu' + (qIsGuOnly(current) ? " guscript" : "") + '">' + esc(qField(current, "gu")) + "</p>" +
-    '<span class="enlab">' + esc(t("res.modelEn")) + "</span>" +
-    '<p class="en" id="modelEn">' + esc(current.en) + "</p>" +
-    '<div class="row" style="margin-top:10px;justify-content:flex-start">' +
-    '<button class="mini" id="btnHear">' + esc(t("btn.hearModel")) + "</button></div></details>";
+  h += modelBlock();
 
   $("result").hidden = false;
   $("result").innerHTML = h;
-
-  $("btnHear").addEventListener("click", () => {
-
-    Speech.stopListen(true);
-    Avatar.setState("speaking");
-    Speech.speak(current.en, { lang: "en", rate: state.settings.rate })
-      .then(() => { if (phase === "feedback") Avatar.setState("idle"); });
-  });
-
+  bindHear();
   $("result").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
@@ -1085,6 +1194,8 @@ $("btnType").addEventListener("click", () => {
 });
 
 $("btnCheck").addEventListener("click", () => submit($("ans").value));
+
+$("btnRevDone").addEventListener("click", closeReview);
 
 $("btnClear").addEventListener("click", () => {
   $("heard").textContent = "";
