@@ -51,7 +51,7 @@ const Judge = (function () {
 
   function setConsent(on) {
     state.settings.ai = !!on;
-    if (!on) { clearCache(); resetReviews(); }   // «ના» કહે તો સાચવેલું અને કતાર બંને જાય
+    if (!on) clearCache();               // «ના» કહે તો સાચવેલાં પરિણામ પણ જાય
     save();
   }
 
@@ -233,67 +233,7 @@ const Judge = (function () {
       .then(r => { if (timer) clearTimeout(timer); return r; });
   }
 
-  /* ---------------- સમીક્ષા કતાર ----------------
-     મોડેલની રાહ જોતાં વિદ્યાર્થીને બેસાડી રાખતા નથી. જવાબ આપે કે તરત
-     «તપાસ ચાલુ છે» કહીને આગળ મોકલીએ; મોડેલ પાછળ પાછળ કામ કરે અને
-     ઇન્ટરવ્યુ પૂરો થાય ત્યારે બધાં પરિણામ સાથે દેખાય.
-
-     આમ કરવાનું કારણ ફક્ત ઝડપ નથી. ઓફલાઇન ગુણ ચાવીરૂપ શબ્દો ગણે છે, તેથી
-     «I like cricket and pizza» જેવો જવાબ પણ સારા ગુણ લઈ જાય છે. એ ખોટો
-     આંકડો બતાવીને પછી સુધારવો એના કરતાં કહી દેવું સારું કે તપાસ બાકી છે —
-     વિદ્યાર્થીએ ખોટી શાબાશી કદી જોવી ન પડે.
-
-     કતાર ફક્ત આ સત્ર પૂરતી છે; સાચવવામાં આવતી નથી. */
-
-  const queue = [];
-
-  function review(offline, answer, question, mode, lang, cid) {
-    const entry = {
-      id: "r" + Date.now() + "_" + queue.length,
-      cid: cid || "",
-      qText: (question && question.q) || "",
-      offline: offline,
-      merged: offline,          // AI ન આવે ત્યાં સુધી ઓફલાઇન પરિણામ જ વપરાય
-      done: false,
-      byAi: false
-    };
-    queue.push(entry);
-
-    // evaluate() કદી નકારતું નથી, પણ merge() બહારનું છે — તેથી બંને ઢાંકીએ.
-    entry.promise = evaluate(answer, question, mode, lang)
-      .then(j => { try { entry.merged = merge(offline, j); } catch (e) {} })
-      .catch(() => {})
-      .then(() => {
-        entry.byAi = !!(entry.merged && entry.merged.byAi);
-        entry.done = true;
-        return entry;
-      });
-
-    return entry;
-  }
-
-  function reviews() { return queue.slice(); }
-  function pending() { let n = 0; queue.forEach(e => { if (!e.done) n++; }); return n; }
-  function resetReviews() { queue.length = 0; }
-
-  /* બાકી રહેલી તપાસ પૂરી થાય ત્યાં સુધી રાહ — પણ વધુમાં વધુ ms સુધી જ.
-     evaluate() પોતે TIMEOUT_MS પર છોડી દે છે; આ બીજું તાળું છે, જેથી એકેય
-     તૂટેલું વચન સ્ક્રીનને કાયમ માટે «રાહ જુઓ» પર અટકાવી ન દે. */
-  function settle(ms) {
-    const waits = [];
-    queue.forEach(e => { if (!e.done) waits.push(e.promise); });
-    if (!waits.length) return Promise.resolve();
-
-    return new Promise(resolve => {
-      let over = false;
-      const stop = () => { if (!over) { over = true; resolve(); } };
-      setTimeout(stop, ms || (TIMEOUT_MS + 3000));
-      Promise.all(waits).then(stop, stop);
-    });
-  }
-
-  return { enabled, consented, active, setConsent, evaluate, merge, clearCache,
-           review, reviews, pending, resetReviews, settle };
+  return { enabled, consented, active, setConsent, evaluate, merge, clearCache };
 })();
 
 if (typeof module !== "undefined" && module.exports) module.exports = { Judge };
