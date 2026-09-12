@@ -33,7 +33,7 @@ const JUDGE_URL = "https://interview-judge.msa-vtc.workers.dev";
 
 const Judge = (function () {
 
-  const TIMEOUT_MS = 12000;              // આટલી વારમાં જવાબ ન આવે તો ઓફલાઇન ગુણ વાપરો
+  const TIMEOUT_MS = 25000;              // આટલી વારમાં જવાબ ન આવે તો ઓફલાઇન ગુણ વાપરો
   const MAX_ANSWER = 4000;               // આનાથી લાંબું લખાણ મોકલવું નથી
   const CACHE_KEY = "interview_judge_cache_v1";
   const CACHE_MAX = 150;                 // આટલાં પરિણામ સાચવો, પછી જૂનાં કાઢો
