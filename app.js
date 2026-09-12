@@ -847,9 +847,13 @@ function showResult(r) {
   if (r.tip) h += '<div class="box tip"><b>' + esc(t("res.tip")) + '</b><span class="' +
     (qIsGuOnly(current) ? "guscript" : "") + '">' + esc(qField(current, "tip")) + "</span></div>";
 
+  /* સમજૂતી ચાલુ ભાષામાં. અંગ્રેજી મોડમાં એ બતાવવાની જરૂર નથી — નીચે
+     «અંગ્રેજીમાં આ રીતે બોલો» માં એ જ વાત એ જ ભાષામાં આવે છે, અને એક જ
+     ફકરો બે વાર વાંચવો પડે એ મદદ નહીં, ગૂંચવણ છે. */
   h += '<details class="model"><summary>' + esc(t("res.model")) + "</summary>" +
-    (qIsGuOnly(current) ? '<span class="enlab" style="margin-top:0">' + esc(t("res.modelGuOnly")) + "</span>" : "") +
-    '<p class="gu' + (qIsGuOnly(current) ? " guscript" : "") + '">' + esc(qField(current, "gu")) + "</p>" +
+    (getLang() === "en" ? "" :
+      (qIsGuOnly(current) ? '<span class="enlab" style="margin-top:0">' + esc(t("res.modelGuOnly")) + "</span>" : "") +
+      '<p class="gu' + (qIsGuOnly(current) ? " guscript" : "") + '">' + esc(qField(current, "gu")) + "</p>") +
     '<span class="enlab">' + esc(t("res.modelEn")) + "</span>" +
     '<p class="en" id="modelEn">' + esc(current.en) + "</p>" +
     '<div class="row" style="margin-top:10px;justify-content:flex-start">' +

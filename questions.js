@@ -24,7 +24,13 @@ registerCourse({
   id: 1,
   cat: "એકાઉન્ટિંગ / ટેલી",
   q: "How do you make a purchase entry in Tally?",
-  i18n: { gu: { q: "Tally માં purchase entry કેવી રીતે કરો છો?" }, hi: { q: "Tally में purchase entry कैसे करते हैं?" } },
+  i18n: {
+    gu: { q: "Tally માં purchase entry કેવી રીતે કરો છો?" },
+    hi: { q: "Tally में purchase entry कैसे करते हैं?",
+          gu: "Tally में purchase entry के लिए Gateway of Tally से Accounting Vouchers चुनिए और F9 (Purchase) दबाइए। फिर supplier का नाम, invoice number और तारीख़ भरिए। उसके बाद ख़रीदी हुई चीज़, मात्रा और रक़म डालिए, GST लागू होता हो तो जोड़िए, और आख़िर में Ctrl+A दबाकर entry save कीजिए।",
+          tip: "क़दम क्रम से बोलिए। इससे interview लेने वाले को लगता है कि आपको सचमुच practical अनुभव है।" },
+    en: { tip: "Say the steps in order. It convinces the interviewer that you have genuine hands-on experience." }
+  },
   kw: [["purchase"], ["voucher", "f9", "entry"], ["supplier", "party", "creditor", "vendor"], ["amount", "gst", "tax", "rate"], ["ledger", "account", "save"]],
   gu: "ટેલીમાં પર્ચેસ એન્ટ્રી માટે Gateway of Tally માંથી Accounting Vouchers પસંદ કરો અને F9 (Purchase) દબાવો. પછી સપ્લાયરનું નામ, ઇન્વોઇસ નંબર અને તારીખ ભરો. ત્યાર બાદ ખરીદેલી વસ્તુ, જથ્થો અને રકમ નાખો, GST લાગુ પડતો હોય તો ઉમેરો, અને છેલ્લે Ctrl+A દબાવીને એન્ટ્રી સેવ કરો.",
   en: "To make a purchase entry in Tally, I go to Accounting Vouchers and press F9 for Purchase. I enter the supplier name, the invoice number and the date. Then I enter the item, quantity and amount, add GST if it applies, and save the entry using Ctrl plus A.",
@@ -34,7 +40,13 @@ registerCourse({
   id: 2,
   cat: "એકાઉન્ટિંગ / ટેલી",
   q: "How are accounting entries made?",
-  i18n: { gu: { q: "Accounting entries કઈ રીતે કરવામાં આવે છે?" }, hi: { q: "Accounting entries किस तरह की जाती हैं?" } },
+  i18n: {
+    gu: { q: "Accounting entries કઈ રીતે કરવામાં આવે છે?" },
+    hi: { q: "Accounting entries किस तरह की जाती हैं?",
+          gu: "हर entry में debit और credit, ये दो पक्ष होते हैं, और दोनों की रक़म बराबर होनी चाहिए। पहले तय कीजिए कि कौन से दो खाते प्रभावित होते हैं, फिर Golden Rules के अनुसार तय कीजिए कि कौन सा debit होगा और कौन सा credit।",
+          tip: "एक छोटा उदाहरण देकर समझाएँगे तो जवाब बहुत मज़बूत लगेगा।" },
+    en: { tip: "Explaining with one small example makes the answer far stronger." }
+  },
   kw: [["debit", "dr"], ["credit", "cr"], ["account", "ledger"], ["equal", "same", "both", "two"], ["rule", "golden", "example"]],
   gu: "દરેક એન્ટ્રીમાં ડેબિટ અને ક્રેડિટ એમ બે બાજુ હોય છે, અને બંનેની રકમ સરખી હોવી જોઈએ. પહેલાં નક્કી કરો કે કયા બે ખાતાં અસર પામે છે, પછી ગોલ્ડન રૂલ્સ પ્રમાણે કયું ડેબિટ થશે અને કયું ક્રેડિટ તે નક્કી કરો.",
   en: "Every accounting entry has two sides, debit and credit, and both amounts must be equal. First I identify which two accounts are affected, then I apply the golden rules to decide which account to debit and which to credit. For example, if I buy goods for cash, the Purchase account is debited and the Cash account is credited.",
@@ -44,7 +56,13 @@ registerCourse({
   id: 3,
   cat: "એકાઉન્ટિંગ / ટેલી",
   q: "What are the Golden Rules of Accounting?",
-  i18n: { gu: { q: "Accounting ના Golden Rules શું છે?" }, hi: { q: "Accounting के Golden Rules क्या हैं?" } },
+  i18n: {
+    gu: { q: "Accounting ના Golden Rules શું છે?" },
+    hi: { q: "Accounting के Golden Rules क्या हैं?",
+          gu: "तीन तरह के खातों के लिए तीन नियम हैं। Personal account: पाने वाले को debit, देने वाले को credit। Real account: जो आए वह debit, जो जाए वह credit। Nominal account: ख़र्च और नुक़सान debit, आय और मुनाफ़ा credit।",
+          tip: "तीनों नियम क्रम से बोलिए और हर एक के साथ एक छोटा उदाहरण दीजिए।" },
+    en: { tip: "State all three rules in order, and give one small example with each." }
+  },
   kw: [["personal"], ["real"], ["nominal"], ["debit", "dr"], ["credit", "cr"], ["receiver", "comes", "expense", "giver", "goes", "income"]],
   gu: "ત્રણ પ્રકારના ખાતાં માટે ત્રણ નિયમો છે. પર્સનલ એકાઉન્ટ: મેળવનારને ડેબિટ, આપનારને ક્રેડિટ. રિયલ એકાઉન્ટ: જે આવે તે ડેબિટ, જે જાય તે ક્રેડિટ. નોમિનલ એકાઉન્ટ: ખર્ચ અને નુકસાન ડેબિટ, આવક અને નફો ક્રેડિટ.",
   en: "There are three golden rules. For personal accounts, debit the receiver and credit the giver. For real accounts, debit what comes in and credit what goes out. For nominal accounts, debit all expenses and losses, and credit all incomes and gains.",
@@ -54,7 +72,13 @@ registerCourse({
   id: 4,
   cat: "એકાઉન્ટિંગ / ટેલી",
   q: "What is a Contra voucher, and what entries are related to it?",
-  i18n: { gu: { q: "Contra voucher શું હોય છે, અને તેની સાથે જોડાયેલી કઈ entries હોય છે?" }, hi: { q: "Contra voucher क्या होता है, और उससे जुड़ी कौन सी entries होती हैं?" } },
+  i18n: {
+    gu: { q: "Contra voucher શું હોય છે, અને તેની સાથે જોડાયેલી કઈ entries હોય છે?" },
+    hi: { q: "Contra voucher क्या होता है, और उससे जुड़ी कौन सी entries होती हैं?",
+          gu: "Contra voucher उन लेन-देन के लिए इस्तेमाल होता है जिनमें पैसा सिर्फ़ cash और bank के बीच आता-जाता है। जैसे bank में cash जमा करना, bank से cash निकालना, या एक bank खाते से दूसरे खाते में transfer करना। Tally में उसकी shortcut key F4 है।",
+          tip: "यह भी जोड़िए कि इस entry से कंपनी की कुल पूँजी नहीं बदलती — पैसा सिर्फ़ एक जगह से दूसरी जगह जाता है।" },
+    en: { tip: "Add that this entry does not change the company's total capital — the money only moves from one place to another." }
+  },
   kw: [["contra"], ["cash"], ["bank"], ["deposit", "withdraw", "transfer"], ["f4", "voucher"]],
   gu: "કોન્ટ્રા વાઉચર એવા વ્યવહારો માટે વપરાય છે જેમાં ફક્ત રોકડ અને બેંક વચ્ચે પૈસાની હેરફેર થાય છે. જેમ કે બેંકમાં રોકડ જમા કરાવવી, બેંકમાંથી રોકડ ઉપાડવી, અથવા એક બેંક ખાતામાંથી બીજા ખાતામાં ટ્રાન્સફર કરવું. ટેલીમાં તેની શોર્ટકટ કી F4 છે.",
   en: "A contra voucher is used when money moves only between cash and bank. For example, depositing cash into the bank, withdrawing cash from the bank, or transferring money from one bank account to another. In Tally the shortcut key for contra is F4.",
@@ -64,7 +88,13 @@ registerCourse({
   id: 5,
   cat: "એકાઉન્ટિંગ / ટેલી",
   q: "What is bank reconciliation?",
-  i18n: { gu: { q: "Bank reconciliation શું હોય છે?" }, hi: { q: "Bank reconciliation क्या होता है?" } },
+  i18n: {
+    gu: { q: "Bank reconciliation શું હોય છે?" },
+    hi: { q: "Bank reconciliation क्या होता है?",
+          gu: "Bank reconciliation यानी अपनी बही में लिखे bank खाते के आँकड़े और bank के statement के आँकड़े मिलाना। दोनों में फ़र्क़ हो तो उसका कारण ढूँढ़ना — जैसे cheque लिखा गया हो पर अभी bank में pass न हुआ हो, या bank ने कोई charge काटा हो जो हमने दर्ज न किया हो।",
+          tip: "आख़िर में जोड़िए कि यह काम आम तौर पर हर महीने होता है — इससे practical समझ दिखती है।" },
+    en: { tip: "Finish by saying this is normally done every month — it shows practical understanding." }
+  },
   kw: [["bank"], ["statement", "passbook"], ["book", "books", "ledger"], ["match", "compare", "difference", "tally"], ["cheque", "charges", "cleared", "month"]],
   gu: "બેંક રીકન્સીલેશન એટલે આપણા ચોપડામાં લખેલા બેંક ખાતાના આંકડા અને બેંકના સ્ટેટમેન્ટના આંકડા સરખાવવા. બંને વચ્ચે ફરક હોય તો તેનું કારણ શોધવું — જેમ કે ચેક લખાયો હોય પણ હજી બેંકમાં પાસ ન થયો હોય, અથવા બેંકે ચાર્જ કાપ્યો હોય જે આપણે નોંધ્યો ન હોય.",
   en: "Bank reconciliation means comparing the bank balance shown in our books with the balance shown in the bank statement. If there is a difference, I find the reason, such as a cheque that is issued but not yet cleared, or bank charges that are not yet recorded in our books. It is usually done every month.",
@@ -74,7 +104,13 @@ registerCourse({
   id: 6,
   cat: "એકાઉન્ટિંગ / ટેલી",
   q: "What was taught in your Tally training?",
-  i18n: { gu: { q: "તમારી Tally training માં શું શીખવવામાં આવ્યું હતું?" }, hi: { q: "आपकी Tally training में क्या सिखाया गया था?" } },
+  i18n: {
+    gu: { q: "તમારી Tally training માં શું શીખવવામાં આવ્યું હતું?" },
+    hi: { q: "आपकी Tally training में क्या सिखाया गया था?",
+          gu: "आपने क्या सीखा वह क्रम से बताइए — company बनाना, ledger और group बनाना, voucher entry, GST, और report देखना। आख़िर में एक वाक्य में कहिए कि आप किस चीज़ में सबसे ज़्यादा सहज हैं।",
+          tip: "सूची लंबी करने के बजाय जो सचमुच आता है वही बताइए — उसी पर आगे सवाल पूछे जा सकते हैं।" },
+    en: { tip: "Rather than padding the list, name only what you genuinely know — follow-up questions come from it." }
+  },
   kw: [["company", "create"], ["ledger", "group"], ["voucher", "entry", "entries"], ["gst", "tax"], ["report", "balance", "profit"]],
   gu: "તમે શું શીખ્યા તે ક્રમમાં જણાવો — કંપની બનાવવી, લેજર અને ગ્રુપ બનાવવા, વાઉચર એન્ટ્રી, GST, અને રિપોર્ટ જોવા. છેલ્લે એક વાક્યમાં કહો કે તમે કઈ બાબતમાં સૌથી વધુ આરામદાયક છો.",
   en: "In my Tally training I learned how to create a company, how to create ledgers and groups, and how to pass voucher entries like purchase, sales, payment, receipt and contra. I also learned GST entries and how to view reports like the balance sheet and the profit and loss account. I am most comfortable with purchase and sales entries.",
@@ -84,7 +120,13 @@ registerCourse({
   id: 7,
   cat: "ડિજિટલ પેમેન્ટ / વ્યવહારુ કૌશલ્ય",
   q: "How do you make an online transaction? Walk me through the steps.",
-  i18n: { gu: { q: "Online transaction કેવી રીતે કરો છો? મને એક-એક step સમજાવો." }, hi: { q: "Online transaction कैसे करते हैं? मुझे एक-एक step बताइए।" } },
+  i18n: {
+    gu: { q: "Online transaction કેવી રીતે કરો છો? મને એક-એક step સમજાવો." },
+    hi: { q: "Online transaction कैसे करते हैं? मुझे एक-एक step बताइए।",
+          gu: "क़दम क्रम से बताइए: पहले app खोलिए, फिर जिसे पैसे भेजने हैं उसका QR code scan कीजिए या mobile number डालिए, रक़म भरिए, UPI PIN डालिए और payment confirm कीजिए। आख़िर में screen पर confirmation या receipt आती है, वह check कीजिए।",
+          tip: "Interview में अक्सर फ़ोन देकर करके दिखाने को कहा जाता है — इसलिए क़दम बोलते-बोलते हाथ से दिखाने की practice कीजिए।" },
+    en: { tip: "Interviewers often hand you a phone and ask you to demonstrate — so practise saying the steps while showing them." }
+  },
   kw: [["app", "application", "phonepe", "gpay", "google", "paytm"], ["open", "login", "scan"], ["amount", "enter"], ["upi", "pin", "password", "otp"], ["confirm", "send", "payment", "receipt"]],
   gu: "પગલાં ક્રમમાં જણાવો: પહેલાં એપ ખોલો, પછી જેને પૈસા મોકલવાના છે તેનો QR કોડ સ્કેન કરો અથવા મોબાઇલ નંબર નાખો, રકમ ભરો, UPI પિન નાખો અને પેમેન્ટ કન્ફર્મ કરો. છેલ્લે સ્ક્રીન પર કન્ફર્મેશન અથવા રસીદ આવે છે તે ચેક કરો.",
   en: "First I open the payment app, then I scan the QR code or enter the mobile number of the person I want to pay. Next I enter the amount, check the details once, and enter my UPI PIN to confirm. After that I get a confirmation message on the screen showing the payment is successful.",
@@ -94,7 +136,13 @@ registerCourse({
   id: 8,
   cat: "ડિજિટલ પેમેન્ટ / વ્યવહારુ કૌશલ્ય",
   q: "Which apps do you use for online transactions, and how do you use them?",
-  i18n: { gu: { q: "Online transactions માટે તમે કયા apps વાપરો છો, અને તે કેવી રીતે ચલાવો છો?" }, hi: { q: "Online transactions के लिए आप कौन से apps इस्तेमाल करते हैं, और उन्हें कैसे चलाते हैं?" } },
+  i18n: {
+    gu: { q: "Online transactions માટે તમે કયા apps વાપરો છો, અને તે કેવી રીતે ચલાવો છો?" },
+    hi: { q: "Online transactions के लिए आप कौन से apps इस्तेमाल करते हैं, और उन्हें कैसे चलाते हैं?",
+          gu: "आप सचमुच जो apps इस्तेमाल करते हैं उनके नाम दीजिए — जैसे Google Pay, PhonePe या Paytm। फिर संक्षेप में कहिए कि वह आपके bank खाते से जुड़ी है और आप उससे क्या करते हैं: दुकान में payment, mobile recharge, bill भरना या किसी को पैसे भेजना।",
+          tip: "सिर्फ़ नाम गिनाकर मत रुकिए — हर app किस काम के लिए इस्तेमाल करते हैं यह एक वाक्य में बताइए।" },
+    en: { tip: "Do not stop at listing names — say in one sentence what you use each app for." }
+  },
   kw: [["phonepe", "gpay", "google pay", "paytm", "bhim", "upi"], ["scan", "qr", "number"], ["bank", "account", "linked"], ["shopping", "bill", "recharge", "transfer"]],
   gu: "તમે ખરેખર વાપરતા હો તે એપનાં નામ આપો — જેમ કે Google Pay, PhonePe અથવા Paytm. પછી ટૂંકમાં કહો કે તે તમારા બેંક ખાતા સાથે જોડાયેલી છે અને તમે તેનાથી શું કરો છો: દુકાનમાં પેમેન્ટ, મોબાઇલ રિચાર્જ, બિલ ભરવું કે કોઈને પૈસા મોકલવા.",
   en: "I mainly use Google Pay and PhonePe. Both are linked to my bank account through UPI. I use them to pay at shops by scanning the QR code, to recharge my mobile, to pay bills, and to send money to my family and friends.",
@@ -104,7 +152,13 @@ registerCourse({
   id: 9,
   cat: "શિક્ષણ અને લાયકાત",
   q: "What is your educational qualification, and up to what level have you studied?",
-  i18n: { gu: { q: "તમારી educational qualification શું છે, અને તમે ક્યાં સુધી ભણ્યા છો?" }, hi: { q: "आपकी educational qualification क्या है, और आपने कहाँ तक पढ़ाई की है?" } },
+  i18n: {
+    gu: { q: "તમારી educational qualification શું છે, અને તમે ક્યાં સુધી ભણ્યા છો?" },
+    hi: { q: "आपकी educational qualification क्या है, और आपने कहाँ तक पढ़ाई की है?",
+          gu: "सीधा और साफ़ जवाब दीजिए: आपकी सबसे ऊँची degree, किस university या college से, और किस साल पूरी की। अगर पढ़ाई अभी चल रही है तो किस साल में हैं यह बताइए।",
+          tip: "Degree का पूरा नाम बोलिए। सिर्फ़ B.Com कहकर रुकने के बजाय university और साल भी जोड़िए।" },
+    en: { tip: "Say the full name of the degree. Rather than stopping at 'B.Com', add the university and the year." }
+  },
   kw: [["bcom", "b com", "bachelor", "graduate", "llb", "hsc", "diploma", "degree"], ["university", "college", "school"], ["year", "passed", "completed", "pursuing"], ["percentage", "marks", "grade", "subject"]],
   gu: "સીધો અને સ્પષ્ટ જવાબ આપો: તમારી સૌથી ઊંચી ડિગ્રી, કઈ યુનિવર્સિટી કે કૉલેજમાંથી, અને કયા વર્ષે પૂરી કરી. જો હજી અભ્યાસ ચાલુ હોય તો કયા વર્ષમાં છો તે જણાવો.",
   en: "I have completed my B.Com from Gujarat University in 2024. Along with that I have also done a Tally course. At present I am pursuing my LLB, and I am in the first year.",
@@ -114,7 +168,13 @@ registerCourse({
   id: 10,
   cat: "શિક્ષણ અને લાયકાત",
   q: "Where did you obtain your degree from?",
-  i18n: { gu: { q: "તમે તમારી degree ક્યાંથી લીધી છે?" }, hi: { q: "आपने अपनी degree कहाँ से ली है?" } },
+  i18n: {
+    gu: { q: "તમે તમારી degree ક્યાંથી લીધી છે?" },
+    hi: { q: "आपने अपनी degree कहाँ से ली है?",
+          gu: "College और university का पूरा नाम बोलिए, और साथ में साल भी बताइए। एक शब्द में जवाब ख़त्म करने के बजाय पूरा वाक्य बनाइए।",
+          tip: "सिर्फ़ शहर का नाम मत कहिए — संस्थान का नाम साफ़ बोलिए, क्योंकि interview लेने वाला उसे नोट करता है।" },
+    en: { tip: "Do not just name the city — say the institution clearly, because the interviewer writes it down." }
+  },
   kw: [["university", "college"], ["gujarat", "ahmedabad", "name"], ["degree", "bcom", "graduation"], ["year", "passed", "completed"]],
   gu: "કૉલેજ અને યુનિવર્સિટીનું પૂરું નામ બોલો, અને સાથે વર્ષ પણ જણાવો. એક વાક્યમાં જવાબ પૂરો કરવાને બદલે પૂરું વાક્ય બનાવો.",
   en: "I completed my degree from Gujarat University. I studied at H.A. College of Commerce in Ahmedabad, and I passed my B.Com in 2024.",
@@ -124,7 +184,13 @@ registerCourse({
   id: 11,
   cat: "કૌટુંબિક પૃષ્ઠભૂમિ",
   q: "Tell me about your family background — what do your parents do, and how many members are in your family?",
-  i18n: { gu: { q: "તમારા family background વિશે જણાવો — તમારા માતા-પિતા શું કરે છે, અને પરિવારમાં કેટલા સભ્યો છે?" }, hi: { q: "अपने family background के बारे में बताइए — आपके माता-पिता क्या करते हैं, और परिवार में कितने सदस्य हैं?" } },
+  i18n: {
+    gu: { q: "તમારા family background વિશે જણાવો — તમારા માતા-પિતા શું કરે છે, અને પરિવારમાં કેટલા સભ્યો છે?" },
+    hi: { q: "अपने family background के बारे में बताइए — आपके माता-पिता क्या करते हैं, और परिवार में कितने सदस्य हैं?",
+          gu: "कुल कितने सदस्य हैं इससे शुरू कीजिए, फिर पिता क्या करते हैं, माता क्या करती हैं, और भाई-बहनों के बारे में संक्षेप में बताइए। दो से तीन पूरे वाक्य काफ़ी हैं — ज़्यादा विस्तार में जाने की ज़रूरत नहीं।",
+          tip: "यह सवाल आपकी स्थिरता जानने के लिए पूछा जाता है। शांति से, संक्षेप में और आत्मविश्वास के साथ जवाब दीजिए।" },
+    en: { tip: "This question is asked to gauge your stability. Answer calmly, briefly and with confidence." }
+  },
   kw: [["family", "members", "four", "five", "three"], ["father", "papa"], ["mother", "mom"], ["brother", "sister", "sibling"], ["work", "job", "business", "housewife", "homemaker"]],
   gu: "કુલ કેટલા સભ્યો છે તેનાથી શરૂ કરો, પછી પિતા શું કરે છે, માતા શું કરે છે, અને ભાઈ-બહેન વિશે ટૂંકમાં જણાવો. બે થી ત્રણ પૂરાં વાક્યો પૂરતાં છે — વધારે વિગતમાં જવાની જરૂર નથી.",
   en: "There are four members in my family. My father works in a private company, and my mother is a homemaker. I have one younger sister who is studying in the twelfth standard. We all live together in Ahmedabad.",
@@ -134,7 +200,13 @@ registerCourse({
   id: 12,
   cat: "કૌટુંબિક પૃષ્ઠભૂમિ",
   q: "How many siblings do you have, and what do they do?",
-  i18n: { gu: { q: "તમારે કેટલા ભાઈ-બહેન છે, અને તેઓ શું કરે છે?" }, hi: { q: "आपके कितने भाई-बहन हैं, और वे क्या करते हैं?" } },
+  i18n: {
+    gu: { q: "તમારે કેટલા ભાઈ-બહેન છે, અને તેઓ શું કરે છે?" },
+    hi: { q: "आपके कितने भाई-बहन हैं, और वे क्या करते हैं?",
+          gu: "कितने भाई-बहन हैं यह बताइए, फिर हर एक बड़ा है या छोटा और अभी क्या करता है यह बताइए। अगर भाई-बहन न हों तो साफ़ कहिए कि आप इकलौते हैं।",
+          tip: "सिर्फ़ संख्या बोलकर मत रुकिए — हर कोई क्या करता है यह एक वाक्य में जोड़िए।" },
+    en: { tip: "Do not stop at the number — add in one sentence what each of them does." }
+  },
   kw: [["brother", "sister", "sibling", "one", "two"], ["elder", "younger"], ["study", "studying", "college", "school", "work", "job"]],
   gu: "કેટલા ભાઈ-બહેન છે તે કહો, પછી દરેક મોટા છે કે નાના અને હાલમાં શું કરે છે તે જણાવો. જો ભાઈ-બહેન ન હોય તો સ્પષ્ટ કહો કે તમે એકના એક છો.",
   en: "I have one elder brother and one younger sister. My brother works in a private company in Ahmedabad, and my sister is studying in college. We are a close family and they support my decisions.",
@@ -144,7 +216,13 @@ registerCourse({
   id: 13,
   cat: "નોકરીની ભૂમિકા અને શિફ્ટ",
   q: "What is Domestic Voice?",
-  i18n: { gu: { q: "Domestic Voice શું હોય છે?" }, hi: { q: "Domestic Voice क्या होता है?" } },
+  i18n: {
+    gu: { q: "Domestic Voice શું હોય છે?" },
+    hi: { q: "Domestic Voice क्या होता है?",
+          gu: "Domestic Voice यानी ऐसी process जिसमें फ़ोन पर भारत के ही ग्राहकों से बात करनी होती है। ग्राहक के सवाल सुनकर हिंदी, अंग्रेज़ी या स्थानीय भाषा में जवाब देना होता है। इसके मुक़ाबले international process में विदेश के ग्राहकों से बात करनी होती है।",
+          tip: "Domestic और international का फ़र्क़ बताएँगे तो जवाब पूरा माना जाएगा।" },
+    en: { tip: "Explaining the difference between domestic and international makes the answer complete." }
+  },
   kw: [["domestic", "india", "indian", "country"], ["voice", "call", "calls", "phone"], ["customer", "client"], ["language", "hindi", "english"], ["process", "support", "query"]],
   gu: "ડોમેસ્ટિક વોઈસ એટલે એવી પ્રક્રિયા જેમાં ફોન પર ભારતના જ ગ્રાહકો સાથે વાત કરવાની હોય છે. ગ્રાહકના પ્રશ્નો સાંભળીને હિન્દી, અંગ્રેજી કે સ્થાનિક ભાષામાં જવાબ આપવાનો હોય છે. તેની સામે ઇન્ટરનેશનલ પ્રોસેસમાં વિદેશના ગ્રાહકો સાથે વાત કરવાની હોય છે.",
   en: "Domestic voice means a process where we speak with customers who are within India, over the phone. We listen to their questions or complaints and solve them in Hindi or English. It is different from an international process, where we handle customers from other countries.",
@@ -154,7 +232,13 @@ registerCourse({
   id: 14,
   cat: "નોકરીની ભૂમિકા અને શિફ્ટ",
   q: "Are you willing to work night shifts?",
-  i18n: { gu: { q: "શું તમે night shift માં કામ કરવા તૈયાર છો?" }, hi: { q: "क्या आप night shift में काम करने के लिए तैयार हैं?" } },
+  i18n: {
+    gu: { q: "શું તમે night shift માં કામ કરવા તૈયાર છો?" },
+    hi: { q: "क्या आप night shift में काम करने के लिए तैयार हैं?",
+          gu: "सीधा जवाब दीजिए — हाँ या ना। अगर हाँ हो तो जोड़िए कि घर से इजाज़त है और आने-जाने की व्यवस्था है। अगर ना हो तो नम्रता से कारण बताइए और कौन सी shift ठीक रहेगी यह कहिए। झूठा हाँ कहने से ईमानदार जवाब बेहतर है।",
+          tip: "हाँ कहें तो कारण भी दीजिए। सिर्फ़ हाँ बोलने से जवाब अधूरा लगता है।" },
+    en: { tip: "If you say yes, give the reason too. A bare yes sounds incomplete." }
+  },
   kw: [["yes", "no", "willing", "ready", "comfortable"], ["night", "shift"], ["family", "permission", "support"], ["transport", "travel", "cab", "safe"]],
   gu: "સીધો જવાબ આપો — હા કે ના. જો હા હોય તો ઉમેરો કે ઘરેથી પરવાનગી છે અને આવવા-જવાની વ્યવસ્થા છે. જો ના હોય તો નમ્રતાથી કારણ જણાવો અને કઈ શિફ્ટ ફાવે તે કહો. ખોટું 'હા' કહેવા કરતાં પ્રામાણિક જવાબ સારો.",
   en: "Yes, I am comfortable working night shifts. I have already discussed this with my family and they are supportive. As long as transport facility is provided, I will be able to reach on time and work regularly.",
@@ -164,7 +248,13 @@ registerCourse({
   id: 15,
   cat: "નોકરીની ભૂમિકા અને શિફ્ટ",
   q: "What is the difference between a Voice and a Non-Voice process?",
-  i18n: { gu: { q: "Voice અને Non-Voice process વચ્ચે શું ફરક છે?" }, hi: { q: "Voice और Non-Voice process में क्या फ़र्क़ है?" } },
+  i18n: {
+    gu: { q: "Voice અને Non-Voice process વચ્ચે શું ફરક છે?" },
+    hi: { q: "Voice और Non-Voice process में क्या फ़र्क़ है?",
+          gu: "Voice process में फ़ोन पर ग्राहक से सीधी बात करनी होती है, इसलिए बोलने की कुशलता ज़रूरी है। Non-voice process में बात नहीं करनी होती — उसमें chat, email या back office का काम होता है, इसलिए लिखने और typing की कुशलता ज़रूरी है।",
+          tip: "दोनों के लिए कौन सी कुशलता चाहिए यह जोड़िए — इससे आपकी समझ गहरी लगती है।" },
+    en: { tip: "Add which skill each one needs — it makes your understanding sound deeper." }
+  },
   kw: [["voice", "call", "talk", "speak", "phone"], ["non-voice", "non voice", "chat", "email", "back office"], ["customer"], ["write", "written", "typing"]],
   gu: "વોઈસ પ્રોસેસમાં ફોન પર ગ્રાહક સાથે સીધી વાત કરવાની હોય છે, તેથી બોલવાની આવડત જરૂરી છે. નોન-વોઈસ પ્રોસેસમાં વાત કરવાની હોતી નથી — તેમાં ચેટ, ઈમેલ કે બેક ઓફિસનું કામ હોય છે, તેથી લખવાની અને ટાઇપિંગની આવડત જરૂરી છે.",
   en: "In a voice process we talk to customers directly on the phone, so good speaking and listening skills are important. In a non-voice process we do not speak to customers. Instead we handle chats, emails or back office work, so writing and typing skills are more important.",
@@ -174,7 +264,13 @@ registerCourse({
   id: 16,
   cat: "નોકરીની ભૂમિકા અને શિફ્ટ",
   q: "What is VOIS?",
-  i18n: { gu: { q: "VOIS શું છે?" }, hi: { q: "VOIS क्या है?" } },
+  i18n: {
+    gu: { q: "VOIS શું છે?" },
+    hi: { q: "VOIS क्या है?",
+          gu: "VOIS यानी Vodafone Intelligent Solutions। यह Vodafone group का एक केंद्र है जो technology, ग्राहक सेवा और कई दूसरी सेवाएँ दुनिया भर की Vodafone कंपनियों को देता है। भारत में इसके बड़े office हैं।",
+          tip: "Interview से पहले कंपनी का पूरा नाम और वह क्या करती है यह ज़रूर देख लीजिए — यह सवाल लगभग हर बार पूछा जाता है।" },
+    en: { tip: "Before the interview, look up the company's full name and what it does — this question comes up almost every time." }
+  },
   kw: [["vois", "vodafone", "intelligent", "solutions"], ["company", "organisation", "organization"], ["service", "shared", "global", "technology"], ["india", "pune", "ahmedabad"]],
   gu: "VOIS એટલે Vodafone Intelligent Solutions. તે Vodafone ગ્રુપનું એક કેન્દ્ર છે જે ટેકનોલોજી, ગ્રાહક સેવા અને બીજી ઘણી સેવાઓ દુનિયાભરની Vodafone કંપનીઓને પૂરી પાડે છે. ભારતમાં તેની મોટી ઓફિસો છે.",
   en: "VOIS stands for Vodafone Intelligent Solutions. It is a part of the Vodafone Group that provides technology, customer service and business support to Vodafone companies across the world. It has large centres in India.",
@@ -184,7 +280,13 @@ registerCourse({
   id: 17,
   cat: "વ્યક્તિગત પરિચય / વતન",
   q: "Tell me about your hometown — where are you from?",
-  i18n: { gu: { q: "તમારા hometown વિશે જણાવો — તમે ક્યાંના રહેવાસી છો?" }, hi: { q: "अपने hometown के बारे में बताइए — आप कहाँ के रहने वाले हैं?" } },
+  i18n: {
+    gu: { q: "તમારા hometown વિશે જણાવો — તમે ક્યાંના રહેવાસી છો?" },
+    hi: { q: "अपने hometown के बारे में बताइए — आप कहाँ के रहने वाले हैं?",
+          gu: "आपका शहर या गाँव कौन सा है इससे शुरू कीजिए, फिर वह किस ज़िले में है और किस चीज़ के लिए जाना जाता है यह एक वाक्य में कहिए। आख़िर में बताइए कि आप वहाँ कितने समय से रह रहे हैं।",
+          tip: "एक वाक्य में गाँव या शहर की ख़ासियत जोड़िए — इससे जवाब याद रह जाने लायक़ बनता है।" },
+    en: { tip: "Add one sentence on what your town is known for — it makes the answer memorable." }
+  },
   kw: [["from", "belong", "born", "live"], ["city", "town", "village", "district"], ["ahmedabad", "gujarat", "rajkot", "surat", "vadodara"], ["famous", "known", "family", "years"]],
   gu: "તમારું શહેર કે ગામ કયું છે તેનાથી શરૂ કરો, પછી તે કયા જિલ્લામાં આવેલું છે અને શેના માટે જાણીતું છે તે એક વાક્યમાં કહો. છેલ્લે જણાવો કે તમે ત્યાં કેટલા સમયથી રહો છો.",
   en: "I am from Ahmedabad, which is the largest city in Gujarat. It is well known for its textile industry and for historical places like the Sabarmati Ashram. I have been living here with my family since my childhood.",
@@ -194,7 +296,13 @@ registerCourse({
   id: 18,
   cat: "શોખ",
   q: "What are your hobbies? What are you interested in?",
-  i18n: { gu: { q: "તમારા hobbies શું છે? તમને કઈ બાબતોમાં રસ છે?" }, hi: { q: "आपके hobbies क्या हैं? आपकी रुचि किन चीज़ों में है?" } },
+  i18n: {
+    gu: { q: "તમારા hobbies શું છે? તમને કઈ બાબતોમાં રસ છે?" },
+    hi: { q: "आपके hobbies क्या हैं? आपकी रुचि किन चीज़ों में है?",
+          gu: "एक या दो hobbies बताइए और हर एक के साथ एक छोटा कारण दीजिए कि वह आपको क्यों पसंद है। झूठे hobbies मत बताइए — उन पर आगे सवाल पूछा जा सकता है, जैसे आख़िरी कौन सी किताब पढ़ी।",
+          tip: "Hobby को नौकरी से जोड़िए — जैसे पढ़ने से अंग्रेज़ी सुधरती है। इससे जवाब ज़्यादा असरदार बनता है।" },
+    en: { tip: "Tie the hobby back to the job — reading improves your English, for instance. It makes the answer land better." }
+  },
   kw: [["reading", "writing", "music", "sports", "cooking", "drawing", "cricket", "travel"], ["free time", "spare time", "hobby", "like", "enjoy"], ["because", "helps", "learn", "relax"]],
   gu: "એક કે બે શોખ જણાવો અને દરેક સાથે એક ટૂંકું કારણ આપો કે તે તમને કેમ ગમે છે. ખોટા શોખ ન કહો — તેના પર આગળ પ્રશ્ન પુછાઈ શકે છે, જેમ કે 'છેલ્લે કયું પુસ્તક વાંચ્યું?'",
   en: "My hobbies are reading books and writing. I usually read in my free time because it helps me improve my English and learn new things. I also enjoy writing short articles, which helps me express my thoughts clearly.",
@@ -204,7 +312,13 @@ registerCourse({
   id: 19,
   cat: "રેઝ્યુમે / સ્વ-માહિતી",
   q: "What did you write in the 'About Me' section of your resume?",
-  i18n: { gu: { q: "તમારા resume ના 'About Me' section માં તમે શું લખ્યું છે?" }, hi: { q: "अपने resume के 'About Me' section में आपने क्या लिखा है?" } },
+  i18n: {
+    gu: { q: "તમારા resume ના 'About Me' section માં તમે શું લખ્યું છે?" },
+    hi: { q: "अपने resume के 'About Me' section में आपने क्या लिखा है?",
+          gu: "Resume में जो लिखा हो वही बोलिए — दो से तीन बातें काफ़ी हैं: आपका स्वभाव, आपकी मुख्य कुशलता, और आपका लक्ष्य। जवाब resume से मेल खाना चाहिए, वरना ग़लत छाप पड़ती है।",
+          tip: "Interview से पहले अपना resume एक बार पढ़ लीजिए — सवाल उसी में से पूछे जाते हैं।" },
+    en: { tip: "Read your own resume once before the interview — the questions come straight out of it." }
+  },
   kw: [["about", "resume", "wrote", "mentioned"], ["hardworking", "honest", "quick", "learner", "punctual", "responsible"], ["skill", "tally", "computer", "communication"], ["career", "grow", "opportunity", "goal"]],
   gu: "રેઝ્યુમેમાં જે લખ્યું હોય તે જ બોલો — બે થી ત્રણ મુદ્દા પૂરતા છે: તમારો સ્વભાવ, તમારી મુખ્ય આવડત, અને તમારો ધ્યેય. જવાબ રેઝ્યુમે સાથે મેળ ખાવો જોઈએ, નહીંતર ખોટી છાપ પડે છે.",
   en: "In the About Me section I have written that I am a hardworking and honest person who learns quickly. I have mentioned my knowledge of Tally and basic computer skills. I have also written that I am looking for an opportunity where I can use my skills and grow with the company.",
@@ -214,7 +328,13 @@ registerCourse({
   id: 20,
   cat: "પગારની અપેક્ષા",
   q: "What is your salary expectation?",
-  i18n: { gu: { q: "તમારી salary expectation શું છે?" }, hi: { q: "आपकी salary expectation क्या है?" } },
+  i18n: {
+    gu: { q: "તમારી salary expectation શું છે?" },
+    hi: { q: "आपकी salary expectation क्या है?",
+          gu: "सिर्फ़ आँकड़ा बोलकर मत रुकिए — पूरा वाक्य बनाइए। एक range दीजिए, जैसे 15,000 से 20,000, फिर छोटा कारण दीजिए, और आख़िर में जोड़िए कि आप कंपनी के मानक के अनुसार बात करने को तैयार हैं।",
+          tip: "इस सवाल में सबसे बड़ी ग़लती एक ही शब्द में जवाब देना है। कारण के साथ पूरा वाक्य बोलिए।" },
+    en: { tip: "The biggest mistake here is a one-word answer. Speak a full sentence with a reason." }
+  },
   kw: [["thousand", "15", "18", "20", "salary", "expectation"], ["month", "monthly", "per"], ["company", "standard", "policy", "norms"], ["learn", "experience", "grow", "first"]],
   gu: "ફક્ત આંકડો બોલીને અટકશો નહીં — પૂરું વાક્ય બનાવો. એક શ્રેણી આપો (જેમ કે ૧૫,૦૦૦ થી ૨૦,૦૦૦), પછી ટૂંકું કારણ આપો, અને છેલ્લે ઉમેરો કે તમે કંપનીના ધોરણ પ્રમાણે વાત કરવા તૈયાર છો.",
   en: "As this is my first job, my main focus is on learning and gaining experience. Considering the market rate for this role, I am expecting between fifteen thousand and twenty thousand rupees per month. However, I am flexible and open to the company's standard package.",
@@ -224,7 +344,13 @@ registerCourse({
   id: 21,
   cat: "સ્વ-પરિચય",
   q: "Tell me about yourself. Give me a short self-introduction.",
-  i18n: { gu: { q: "તમારા વિશે જણાવો. ટૂંકમાં તમારો self-introduction આપો." }, hi: { q: "अपने बारे में बताइए। संक्षेप में अपना self-introduction दीजिए।" } },
+  i18n: {
+    gu: { q: "તમારા વિશે જણાવો. ટૂંકમાં તમારો self-introduction આપો." },
+    hi: { q: "अपने बारे में बताइए। संक्षेप में अपना self-introduction दीजिए।",
+          gu: "इस क्रम में बोलिए: नाम, आप कहाँ के हैं, शिक्षा, कोई course या कुशलता, और आख़िर में आप यह नौकरी क्यों चाहते हैं। पूरा जवाब लगभग तीस से पैंतालीस सेकंड का रखिए। Myself Ravi कहने के बजाय My name is Ravi कहिए — यह सबसे आम ग़लती है।",
+          tip: "यह सवाल लगभग हर interview में सबसे पहले पूछा जाता है। इसे लिखकर, ज़ोर से, कम से कम दस बार practice कीजिए।" },
+    en: { tip: "This is the first question in almost every interview. Write it out and practise it aloud at least ten times." }
+  },
   kw: [["name", "myself", "i am"], ["from", "live", "city"], ["education", "bcom", "graduate", "completed", "study"], ["skill", "tally", "computer", "course"], ["family", "hobby", "looking", "opportunity"]],
   gu: "આ ક્રમમાં બોલો: નામ, તમે ક્યાંના છો, શિક્ષણ, કોઈ કોર્સ કે આવડત, અને છેલ્લે તમે આ નોકરી કેમ ઇચ્છો છો. આખો જવાબ આશરે ત્રીસ થી પિસ્તાળીસ સેકન્ડનો રાખો. 'Myself Ravi' બોલવાને બદલે 'My name is Ravi' બોલો — આ સૌથી સામાન્ય ભૂલ છે.",
   en: "My name is Ravi Patel and I am from Ahmedabad. I have completed my B.Com from Gujarat University in 2024, and I have also done a Tally course. I live with my family, and in my free time I like reading books. I am now looking for an opportunity where I can start my career and grow with the company.",
@@ -234,7 +360,13 @@ registerCourse({
   id: 22,
   cat: "અભ્યાસ અને નોકરીનું સંતુલન",
   q: "How will you manage a job alongside your studies — full-time or part-time?",
-  i18n: { gu: { q: "ભણતરની સાથે job કેવી રીતે manage કરશો — full-time કે part-time?" }, hi: { q: "पढ़ाई के साथ job कैसे manage करेंगे — full-time या part-time?" } },
+  i18n: {
+    gu: { q: "ભણતરની સાથે job કેવી રીતે manage કરશો — full-time કે part-time?" },
+    hi: { q: "पढ़ाई के साथ job कैसे manage करेंगे — full-time या part-time?",
+          gu: "साफ़ योजना बताइए: आपके college का समय क्या है, आप किस shift में काम कर सकेंगे, और परीक्षा के समय क्या करेंगे। गोल-मोल जवाब मत दीजिए — interview लेने वाला यह जानना चाहता है कि आप नौकरी नियमित कर पाएँगे या नहीं।",
+          tip: "निश्चित समय बताइए। मैं manage कर लूँगा जैसा अस्पष्ट जवाब कमज़ोर माना जाता है।" },
+    en: { tip: "Give specific times. A vague 'I will manage' is treated as a weak answer." }
+  },
   kw: [["manage", "balance", "handle"], ["study", "studies", "college", "exam"], ["full time", "full-time", "part time", "part-time"], ["evening", "morning", "weekend", "night", "shift"], ["plan", "time", "schedule", "priority"]],
   gu: "સ્પષ્ટ યોજના જણાવો: તમારી કૉલેજનો સમય કયો છે, તમે કઈ શિફ્ટમાં કામ કરી શકશો, અને પરીક્ષા વખતે શું કરશો. ગોળ ગોળ જવાબ ન આપો — ઇન્ટરવ્યુ લેનાર એ જાણવા માંગે છે કે તમે નોકરી નિયમિત કરી શકશો કે નહીં.",
   en: "My college classes are in the morning and they finish by twelve o'clock. So I can comfortably work in the afternoon or evening shift on a full-time basis. I have already planned my study time at night, and during exams I will inform my manager well in advance.",

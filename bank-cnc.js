@@ -11,7 +11,13 @@ registerCourse({
   id: 1,
   cat: "સલામતી",
   q: "What safety checks do you do before starting a CNC machine?",
-  i18n: { gu: { q: "CNC machine ચાલુ કરતાં પહેલાં કઈ safety checks કરો છો?" }, hi: { q: "CNC machine चालू करने से पहले कौन सी safety checks करते हैं?" } },
+  i18n: {
+    gu: { q: "CNC machine ચાલુ કરતાં પહેલાં કઈ safety checks કરો છો?" },
+    hi: { q: "CNC machine चालू करने से पहले कौन सी safety checks करते हैं?",
+          gu: "Machine चालू करने से पहले सबसे पहले safety glasses और safety shoes पहनता हूँ। फिर emergency stop button काम कर रहा है या नहीं यह जाँचता हूँ। उसके बाद machine के guard और दरवाज़े बंद हैं यह देखता हूँ, coolant का level जाँचता हूँ, tool holder में tool मज़बूती से बैठा है यह देखता हूँ, और job fixture या vice में ठीक से पकड़ा गया है यह जाँचता हूँ। आख़िर में program और zero offset एक बार जाँच लेता हूँ।",
+          tip: "Safety के सवाल में «emergency stop» और «PPE» बोलना ज़रूरी है। ये दो छूट जाएँ तो interview में तुरंत मना कर दिया जाता है।" },
+    en: { tip: "In a safety question you must say 'emergency stop' and 'PPE'. Missing these two gets candidates rejected on the spot." }
+  },
   kw: [["door", "guard", "cover", "shield", "closed"], ["coolant", "oil", "lubricant", "level"], ["tool", "holder", "tight", "clamp", "fix"], ["job", "workpiece", "work piece", "fixture", "vice", "chuck"], ["zero", "reference", "home", "offset", "program", "check"]],
   must: [
     { kw: ["emergency stop", "e-stop", "estop", "emergency"], gu: "ઇમરજન્સી સ્ટોપ બટન તપાસવું" },
@@ -25,7 +31,13 @@ registerCourse({
   id: 2,
   cat: "મૂળભૂત",
   q: "What does CNC stand for, and how is it different from a manual machine?",
-  i18n: { gu: { q: "CNC નું પૂરું નામ શું છે, અને manual machine થી તે કઈ રીતે જુદું છે?" }, hi: { q: "CNC का पूरा नाम क्या है, और manual machine से यह कैसे अलग है?" } },
+  i18n: {
+    gu: { q: "CNC નું પૂરું નામ શું છે, અને manual machine થી તે કઈ રીતે જુદું છે?" },
+    hi: { q: "CNC का पूरा नाम क्या है, और manual machine से यह कैसे अलग है?",
+          gu: "CNC का पूरा नाम Computer Numerical Control है। Manual machine में operator हाथ से handwheel घुमाकर tool चलाता है, जबकि CNC में program के code के अनुसार machine अपने आप tool चलाती है। इसलिए CNC में accuracy ज़्यादा मिलती है, एक ही माप के सैकड़ों part एक जैसे बनते हैं, और काम तेज़ी से होता है।",
+          tip: "पूरा नाम साफ़ बोलिए — «Computer Numerical Control»। सिर्फ़ «CNC» कहकर मत रुकिए।" },
+    en: { tip: "Say the full form clearly — 'Computer Numerical Control'. Do not stop at just saying 'CNC'." }
+  },
   kw: [["computer numerical control", "computerised numerical control", "computer numeric"], ["program", "programme", "code", "software"], ["automatic", "automatically", "auto"], ["manual", "hand", "operator", "handwheel"], ["accurate", "accuracy", "precise", "same", "repeat", "faster", "fast"]],
   gu: "CNC નું પૂરું નામ Computer Numerical Control છે. મેન્યુઅલ મશીનમાં ઓપરેટર હાથે હેન્ડવ્હીલ ફેરવીને ટૂલ ચલાવે છે, જ્યારે CNC માં પ્રોગ્રામ કોડ પ્રમાણે મશીન આપોઆપ ટૂલ ચલાવે છે. તેથી CNC માં ચોકસાઈ વધુ મળે છે, એક જ માપના સેંકડો પાર્ટ સરખા બને છે, અને કામ ઝડપથી થાય છે.",
   en: "CNC stands for Computer Numerical Control. In a manual machine the operator moves the tool by hand using the handwheel, but in a CNC machine the tool moves automatically according to the program code. Because of that CNC gives much better accuracy, hundreds of parts come out exactly the same size, and the work is faster.",
@@ -35,7 +47,13 @@ registerCourse({
   id: 3,
   cat: "પ્રોગ્રામિંગ",
   q: "What is the difference between a G-code and an M-code?",
-  i18n: { gu: { q: "G-code અને M-code વચ્ચે શું ફરક છે?" }, hi: { q: "G-code और M-code में क्या फ़र्क़ है?" } },
+  i18n: {
+    gu: { q: "G-code અને M-code વચ્ચે શું ફરક છે?" },
+    hi: { q: "G-code और M-code में क्या फ़र्क़ है?",
+          gu: "G-code machine की हरकत तय करता है — tool कहाँ और किस तरह जाना चाहिए। जैसे G01 का मतलब सीधी लाइन में काटते हुए जाना। M-code machine के दूसरे काम चालू-बंद करता है — जैसे M03 का मतलब spindle घड़ी की दिशा में चालू करना, M05 का मतलब spindle बंद करना और M30 का मतलब program ख़त्म करना।",
+          tip: "हर प्रकार का एक उदाहरण दीजिए। उदाहरण के बिना जवाब अधूरा माना जाता है।" },
+    en: { tip: "Give one example of each type. Without examples the answer is treated as incomplete." }
+  },
   kw: [["g code", "g-code", "gcode"], ["m code", "m-code", "mcode"], ["movement", "motion", "move", "geometry", "path", "position"], ["machine", "function", "spindle", "coolant", "tool change", "stop"], ["example", "g01", "g0", "g1", "m03", "m3", "m30", "m05"]],
   gu: "G-code મશીનની હલનચલન નક્કી કરે છે — ટૂલ ક્યાં અને કઈ રીતે જવું જોઈએ. જેમ કે G01 એટલે સીધી લીટીમાં કાપતાં કાપતાં જવું. M-code મશીનનાં બીજાં કામ ચાલુ-બંધ કરે છે — જેમ કે M03 એટલે સ્પિન્ડલ ઘડિયાળની દિશામાં ચાલુ કરવું, M05 એટલે સ્પિન્ડલ બંધ કરવું અને M30 એટલે પ્રોગ્રામ પૂરો કરવો.",
   en: "G-codes control the movement of the machine, that is where and how the tool should travel. For example G01 means move in a straight line while cutting. M-codes control the other machine functions, for example M03 starts the spindle clockwise, M05 stops the spindle, and M30 ends the program.",
@@ -45,7 +63,13 @@ registerCourse({
   id: 4,
   cat: "મશીન સેટિંગ",
   q: "How do you set the work zero or job zero on a CNC machine?",
-  i18n: { gu: { q: "CNC machine પર work zero કે job zero કેવી રીતે set કરો છો?" }, hi: { q: "CNC machine पर work zero या job zero कैसे set करते हैं?" } },
+  i18n: {
+    gu: { q: "CNC machine પર work zero કે job zero કેવી રીતે set કરો છો?" },
+    hi: { q: "CNC machine पर work zero या job zero कैसे set करते हैं?",
+          gu: "पहले job को fixture में मज़बूती से पकड़ता हूँ। फिर edge finder या probe से tool को job की X और Y side पर छुआकर उस जगह का माप लेता हूँ। उसके बाद Z axis के लिए tool को job की ऊपरी सतह पर छुआता हूँ। फिर वे तीनों माप machine के work offset में — जैसे G54 में — डालकर save करता हूँ। आख़िर में dry run करके यह जाँचता हूँ कि zero सही है।",
+          tip: "आख़िर में «dry run करके जाँचता हूँ» ज़रूर जोड़िए। इससे लगता है कि आप सावधानी से काम करते हैं।" },
+    en: { tip: "Always add 'I check it with a dry run' at the end. It shows you work carefully." }
+  },
   kw: [["zero", "datum", "reference", "origin"], ["probe", "edge finder", "dial", "touch", "paper", "feeler"], ["x", "y", "z", "axis"], ["offset", "g54", "g55", "work offset", "wcs"], ["enter", "set", "record", "save", "memory"]],
   gu: "પહેલાં જોબને ફિક્સ્ચરમાં મજબૂત પકડું છું. પછી એજ ફાઇન્ડર કે પ્રોબ વડે ટૂલને જોબની X અને Y બાજુ પર અડાડીને એ જગ્યાનું માપ લઉં છું. ત્યાર બાદ Z અક્ષ માટે ટૂલને જોબની ઉપરની સપાટી પર અડાડું છું. પછી એ ત્રણેય માપ મશીનના વર્ક ઓફસેટમાં — જેમ કે G54 માં — નાખીને સેવ કરું છું. છેલ્લે ડ્રાય રન કરીને ઝીરો સાચો છે તે ચકાસું છું.",
   en: "First I clamp the job tightly in the fixture. Then using an edge finder or a probe I touch the tool to the X and Y sides of the job and note that position. After that I touch the tool on the top surface of the job for the Z axis. Then I enter all three values in the machine work offset, for example G54, and save it. Finally I do a dry run to confirm the zero is correct.",
@@ -55,7 +79,13 @@ registerCourse({
   id: 5,
   cat: "કટિંગ પેરામીટર",
   q: "What is feed rate and what is cutting speed?",
-  i18n: { gu: { q: "Feed rate શું છે અને cutting speed શું છે?" }, hi: { q: "Feed rate क्या है और cutting speed क्या है?" } },
+  i18n: {
+    gu: { q: "Feed rate શું છે અને cutting speed શું છે?" },
+    hi: { q: "Feed rate क्या है और cutting speed क्या है?",
+          gu: "Cutting speed का मतलब है tool या job कितनी तेज़ी से घूमता है — इसका सम्बन्ध spindle के RPM से है। Feed rate का मतलब है tool job में कितनी तेज़ी से आगे बढ़ता है, जो millimetre प्रति minute या प्रति revolution में मापा जाता है। दोनों job की धातु और tool के हिसाब से तय होते हैं। Feed या speed ज़्यादा रखें तो tool टूट सकता है या सतह ख़राब आती है, और कम रखें तो समय बर्बाद होता है।",
+          tip: "दोनों की तुलना करने के बाद «ज़्यादा रखें तो क्या होगा» यह भी बताइए — इससे समझ दिखती है।" },
+    en: { tip: "After comparing the two, also say what happens if you set them too high — that shows understanding." }
+  },
   kw: [["feed", "feed rate"], ["speed", "cutting speed", "surface speed", "rpm", "spindle"], ["tool", "material", "job", "workpiece"], ["fast", "slow", "minute", "revolution", "mm"], ["finish", "break", "damage", "life", "heat", "quality"]],
   gu: "કટિંગ સ્પીડ એટલે ટૂલ કે જોબ કેટલી ઝડપે ફરે છે — તે સ્પિન્ડલના RPM સાથે સંબંધ ધરાવે છે. ફીડ રેટ એટલે ટૂલ જોબમાં કેટલી ઝડપે આગળ વધે છે, જે મિલીમીટર પ્રતિ મિનિટ કે પ્રતિ રિવોલ્યુશનમાં મપાય છે. બંને જોબની ધાતુ અને ટૂલ પ્રમાણે નક્કી થાય છે. ફીડ કે સ્પીડ વધુ રાખીએ તો ટૂલ તૂટે અથવા સપાટી ખરાબ આવે, અને ઓછી રાખીએ તો સમય બગડે.",
   en: "Cutting speed is how fast the tool or the job rotates, and it is related to the spindle RPM. Feed rate is how fast the tool moves into the job, and it is measured in millimetres per minute or per revolution. Both are decided according to the job material and the tool. If the feed or speed is too high the tool can break or the surface finish becomes poor, and if it is too low we waste time.",
@@ -65,7 +95,13 @@ registerCourse({
   id: 6,
   cat: "માપણી",
   q: "Which measuring instruments do you use, and how do you check a job after machining?",
-  i18n: { gu: { q: "તમે કયાં measuring instruments વાપરો છો, અને machining પછી job કેવી રીતે તપાસો છો?" }, hi: { q: "आप कौन से measuring instruments इस्तेमाल करते हैं, और machining के बाद job कैसे जाँचते हैं?" } },
+  i18n: {
+    gu: { q: "તમે કયાં measuring instruments વાપરો છો, અને machining પછી job કેવી રીતે તપાસો છો?" },
+    hi: { q: "आप कौन से measuring instruments इस्तेमाल करते हैं, और machining के बाद job कैसे जाँचते हैं?",
+          gu: "मैं मुख्य रूप से vernier caliper, micrometer और dial gauge इस्तेमाल करता हूँ। Job machine हो जाने के बाद पहले उसे साफ़ करता हूँ, फिर drawing में दिए गए हर माप से मिलाकर माप लेता हूँ। माप tolerance के अंदर है या नहीं यह जाँचता हूँ। Tolerance से बाहर जाए तो supervisor को बताता हूँ और offset सुधारकर अगला part बनाता हूँ।",
+          tip: "«Tolerance» शब्द इस्तेमाल कीजिए और माप ग़लत आने पर क्या करेंगे यह भी बताइए।" },
+    en: { tip: "Use the word 'tolerance', and also say what you would do if a measurement comes out wrong." }
+  },
   kw: [["vernier", "caliper", "calliper"], ["micrometer", "micrometre", "mike"], ["dial", "gauge", "indicator", "bore", "height"], ["drawing", "print", "tolerance", "dimension", "specification", "limit"], ["check", "measure", "compare", "clean", "verify"]],
   gu: "હું મુખ્યત્વે વર્નિયર કેલિપર, માઇક્રોમીટર અને ડાયલ ગેજ વાપરું છું. જોબ મશીન થઈ ગયા પછી પહેલાં તેને સાફ કરું છું, પછી ડ્રોઇંગમાં આપેલા દરેક માપ સાથે સરખાવીને માપ લઉં છું. માપ ટોલરન્સની અંદર છે કે નહીં તે ચકાસું છું. ટોલરન્સ બહાર જાય તો સુપરવાઇઝરને જાણ કરું છું અને ઓફસેટ સુધારીને આગળનો પાર્ટ બનાવું છું.",
   en: "I mainly use a vernier caliper, a micrometer and a dial gauge. After the job is machined I first clean it, then I measure every dimension and compare it with the drawing. I check whether the measurement is within tolerance. If it is out of tolerance I inform my supervisor and correct the offset before machining the next part.",
@@ -75,7 +111,13 @@ registerCourse({
   id: 7,
   cat: "સલામતી",
   q: "What will you do if something goes wrong while the machine is running?",
-  i18n: { gu: { q: "Machine ચાલુ હોય ત્યારે કંઈક ખોટું થાય તો તમે શું કરશો?" }, hi: { q: "Machine चलते समय कुछ गड़बड़ हो जाए तो आप क्या करेंगे?" } },
+  i18n: {
+    gu: { q: "Machine ચાલુ હોય ત્યારે કંઈક ખોટું થાય તો તમે શું કરશો?" },
+    hi: { q: "Machine चलते समय कुछ गड़बड़ हो जाए तो आप क्या करेंगे?",
+          gu: "कुछ ग़लत हो जाए तो सबसे पहले emergency stop button दबाकर machine बंद करता हूँ। Machine पूरी तरह रुक जाने तक दरवाज़ा नहीं खोलता और हाथ अंदर नहीं डालता। फिर तुरंत supervisor को बताता हूँ। अपने आप बड़ी समस्या सुधारने की कोशिश नहीं करता। कारण मिल जाने और जगह सुरक्षित हो जाने के बाद ही machine दोबारा चालू करता हूँ।",
+          tip: "क्रम अहम है: पहले machine बंद, फिर supervisor को ख़बर। उल्टा क्रम ग़लत माना जाता है।" },
+    en: { tip: "The order matters: stop the machine first, then inform the supervisor. The reverse order is marked wrong." }
+  },
   kw: [["stop", "immediately", "at once", "first"], ["supervisor", "senior", "in charge", "inform", "report", "tell"], ["door", "guard", "hand", "inside", "touch", "away"], ["check", "reason", "cause", "problem", "find"], ["restart", "again", "after", "clear", "safe"]],
   must: [
     { kw: ["emergency stop", "e-stop", "estop", "emergency", "stop button", "red button"], gu: "તરત ઇમરજન્સી સ્ટોપ દબાવવું" },
@@ -89,7 +131,13 @@ registerCourse({
   id: 8,
   cat: "ટૂલિંગ",
   q: "How do you know when a cutting tool needs to be changed?",
-  i18n: { gu: { q: "Cutting tool બદલવાનો સમય થયો છે તે તમે કેવી રીતે જાણો છો?" }, hi: { q: "Cutting tool बदलने का समय आ गया है, यह आप कैसे जानते हैं?" } },
+  i18n: {
+    gu: { q: "Cutting tool બદલવાનો સમય થયો છે તે તમે કેવી રીતે જાણો છો?" },
+    hi: { q: "Cutting tool बदलने का समय आ गया है, यह आप कैसे जानते हैं?",
+          gu: "Tool बदलने की ज़रूरत है, यह कई निशानियों से पता चलता है। पहली — काटते समय आवाज़ बदल जाए या vibration बढ़ जाए। दूसरी — job की सतह खुरदरी आए या निशान पड़ें। तीसरी — माप tolerance से बाहर जाने लगे। चौथी — tool की धार देखने पर घिसी, भोथरी या टूटी दिखे, या ज़्यादा गर्मी से रंग बदला दिखे। ऐसा दिखे तो machine बंद करके tool बदल देता हूँ।",
+          tip: "कम से कम तीन निशानियाँ गिनाइए। सिर्फ़ एक बताने से कम अनुभव लगता है।" },
+    en: { tip: "List at least three signs. Giving only one makes you sound inexperienced." }
+  },
   kw: [["wear", "worn", "blunt", "dull", "damage", "chip", "break", "crack"], ["sound", "noise", "vibration", "vibrate", "chatter"], ["finish", "surface", "rough", "quality", "mark"], ["size", "dimension", "measurement", "tolerance", "accurate"], ["burr", "colour", "color", "burn", "heat", "spark", "load", "power"]],
   gu: "ટૂલ બદલવાની જરૂર છે તે ઘણી નિશાનીઓથી ખબર પડે છે. પહેલી નિશાની — કાપતી વખતે અવાજ બદલાય કે વાઇબ્રેશન વધે. બીજી — જોબની સપાટી ખરબચડી આવે કે નિશાન પડે. ત્રીજી — માપ ટોલરન્સ બહાર જવા લાગે. ચોથી — ટૂલની ધાર જોઈએ તો ઘસાયેલી, બુઠ્ઠી કે તૂટેલી દેખાય, અથવા વધુ ગરમીથી રંગ બદલાયેલો દેખાય. આવું દેખાય તો મશીન બંધ કરીને ટૂલ બદલું છું.",
   en: "There are several signs that tell me the tool needs changing. First, the cutting sound changes or the vibration increases. Second, the surface finish becomes rough or marks appear on the job. Third, the dimensions start going out of tolerance. Fourth, when I look at the tool edge it is worn, blunt or chipped, or the colour has changed because of heat. When I see these signs I stop the machine and change the tool.",
@@ -99,7 +147,13 @@ registerCourse({
   id: 9,
   cat: "કૂલન્ટ અને દેખરેખ",
   q: "Why is coolant used in machining, and what daily maintenance do you do on the machine?",
-  i18n: { gu: { q: "Machining માં coolant શા માટે વપરાય છે, અને machine પર રોજ કઈ maintenance કરો છો?" }, hi: { q: "Machining में coolant क्यों इस्तेमाल होता है, और machine पर रोज़ कौन सी maintenance करते हैं?" } },
+  i18n: {
+    gu: { q: "Machining માં coolant શા માટે વપરાય છે, અને machine પર રોજ કઈ maintenance કરો છો?" },
+    hi: { q: "Machining में coolant क्यों इस्तेमाल होता है, और machine पर रोज़ कौन सी maintenance करते हैं?",
+          gu: "Coolant का मुख्य काम काटते समय पैदा होने वाली गर्मी कम करना है। वह friction घटाता है, tool की उम्र बढ़ाता है, chips धोकर हटाता है और job की सतह अच्छी लाता है। रोज़ की देखभाल में मैं coolant का level जाँचता हूँ, machine और chip tray साफ़ करता हूँ, lubrication oil जाँचता हूँ, और हवा का pressure देखता हूँ।",
+          tip: "Coolant के दो-तीन फ़ायदे बोलिए, सिर्फ़ «ठंडा करता है» इतना मत कहिए।" },
+    en: { tip: "Give two or three benefits of coolant — do not stop at 'it cools things down'." }
+  },
   kw: [["cool", "cooling", "heat", "temperature", "hot"], ["chip", "chips", "flush", "clear", "remove", "clean"], ["tool life", "life", "wear", "friction", "lubricate", "lubrication"], ["finish", "surface", "quality"], ["level", "check", "daily", "clean", "grease", "oil", "filter"]],
   gu: "કૂલન્ટનું મુખ્ય કામ કાપતી વખતે પેદા થતી ગરમી ઓછી કરવાનું છે. તે ઘર્ષણ ઘટાડે છે, ટૂલની ઉંમર વધારે છે, ચીપ્સ ધોઈને દૂર કરે છે અને જોબની સપાટી સારી લાવે છે. રોજની દેખરેખમાં હું કૂલન્ટનું લેવલ તપાસું છું, મશીન અને ચીપ ટ્રે સાફ કરું છું, લુબ્રિકેશન ઓઇલ ચકાસું છું, અને હવાનું પ્રેશર જોઉં છું.",
   en: "The main job of coolant is to reduce the heat produced during cutting. It reduces friction, increases tool life, flushes the chips away and gives a better surface finish. For daily maintenance I check the coolant level, clean the machine and the chip tray, check the lubrication oil, and check the air pressure.",
@@ -109,7 +163,13 @@ registerCourse({
   id: 10,
   cat: "કામની તૈયારી",
   q: "You are given a new drawing to machine. What are the steps you will follow?",
-  i18n: { gu: { q: "તમને machining માટે નવું drawing આપવામાં આવે છે. તમે કયા steps અનુસરશો?" }, hi: { q: "आपको machining के लिए नया drawing दिया जाता है। आप कौन से steps अपनाएँगे?" } },
+  i18n: {
+    gu: { q: "તમને machining માટે નવું drawing આપવામાં આવે છે. તમે કયા steps અનુસરશો?" },
+    hi: { q: "आपको machining के लिए नया drawing दिया जाता है। आप कौन से steps अपनाएँगे?",
+          gu: "पहले drawing ध्यान से पढ़कर हर माप, tolerance और सतह की ज़रूरत समझता हूँ। फिर कच्चा माल सही है और माप पर्याप्त है यह जाँचता हूँ। उसके बाद कौन से tools चाहिए यह तय करके machine में load करता हूँ। फिर program load करके simulation और dry run करता हूँ। फिर पहला part धीमी feed पर बनाकर पूरा माप लेता हूँ। पहला part मंज़ूर होने के बाद ही पूरा production चालू करता हूँ।",
+          tip: "«पहला part जाँचकर मंज़ूर कराना» — यह बात industry में बहुत अहम है, ज़रूर बोलिए।" },
+    en: { tip: "'Getting the first part inspected and approved' matters a great deal in industry — be sure to say it." }
+  },
   kw: [["drawing", "print", "study", "read", "understand", "dimension"], ["material", "raw", "stock", "size", "check"], ["tool", "tooling", "select", "list", "load"], ["program", "programme", "write", "load", "simulate", "dry run"], ["first piece", "first part", "check", "measure", "inspect", "approval", "then", "production"]],
   gu: "પહેલાં ડ્રોઇંગ ધ્યાનથી વાંચીને દરેક માપ, ટોલરન્સ અને સપાટીની જરૂરિયાત સમજું છું. પછી કાચો માલ સાચો છે અને માપ પૂરતું છે તે ચકાસું છું. ત્યાર બાદ કયાં ટૂલ જોઈશે તે નક્કી કરીને મશીનમાં લોડ કરું છું. પછી પ્રોગ્રામ લોડ કરીને સિમ્યુલેશન અને ડ્રાય રન કરું છું. પછી પહેલો પાર્ટ ધીમી ફીડ પર બનાવીને પૂરેપૂરો માપી લઉં છું. પહેલો પાર્ટ મંજૂર થાય પછી જ પૂરું પ્રોડક્શન ચાલુ કરું છું.",
   en: "First I read the drawing carefully and understand every dimension, tolerance and surface requirement. Then I check that the raw material is correct and big enough. After that I decide which tools are needed and load them in the machine. Then I load the program and do a simulation and a dry run. Next I machine the first part at a slow feed and measure it completely. Only after the first part is approved do I start full production.",

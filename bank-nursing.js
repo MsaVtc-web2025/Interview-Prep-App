@@ -11,7 +11,13 @@ registerCourse({
   id: 1,
   cat: "મૂળભૂત",
   q: "What are the vital signs, and what are their normal values in an adult?",
-  i18n: { gu: { q: "Vital signs કયા કયા છે, અને પુખ્ત વ્યક્તિમાં તેમની normal values કેટલી હોય છે?" }, hi: { q: "Vital signs कौन कौन से हैं, और एक वयस्क में उनकी normal values कितनी होती हैं?" } },
+  i18n: {
+    gu: { q: "Vital signs કયા કયા છે, અને પુખ્ત વ્યક્તિમાં તેમની normal values કેટલી હોય છે?" },
+    hi: { q: "Vital signs कौन कौन से हैं, और एक वयस्क में उनकी normal values कितनी होती हैं?",
+          gu: "चार मुख्य vital signs हैं, और आजकल oxygen saturation भी गिना जाता है। पहला, temperature — सामान्य रूप से 98.6 डिग्री Fahrenheit यानी 37 डिग्री Celsius। दूसरा, pulse — प्रति मिनट 60 से 100 धड़कन। तीसरा, respiration rate — प्रति मिनट 12 से 20 बार। चौथा, blood pressure — लगभग 120 बटा 80। और पाँचवाँ, oxygen saturation — 95 प्रतिशत या उससे ज़्यादा।",
+          tip: "हर vital sign के साथ उसका सामान्य आँकड़ा बोलिए। सिर्फ़ नाम गिनाने से आधे अंक मिलते हैं।" },
+    en: { tip: "Give the normal figure with each vital sign. Just naming them gets you half marks." }
+  },
   kw: [["temperature", "temp", "98", "37"], ["pulse", "heart rate", "60", "100", "72"], ["respiration", "respiratory", "breathing", "12", "20", "16"], ["blood pressure", "bp", "120", "80"], ["oxygen", "spo2", "saturation", "95", "spo"]],
   gu: "ચાર મુખ્ય વાઇટલ સાઇન છે, અને આજકાલ ઓક્સિજન સેચ્યુરેશન પણ ગણાય છે. પહેલું, તાપમાન — સામાન્ય રીતે ૯૮.૬ ડિગ્રી ફેરનહાઇટ એટલે ૩૭ ડિગ્રી સેલ્સિયસ. બીજું, પલ્સ — પ્રતિ મિનિટ ૬૦ થી ૧૦૦ ધબકારા. ત્રીજું, શ્વાસનો દર — પ્રતિ મિનિટ ૧૨ થી ૨૦ વાર. ચોથું, બ્લડ પ્રેશર — આશરે ૧૨૦ ઉપર ૮૦. અને પાંચમું, ઓક્સિજન સેચ્યુરેશન — ૯૫ ટકા કે વધુ.",
   en: "There are four main vital signs, and nowadays oxygen saturation is also counted. First, temperature, which is normally ninety eight point six degrees Fahrenheit, that is thirty seven degrees Celsius. Second, pulse, which is sixty to one hundred beats per minute. Third, respiration rate, which is twelve to twenty breaths per minute. Fourth, blood pressure, which is around one twenty over eighty. And fifth, oxygen saturation, which should be ninety five percent or above.",
@@ -21,7 +27,13 @@ registerCourse({
   id: 2,
   cat: "સંક્રમણ નિયંત્રણ",
   q: "How do you prevent the spread of infection in a hospital ward?",
-  i18n: { gu: { q: "Hospital ward માં infection ફેલાતું કેવી રીતે અટકાવો છો?" }, hi: { q: "Hospital ward में infection फैलने से कैसे रोकते हैं?" } },
+  i18n: {
+    gu: { q: "Hospital ward માં infection ફેલાતું કેવી રીતે અટકાવો છો?" },
+    hi: { q: "Hospital ward में infection फैलने से कैसे रोकते हैं?",
+          gu: "Infection रोकने का सबसे पहला और सबसे असरदार क़दम हाथ धोना है। हर patient को छूने से पहले और बाद में हाथ साबुन से धोता हूँ या sanitizer इस्तेमाल करता हूँ। ज़रूरत के अनुसार gloves, mask और gown पहनता हूँ और हर patient के लिए नए gloves इस्तेमाल करता हूँ। सारे उपकरण इस्तेमाल से पहले और बाद में sterilize करता हूँ। कचरा रंग के अनुसार अलग डिब्बों में डालता हूँ और सुई-blade सिर्फ़ sharp container में डालता हूँ। Patient की चादर नियमित बदलता हूँ, और संक्रमित patient को अलग रखता हूँ।",
+          tip: "«हाथ धोना» पहले बोलना ज़रूरी है। यह छूट गया तो nursing के interview में तुरंत मना कर दिया जाता है।" },
+    en: { tip: "Hand washing must come first. Miss it and nursing interviews reject you on the spot." }
+  },
   kw: [["glove", "gloves", "mask", "gown", "apron", "ppe", "cap"], ["sterile", "sterilise", "sterilize", "disinfect", "clean", "cleaning", "autoclave"], ["waste", "dispose", "disposal", "bin", "colour", "color", "segregate", "sharp", "needle"], ["patient", "isolation", "separate", "bed", "linen", "bedsheet", "change"], ["before", "after", "each", "every", "between", "touch"]],
   must: [{ kw: ["hand wash", "handwash", "wash my hand", "wash hand", "washing hand", "hand hygiene", "sanitiser", "sanitizer", "hand rub", "soap"], gu: "હાથ ધોવા / હેન્ડ હાઇજીન" }],
   gu: "સંક્રમણ રોકવાનું સૌથી પહેલું અને સૌથી અસરકારક પગલું હાથ ધોવાનું છે. દરેક દર્દીને અડ્યા પહેલાં અને પછી હાથ સાબુથી ધોઉં છું અથવા સેનિટાઇઝર વાપરું છું. જરૂર પ્રમાણે ગ્લવ્ઝ, માસ્ક અને ગાઉન પહેરું છું અને દરેક દર્દી માટે નવા ગ્લવ્ઝ વાપરું છું. બધાં સાધનો વપરાશ પહેલાં અને પછી સ્ટરિલાઇઝ કરું છું. કચરો રંગ પ્રમાણેના અલગ ડબ્બામાં નાખું છું અને સોય-બ્લેડ ફક્ત શાર્પ કન્ટેનરમાં નાખું છું. દર્દીની ચાદર નિયમિત બદલું છું, અને સંક્રમિત દર્દીને અલગ રાખું છું.",
@@ -32,7 +44,13 @@ registerCourse({
   id: 3,
   cat: "દવા આપવી",
   q: "What precautions do you take before giving medicine to a patient?",
-  i18n: { gu: { q: "Patient ને દવા આપતાં પહેલાં તમે કઈ precautions લો છો?" }, hi: { q: "Patient को दवा देने से पहले आप कौन सी precautions लेते हैं?" } },
+  i18n: {
+    gu: { q: "Patient ને દવા આપતાં પહેલાં તમે કઈ precautions લો છો?" },
+    hi: { q: "Patient को दवा देने से पहले आप कौन सी precautions लेते हैं?",
+          gu: "दवा देने से पहले «Five Rights» जाँचता हूँ। पहला, सही patient — नाम और bed number पूछकर पक्का करता हूँ। दूसरा, सही दवा — label और doctor के prescription से मिलाता हूँ। तीसरा, सही dose। चौथा, सही route — मुँह से, injection या IV। पाँचवाँ, सही समय। इसके साथ दवा की expiry date देखता हूँ और patient को कोई allergy है या नहीं यह पूछता हूँ। दवा देने के बाद तुरंत record में लिखता हूँ और patient पर कोई प्रतिक्रिया दिखे तो तुरंत nurse in-charge या doctor को बताता हूँ।",
+          tip: "«Five Rights» नाम के साथ बोलिए और पाँचों गिनाइए। Allergy पूछना मत भूलिए।" },
+    en: { tip: "Name the 'Five Rights' and list all five. Do not forget to ask about allergies." }
+  },
   kw: [["right patient", "patient name", "name", "identify", "confirm", "check patient", "bed number"], ["right drug", "medicine name", "label", "correct medicine", "drug"], ["dose", "dosage", "quantity", "amount", "strength"], ["route", "oral", "injection", "iv", "im", "time", "timing"], ["expiry", "expiry date", "expire", "allergy", "allergic", "record", "document", "chart", "doctor", "prescription"]],
   must: [
     { kw: ["right patient", "patient name", "name", "identify", "confirm", "bed number", "check patient"], gu: "સાચો દર્દી ઓળખવો" },
@@ -46,7 +64,13 @@ registerCourse({
   id: 4,
   cat: "પ્રાથમિક સારવાર",
   q: "A patient suddenly collapses in the ward. What will you do?",
-  i18n: { gu: { q: "Ward માં કોઈ patient અચાનક ઢળી પડે તો તમે શું કરશો?" }, hi: { q: "Ward में कोई patient अचानक गिर जाए तो आप क्या करेंगे?" } },
+  i18n: {
+    gu: { q: "Ward માં કોઈ patient અચાનક ઢળી પડે તો તમે શું કરશો?" },
+    hi: { q: "Ward में कोई patient अचानक गिर जाए तो आप क्या करेंगे?",
+          gu: "पहले जगह सुरक्षित है यह देखकर patient के पास जाता हूँ और नाम पुकारकर, कंधा हिलाकर प्रतिक्रिया जाँचता हूँ। प्रतिक्रिया न मिले तो तुरंत ज़ोर से मदद बुलाता हूँ और doctor तथा emergency team को ख़बर करवाता हूँ। फिर साँस और pulse जाँचता हूँ। साँस न चल रही हो तो patient को सख़्त सतह पर सीधा लिटाकर training के अनुसार तुरंत CPR शुरू करता हूँ — 30 chest compression और 2 साँस। साँस चल रही हो पर बेहोश हो तो recovery position में करवट लिटाता हूँ और oxygen तैयार रखता हूँ। Doctor आने तक patient के पास रहता हूँ और सब record में लिखता हूँ।",
+          tip: "क्रम यही रखिए: प्रतिक्रिया जाँचिए, मदद बुलाइए, साँस जाँचिए, फिर CPR। मदद बुलाना मत भूलिए।" },
+    en: { tip: "Keep this order: check response, call for help, check breathing, then CPR. Never skip calling for help." }
+  },
   kw: [["response", "responsive", "conscious", "shout", "call name", "shake", "check response"], ["breathing", "breath", "pulse", "airway", "check"], ["cpr", "compression", "chest compression", "resuscitation", "30", "2"], ["doctor", "call", "help", "emergency", "code", "team", "shout for help", "inform"], ["position", "flat", "hard", "floor", "bed", "side", "recovery", "oxygen"]],
   must: [
     { kw: ["call", "help", "shout", "inform", "doctor", "emergency", "team", "code"], gu: "તરત મદદ બોલાવવી" },
@@ -60,7 +84,13 @@ registerCourse({
   id: 5,
   cat: "દર્દી સંભાળ",
   q: "What is a bed sore, and how do you prevent it?",
-  i18n: { gu: { q: "Bed sore શું છે, અને તેને કેવી રીતે અટકાવો છો?" }, hi: { q: "Bed sore क्या है, और उसे कैसे रोकते हैं?" } },
+  i18n: {
+    gu: { q: "Bed sore શું છે, અને તેને કેવી રીતે અટકાવો છો?" },
+    hi: { q: "Bed sore क्या है, और उसे कैसे रोकते हैं?",
+          gu: "Bed sore यानी pressure ulcer — patient लंबे समय तक एक ही स्थिति में लेटा रहे तो शरीर के जिन हिस्सों पर लगातार दबाव पड़ता है, वहाँ ख़ून का बहाव घट जाता है और चमड़ी टूटकर घाव बन जाता है। यह ख़ासकर कमर, कूल्हे, एड़ी और कंधे पर होता है। बचाव के लिए हर दो घंटे में patient की स्थिति बदलता हूँ। चमड़ी साफ़ और सूखी रखता हूँ, क्योंकि गीली चमड़ी जल्दी टूटती है। Air mattress या तकिए लगाकर दबाव बाँटता हूँ। हड्डी के पास हल्की मालिश करता हूँ, चादर सीधी और बिना सिलवट की रखता हूँ, और patient को protein वाला खाना तथा पर्याप्त पानी मिले यह देखता हूँ।",
+          tip: "«हर दो घंटे में स्थिति बदलना» यही सबसे अहम जवाब है — ज़रूर बोलिए।" },
+    en: { tip: "'Turn the patient every two hours' is the single most important point — be sure to say it." }
+  },
   kw: [["pressure", "sore", "bed sore", "bedsore", "ulcer", "wound"], ["long time", "same position", "one position", "lying", "immobile", "cannot move", "bedridden"], ["turn", "turning", "change position", "position change", "two hour", "2 hour", "every"], ["clean", "dry", "hygiene", "wash", "skin care", "moisture", "wet"], ["mattress", "air bed", "water bed", "pillow", "cushion", "massage", "nutrition", "protein", "diet"]],
   gu: "બેડ સોર એટલે પ્રેશર અલ્સર — દર્દી લાંબા સમય સુધી એક જ સ્થિતિમાં સૂતો રહે ત્યારે શરીરના જે ભાગ પર સતત દબાણ આવે છે, ત્યાં લોહીનો પ્રવાહ ઘટી જાય અને ચામડી તૂટીને ઘાવ પડે. તે ખાસ કરીને કમર, થાપા, એડી અને ખભા પર થાય. બચાવ માટે દર બે કલાકે દર્દીની સ્થિતિ બદલું છું. ચામડી સાફ અને સૂકી રાખું છું, કારણ કે ભીની ચામડી જલદી તૂટે. એર મેટ્રેસ કે ઓશીકાં વાપરીને દબાણ વહેંચું છું. હાડકાં પાસેની જગ્યાએ હળવો માલિશ કરું છું, ચાદર સીધી અને કરચલી વગરની રાખું છું, અને દર્દીને પ્રોટીનવાળો ખોરાક તથા પૂરતું પાણી મળે તે જોઉં છું.",
   en: "A bed sore, also called a pressure ulcer, happens when a patient lies in the same position for a long time. Continuous pressure on one part of the body reduces the blood flow, and the skin breaks down and forms a wound. It commonly happens on the lower back, hips, heels and shoulders. To prevent it I change the patient position every two hours. I keep the skin clean and dry, because wet skin breaks more easily. I use an air mattress or pillows to spread the pressure. I give a gentle massage around the bony areas, keep the bed sheet straight without wrinkles, and make sure the patient gets protein rich food and enough water.",
@@ -70,7 +100,13 @@ registerCourse({
   id: 6,
   cat: "સંવાદ",
   q: "How do you communicate with a patient who is frightened or in pain?",
-  i18n: { gu: { q: "ડરેલા કે દુખાવામાં હોય એવા patient સાથે તમે કેવી રીતે વાત કરો છો?" }, hi: { q: "डरे हुए या दर्द में पड़े patient से आप कैसे बात करते हैं?" } },
+  i18n: {
+    gu: { q: "ડરેલા કે દુખાવામાં હોય એવા patient સાથે તમે કેવી રીતે વાત કરો છો?" },
+    hi: { q: "डरे हुए या दर्द में पड़े patient से आप कैसे बात करते हैं?",
+          gu: "पहले patient के पास शांति से बैठकर धीमी और नम्र आवाज़ में बात करता हूँ। उनकी बात बीच में रोके बिना पूरी सुनता हूँ और पूछता हूँ कि दर्द कहाँ और कितना है। फिर सरल भाषा में — उन्हीं की भाषा में — समझाता हूँ कि क्या होने वाला है और क्यों, ताकि डर कम हो। Patient की privacy और सम्मान बनाए रखता हूँ। ज़रूरत हो तो परिवार वालों को पास रहने देता हूँ। Patient की स्थिति आरामदायक बनाता हूँ और दर्द ज़्यादा हो तो तुरंत doctor या nurse in-charge को बताता हूँ। झूठा दिलासा या झूठा वादा कभी नहीं देता।",
+          tip: "«झूठा दिलासा नहीं देता» — यह बात जोड़ने से पेशेवर ईमानदारी दिखती है।" },
+    en: { tip: "Adding 'I never give false reassurance' shows professional honesty." }
+  },
   kw: [["calm", "calmly", "gentle", "soft", "polite", "kind", "smile"], ["listen", "listening", "ask", "understand", "patience", "patiently"], ["explain", "explaining", "simple", "language", "tell", "inform", "reassure", "confidence"], ["privacy", "dignity", "respect", "cover", "curtain", "family", "relative"], ["doctor", "inform", "report", "pain", "medicine", "help", "comfort", "position"]],
   gu: "પહેલાં દર્દી પાસે શાંતિથી બેસીને ધીમા અને નમ્ર અવાજે વાત કરું છું. તેમની વાત વચ્ચે અટકાવ્યા વગર પૂરી સાંભળું છું અને પૂછું છું કે દુખાવો ક્યાં અને કેટલો છે. પછી સાદી ભાષામાં — તેમની જ ભાષામાં — સમજાવું છું કે શું થવાનું છે અને કેમ થવાનું છે, જેથી ડર ઓછો થાય. દર્દીની પ્રાઇવસી અને માન સાચવું છું. જરૂર પડે તો કુટુંબીજનને પાસે રહેવા દઉં છું. દર્દીની સ્થિતિ આરામદાયક બનાવું છું અને દુખાવો વધુ હોય તો તરત ડોક્ટર કે નર્સ ઇન્ચાર્જને જાણ કરું છું. ખોટું આશ્વાસન કે ખોટું વચન કદી આપતો નથી.",
   en: "First I sit calmly near the patient and speak in a slow and gentle voice. I listen to them completely without interrupting, and I ask where the pain is and how much it is. Then I explain in simple language, in their own language, what is going to happen and why, so that their fear reduces. I protect the patient privacy and dignity. If needed I allow a family member to stay with them. I make the patient position comfortable, and if the pain is severe I immediately inform the doctor or the nurse in charge. I never give false reassurance or a false promise.",
@@ -80,7 +116,13 @@ registerCourse({
   id: 7,
   cat: "ઇન્જેક્શન",
   q: "What is the difference between an intramuscular and an intravenous injection?",
-  i18n: { gu: { q: "Intramuscular અને intravenous injection વચ્ચે શું ફરક છે?" }, hi: { q: "Intramuscular और intravenous injection में क्या फ़र्क़ है?" } },
+  i18n: {
+    gu: { q: "Intramuscular અને intravenous injection વચ્ચે શું ફરક છે?" },
+    hi: { q: "Intramuscular और intravenous injection में क्या फ़र्क़ है?",
+          gu: "Intramuscular यानी IM injection मांसपेशी में दिया जाता है — जैसे कंधे के deltoid में, कूल्हे के gluteal में या जाँघ में। उसमें सुई चमड़ी से 90 डिग्री के कोण पर डाली जाती है और दवा मांसपेशी से धीरे-धीरे ख़ून में सोखी जाती है। Intravenous यानी IV injection सीधे नस में दिया जाता है, इसलिए दवा तुरंत ख़ून में पहुँचती है और तुरंत असर करती है। इसीलिए emergency में IV इस्तेमाल होता है। IV में दवा धीरे-धीरे देनी पड़ती है और बहुत सावधानी रखनी पड़ती है, क्योंकि असर तुरंत होता है और उसे वापस नहीं लिया जा सकता।",
+          tip: "दोनों की जगह और असर की रफ़्तार — इन दो बातों की तुलना कीजिए। एक-दो जगहों के नाम भी दीजिए।" },
+    en: { tip: "Compare the two on site and on speed of action. Name one or two injection sites as well." }
+  },
   kw: [["intramuscular", "im", "muscle"], ["intravenous", "iv", "vein"], ["slow", "slowly", "gradual", "absorb", "absorption", "deltoid", "gluteal", "thigh"], ["fast", "quick", "immediate", "immediately", "direct", "blood", "bloodstream"], ["angle", "90", "ninety", "site", "needle", "size", "aspirate", "emergency"]],
   gu: "ઇન્ટ્રામસ્ક્યુલર એટલે IM ઇન્જેક્શન સ્નાયુમાં અપાય છે — જેમ કે ખભાના ડેલ્ટોઇડમાં, થાપાના ગ્લુટિયલમાં કે જાંઘમાં. તેમાં સોય ચામડીથી ૯૦ ડિગ્રીના ખૂણે નાખવામાં આવે છે અને દવા સ્નાયુમાંથી ધીમે ધીમે લોહીમાં શોષાય છે. ઇન્ટ્રાવીનસ એટલે IV ઇન્જેક્શન સીધું નસમાં અપાય છે, તેથી દવા તરત લોહીમાં પહોંચે અને તરત અસર કરે. તેથી ઇમરજન્સીમાં IV વપરાય છે. IV માં દવા ધીમે ધીમે આપવી પડે અને ખૂબ કાળજી રાખવી પડે, કારણ કે અસર તરત થાય છે અને પાછી લઈ શકાતી નથી.",
   en: "An intramuscular or IM injection is given into a muscle, for example the deltoid in the shoulder, the gluteal muscle in the hip, or the thigh. The needle is inserted at a ninety degree angle to the skin, and the medicine is absorbed slowly from the muscle into the blood. An intravenous or IV injection is given directly into a vein, so the medicine reaches the blood immediately and acts immediately. That is why IV is used in emergencies. In IV the medicine has to be given slowly and with great care, because the effect is immediate and it cannot be taken back.",
@@ -90,7 +132,13 @@ registerCourse({
   id: 8,
   cat: "નોંધ અને રેકોર્ડ",
   q: "Why is proper documentation and record keeping important in nursing?",
-  i18n: { gu: { q: "Nursing માં યોગ્ય documentation અને record keeping શા માટે જરૂરી છે?" }, hi: { q: "Nursing में सही documentation और record keeping क्यों ज़रूरी है?" } },
+  i18n: {
+    gu: { q: "Nursing માં યોગ્ય documentation અને record keeping શા માટે જરૂરી છે?" },
+    hi: { q: "Nursing में सही documentation और record keeping क्यों ज़रूरी है?",
+          gu: "Record सही और पूरा रखना कई कारणों से ज़रूरी है। पहला, patient की देखभाल लगातार चले — दूसरी shift की nurse या doctor record देखकर जान सकें कि क्या दिया गया और patient की हालत कैसी है। दूसरा, दवा दो बार दिए जाने या छूट जाने की ग़लती टल जाती है। तीसरा, doctor patient की प्रगति समझकर इलाज बदल सकते हैं। चौथा, record एक क़ानूनी दस्तावेज़ है — कोई जाँच या case हो तो वही सबूत बनता है और nurse की भी रक्षा करता है। इसलिए मैं हर entry काम करने के तुरंत बाद, समय और हस्ताक्षर के साथ लिखता हूँ, और जो किया न हो वह कभी नहीं लिखता।",
+          tip: "«क़ानूनी दस्तावेज़» और «जो किया न हो वह मत लिखिए» — ये दो बातें बहुत असर डालती हैं।" },
+    en: { tip: "'It is a legal document' and 'never record what you did not do' both land strongly." }
+  },
   kw: [["record", "document", "documentation", "chart", "file", "write", "note"], ["doctor", "next", "shift", "handover", "team", "nurse", "continuity", "continue"], ["treatment", "medicine", "given", "history", "progress", "condition", "vital"], ["legal", "law", "court", "proof", "evidence", "protect", "responsibility"], ["mistake", "error", "safe", "safety", "double", "repeat", "time", "sign", "immediately"]],
   gu: "રેકોર્ડ સાચો અને પૂરો રાખવો ઘણાં કારણોસર જરૂરી છે. પહેલું, દર્દીની સંભાળ સળંગ ચાલે — બીજી શિફ્ટની નર્સ કે ડોક્ટર રેકોર્ડ જોઈને જાણી શકે કે શું અપાયું અને દર્દીની હાલત કેવી છે. બીજું, દવા બે વાર અપાઈ જવાની કે અપાયા વગર રહી જવાની ભૂલ ટળે. ત્રીજું, ડોક્ટર દર્દીની પ્રગતિ સમજીને સારવાર બદલી શકે. ચોથું, રેકોર્ડ કાનૂની દસ્તાવેજ છે — કોઈ તપાસ કે કેસ થાય તો તે પુરાવો બને છે અને નર્સનું પણ રક્ષણ કરે છે. તેથી હું દરેક નોંધ કામ કર્યા પછી તરત, સમય અને સહી સાથે લખું છું, અને જે કર્યું ન હોય તે કદી લખતો નથી.",
   en: "Keeping a correct and complete record is important for many reasons. First, it keeps the patient care continuous, because the nurse or doctor on the next shift can see from the record what was given and what the patient condition is. Second, it prevents mistakes like giving a medicine twice or missing it completely. Third, the doctor can understand the patient progress and change the treatment. Fourth, the record is a legal document, so if there is any enquiry or case it becomes evidence and it also protects the nurse. That is why I write every entry immediately after doing the work, with the time and my signature, and I never write something that I have not actually done.",
@@ -100,7 +148,13 @@ registerCourse({
   id: 9,
   cat: "શિફ્ટ અને ટીમ",
   q: "Are you willing to do night shifts and work on holidays?",
-  i18n: { gu: { q: "શું તમે night shift અને રજાના દિવસે કામ કરવા તૈયાર છો?" }, hi: { q: "क्या आप night shift और छुट्टी के दिन काम करने के लिए तैयार हैं?" } },
+  i18n: {
+    gu: { q: "શું તમે night shift અને રજાના દિવસે કામ કરવા તૈયાર છો?" },
+    hi: { q: "क्या आप night shift और छुट्टी के दिन काम करने के लिए तैयार हैं?",
+          gu: "साफ़ «हाँ» कहिए और कारण दीजिए। जैसे: «हाँ, मैं night shift और छुट्टी के दिन काम करने के लिए तैयार हूँ। Nursing ऐसा पेशा है जिसमें patient को चौबीस घंटे देखभाल चाहिए, इसलिए shift में काम करना इस काम का हिस्सा है, यह मैं समझता हूँ। मेरे परिवार को भी यह पता है और उनका पूरा साथ है। Night shift के बाद पर्याप्त आराम लेकर मैं duty पर सजग रहता हूँ।» गोल-मोल या आधा जवाब मत दीजिए — hospital के लिए यह सवाल निर्णायक होता है।",
+          tip: "इस सवाल में अस्पष्ट जवाब देने से नौकरी चली जाती है। साफ़ «हाँ» के साथ कारण दीजिए।" },
+    en: { tip: "A vague answer here loses the job. Say a clear yes, and give your reason." }
+  },
   kw: [["yes", "ready", "willing", "no problem", "comfortable", "prepared"], ["night", "shift", "rotation", "rotational", "duty"], ["patient", "care", "24", "twenty four", "hour", "always", "need", "profession", "service"], ["family", "support", "adjust", "manage", "arrange", "prepared", "understand"], ["sleep", "rest", "health", "plan", "advance", "inform", "responsib"]],
   gu: "સ્પષ્ટ «હા» કહો અને કારણ આપો. જેમ કે: «હા, હું નાઇટ શિફ્ટ અને રજાના દિવસે કામ કરવા તૈયાર છું. નર્સિંગ એવો વ્યવસાય છે જેમાં દર્દીને ચોવીસ કલાક સંભાળની જરૂર પડે છે, તેથી શિફ્ટમાં કામ કરવું આ કામનો ભાગ છે એ મને સમજાય છે. મારા કુટુંબને પણ આ ખબર છે અને તેમનો પૂરો સાથ છે. નાઇટ શિફ્ટ પછી પૂરતો આરામ લઈને હું ડ્યુટી પર સજાગ રહું છું.» ગોળ ગોળ કે અડધો જવાબ ન આપો — હોસ્પિટલ માટે આ પ્રશ્ન નિર્ણાયક હોય છે.",
   en: "Yes, I am ready to do night shifts and to work on holidays. Nursing is a profession where patients need care twenty four hours a day, so I understand that shift duty is a part of this job. My family also knows this and they fully support me. After a night shift I take proper rest so that I stay alert on duty.",
@@ -110,7 +164,13 @@ registerCourse({
   id: 10,
   cat: "નૈતિકતા",
   q: "You made a mistake in a patient's treatment. What will you do?",
-  i18n: { gu: { q: "Patient ની treatment માં તમારાથી ભૂલ થઈ ગઈ છે. તમે શું કરશો?" }, hi: { q: "Patient के treatment में आपसे ग़लती हो गई है। आप क्या करेंगे?" } },
+  i18n: {
+    gu: { q: "Patient ની treatment માં તમારાથી ભૂલ થઈ ગઈ છે. તમે શું કરશો?" },
+    hi: { q: "Patient के treatment में आपसे ग़लती हो गई है। आप क्या करेंगे?",
+          gu: "ग़लती हो जाए तो मैं उसे कभी नहीं छिपाता, क्योंकि nursing में छिपाई हुई ग़लती से patient की जान ख़तरे में पड़ सकती है। पहले patient की हालत जाँचता हूँ और उनकी सुरक्षा पर ध्यान देता हूँ। फिर तुरंत nurse in-charge और doctor को ईमानदारी से बताता हूँ, ताकि ज़रूरी इलाज फ़ौरन शुरू हो सके। फिर patient पर लगातार नज़र रखता हूँ और जो हुआ वह जैसा हुआ वैसा record में लिखता हूँ। आख़िर में सोचता हूँ कि ग़लती क्यों हुई और दोबारा न हो इसके लिए क्या बदलना है — जैसे दवा देने से पहले Five Rights और ध्यान से जाँचना।",
+          tip: "«छिपाता नहीं» और «तुरंत बताता हूँ» — ये दो वाक्य ज़रूरी हैं। ईमानदारी ही इस सवाल का पूरा जवाब है।" },
+    en: { tip: "'I do not hide it' and 'I report it immediately' are essential. Honesty is the whole answer to this question." }
+  },
   kw: [["accept", "admit", "own", "honest", "honestly", "true", "mistake", "error"], ["immediately", "at once", "right away", "without delay", "quickly"], ["inform", "report", "tell", "nurse in charge", "senior", "doctor", "sister"], ["patient", "check", "monitor", "observe", "condition", "safe", "safety", "harm", "care"], ["record", "document", "write", "learn", "again", "future", "careful", "hide"]],
   must: [
     { kw: ["inform", "report", "tell", "senior", "doctor", "nurse in charge", "sister", "supervisor"], gu: "તરત સિનિયર કે ડોક્ટરને જાણ કરવી" },

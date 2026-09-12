@@ -11,7 +11,13 @@ registerCourse({
   id: 1,
   cat: "હાર્ડવેર",
   q: "What is the difference between RAM and a hard disk?",
-  i18n: { gu: { q: "RAM અને hard disk વચ્ચે શું ફરક છે?" }, hi: { q: "RAM और hard disk में क्या फ़र्क़ है?" } },
+  i18n: {
+    gu: { q: "RAM અને hard disk વચ્ચે શું ફરક છે?" },
+    hi: { q: "RAM और hard disk में क्या फ़र्क़ है?",
+          gu: "RAM एक temporary memory है। Computer चालू रहने पर जो programs चल रहे होते हैं वे RAM में रहते हैं, और power बंद होते ही वह सब मिट जाता है। Hard disk permanent storage है — files, photos और software उसमें सुरक्षित रहते हैं और power बंद होने पर भी बने रहते हैं। RAM तेज़ पर छोटी होती है, hard disk धीमी पर बहुत बड़ी।",
+          tip: "«Temporary» और «permanent» ये दो शब्द ज़रूर बोलिए। Interview लेने वाला मुख्य रूप से यही सुनना चाहता है।" },
+    en: { tip: "Be sure to say the words 'temporary' and 'permanent'. That is mainly what the interviewer is listening for." }
+  },
   kw: [["ram"], ["hard disk", "hard drive", "hdd", "ssd", "storage"], ["temporary", "temporarily", "volatile", "erase", "lost", "clear"], ["permanent", "permanently", "save", "stored", "keeps"], ["power", "off", "shut", "switch"]],
   gu: "RAM એ કામચલાઉ મેમરી છે. કમ્પ્યુટર ચાલુ હોય ત્યારે જે પ્રોગ્રામ ચાલે છે તે RAM માં રહે છે, અને પાવર બંધ થતાં તે બધું ભૂંસાઈ જાય છે. હાર્ડ ડિસ્ક કાયમી સંગ્રહ છે — ફાઇલો, ફોટા અને સોફ્ટવેર તેમાં સચવાય છે અને પાવર બંધ થાય તો પણ રહે છે. RAM ઝડપી પણ નાની હોય, હાર્ડ ડિસ્ક ધીમી પણ મોટી હોય.",
   en: "RAM is temporary memory. The programs that are running stay in RAM, and everything in it is erased when the power goes off. A hard disk is permanent storage, so files, photos and software stay saved even after the computer is switched off. RAM is faster but smaller, and the hard disk is slower but much larger.",
@@ -21,7 +27,13 @@ registerCourse({
   id: 2,
   cat: "MS એક્સેલ",
   q: "How do you add a column of numbers in MS Excel?",
-  i18n: { gu: { q: "MS Excel માં આંકડાની column નો સરવાળો કેવી રીતે કરો છો?" }, hi: { q: "MS Excel में numbers की column का total कैसे करते हैं?" } },
+  i18n: {
+    gu: { q: "MS Excel માં આંકડાની column નો સરવાળો કેવી રીતે કરો છો?" },
+    hi: { q: "MS Excel में numbers की column का total कैसे करते हैं?",
+          gu: "जिस cell में जवाब चाहिए उस पर click कीजिए, फिर बराबर के निशान के साथ SUM function लिखिए — जैसे =SUM(A1:A10)। Bracket में पहले और आख़िरी cell का नाम दीजिए, फिर Enter दबाइए। दूसरा तरीक़ा यह है कि numbers वाले cells चुनकर Home tab से AutoSum दबा दीजिए।",
+          tip: "Formula बोलते समय «equals», «open bracket», «colon» साफ़-साफ़ बोलिए — सिर्फ़ «A1 A10» मत बोलिए।" },
+    en: { tip: "When saying the formula out loud, say 'equals', 'open bracket', 'colon' clearly — do not just say 'A1 A10'." }
+  },
   kw: [["sum", "autosum", "total"], ["formula", "function", "equal", "="], ["cell", "column", "range"], ["select", "click", "type", "drag"], ["enter", "result", "answer"]],
   gu: "જે ખાનામાં જવાબ જોઈએ છે ત્યાં ક્લિક કરો, પછી બરાબરની નિશાની સાથે SUM ફંક્શન લખો — જેમ કે =SUM(A1:A10). કૌંસમાં પહેલા અને છેલ્લા ખાનાનું નામ આપો, પછી Enter દબાવો. બીજી રીત એ છે કે આંકડાવાળાં ખાનાં પસંદ કરીને Home ટૅબમાંથી AutoSum દબાવો.",
   en: "First I click on the cell where I want the answer. Then I type the SUM formula, for example equals S-U-M open bracket A1 colon A10 close bracket, and press Enter. Another way is to select the numbers and click AutoSum in the Home tab.",
@@ -31,7 +43,13 @@ registerCourse({
   id: 3,
   cat: "ઓપરેટિંગ સિસ્ટમ",
   q: "What is an operating system? Give two examples.",
-  i18n: { gu: { q: "Operating system શું છે? બે ઉદાહરણ આપો." }, hi: { q: "Operating system क्या है? दो उदाहरण दीजिए।" } },
+  i18n: {
+    gu: { q: "Operating system શું છે? બે ઉદાહરણ આપો." },
+    hi: { q: "Operating system क्या है? दो उदाहरण दीजिए।",
+          gu: "Operating system वह मुख्य software है जो computer के hardware और user के बीच कड़ी बनाता है। वह files संभालता है, programs चलाता है और screen पर सब दिखाता है। उसके बिना computer चल ही नहीं सकता। उदाहरण के लिए Windows और Android।",
+          tip: "दो उदाहरण पूछे गए हों तो दो ही दीजिए, और नाम साफ़ बोलिए।" },
+    en: { tip: "If two examples are asked for, give exactly two, and say the names clearly." }
+  },
   kw: [["operating system", "os"], ["software", "program"], ["hardware", "computer", "machine"], ["windows"], ["android", "linux", "ubuntu", "mac", "ios"]],
   gu: "ઓપરેટિંગ સિસ્ટમ એ મુખ્ય સોફ્ટવેર છે જે કમ્પ્યુટરના હાર્ડવેર અને વપરાશકર્તા વચ્ચે કડી બનાવે છે. તે ફાઇલો સંભાળે છે, પ્રોગ્રામ ચલાવે છે અને સ્ક્રીન પર બધું બતાવે છે. તેના વગર કમ્પ્યુટર ચાલી શકે નહીં. ઉદાહરણ તરીકે Windows અને Android.",
   en: "An operating system is the main software that connects the computer hardware with the user. It manages files, runs programs and shows everything on the screen. Without it the computer cannot work. Two examples are Windows and Android.",
@@ -41,7 +59,13 @@ registerCourse({
   id: 4,
   cat: "ઇન્ટરનેટ અને ઈમેલ",
   q: "How do you send an email with a file attached?",
-  i18n: { gu: { q: "File attach કરીને email કેવી રીતે મોકલો છો?" }, hi: { q: "File attach करके email कैसे भेजते हैं?" } },
+  i18n: {
+    gu: { q: "File attach કરીને email કેવી રીતે મોકલો છો?" },
+    hi: { q: "File attach करके email कैसे भेजते हैं?",
+          gu: "पहले Gmail खोलकर Compose दबाइए। To के खाने में जिसे भेजना है उसका email address लिखिए, Subject में विषय लिखिए और नीचे संदेश लिखिए। फिर paperclip जैसे Attach icon पर click करके file चुनिए। File चढ़ जाने के बाद Send दबाइए।",
+          tip: "क्रम से बोलिए: To, Subject, संदेश, Attach, Send। इससे practical अनुभव दिखता है।" },
+    en: { tip: "Say the steps in order: To, Subject, message, Attach, Send. That shows practical experience." }
+  },
   kw: [["compose", "new mail", "new email", "write"], ["address", "to", "recipient", "email id"], ["subject"], ["attach", "attachment", "clip", "paperclip", "upload"], ["send"]],
   gu: "પહેલાં Gmail ખોલીને Compose દબાવો. To ના ખાનામાં જેને મોકલવો છે તેનું ઈમેલ એડ્રેસ લખો, Subject માં વિષય લખો અને નીચે સંદેશો લખો. પછી પેપરક્લિપ જેવા Attach આઇકોન પર ક્લિક કરીને ફાઇલ પસંદ કરો. ફાઇલ ચઢી જાય પછી Send દબાવો.",
   en: "First I open Gmail and click on Compose. I type the receiver email address in the To box, write a subject, and type my message. Then I click the paperclip attach icon and select the file from my computer. After the file is uploaded, I click Send.",
@@ -51,7 +75,13 @@ registerCourse({
   id: 5,
   cat: "સમસ્યા નિવારણ",
   q: "The printer is not printing. What will you check?",
-  i18n: { gu: { q: "Printer print નથી કરતું. તમે શું તપાસશો?" }, hi: { q: "Printer print नहीं कर रहा। आप क्या जाँचेंगे?" } },
+  i18n: {
+    gu: { q: "Printer print નથી કરતું. તમે શું તપાસશો?" },
+    hi: { q: "Printer print नहीं कर रहा। आप क्या जाँचेंगे?",
+          gu: "पहले देखिए कि printer का power चालू है या नहीं। फिर cable या WiFi connection जाँचिए। उसके बाद tray में कागज़ है या नहीं और कागज़ फँसा तो नहीं है, यह देखिए। फिर ink या toner बचा है या नहीं देखिए। आख़िर में computer में print queue जाँचिए — सही printer default है या नहीं और कोई पुराना काम अटका तो नहीं है।",
+          tip: "सबसे आसान बात से शुरू करके क्रम से आगे बढ़िए। Interview में यह तरीक़ा बहुत अच्छा माना जाता है।" },
+    en: { tip: "Start with the simplest thing and work through in order. Interviewers rate that approach highly." }
+  },
   kw: [["power", "switch", "on", "plug"], ["cable", "usb", "connection", "wifi", "connected"], ["paper", "tray", "jam"], ["ink", "toner", "cartridge"], ["queue", "driver", "default", "restart", "settings"]],
   gu: "પહેલાં પ્રિન્ટરનો પાવર ચાલુ છે કે નહીં તે જુઓ. પછી કેબલ કે વાઇફાઇ જોડાણ તપાસો. ત્યાર બાદ ટ્રેમાં કાગળ છે કે નહીં અને કાગળ ફસાયો નથી તે ચકાસો. પછી શાહી કે ટોનર બાકી છે કે નહીં તે જુઓ. છેલ્લે કમ્પ્યુટરમાં પ્રિન્ટ ક્યુ તપાસો — સાચો પ્રિન્ટર ડિફોલ્ટ છે કે નહીં અને કોઈ જૂનું કામ અટકેલું નથી તે જુઓ.",
   en: "First I check whether the printer power is on. Then I check the cable or the wi-fi connection. After that I check if there is paper in the tray and no paper jam. Next I check the ink or toner level. Finally I check the print queue on the computer to see if the correct printer is selected and no old job is stuck.",
@@ -61,7 +91,13 @@ registerCourse({
   id: 6,
   cat: "સલામતી",
   q: "What is a computer virus and how do you protect a computer from it?",
-  i18n: { gu: { q: "Computer virus શું છે અને તેનાથી computer ને કેવી રીતે બચાવશો?" }, hi: { q: "Computer virus क्या है और उससे computer को कैसे बचाएँगे?" } },
+  i18n: {
+    gu: { q: "Computer virus શું છે અને તેનાથી computer ને કેવી રીતે બચાવશો?" },
+    hi: { q: "Computer virus क्या है और उससे computer को कैसे बचाएँगे?",
+          gu: "Virus एक नुक़सान पहुँचाने वाला program है जो computer में घुसकर files ख़राब करता है, data चुराता है या computer धीमा कर देता है। बचने के लिए antivirus software डालना और उसे नियमित update रखना ज़रूरी है। अनजान email की link या file मत खोलिए, अनजान website से software download मत कीजिए, और pen drive इस्तेमाल करने से पहले scan कीजिए।",
+          tip: "«Antivirus» शब्द बोलना ज़रूरी है। उसके साथ «update रखना» भी जोड़िए।" },
+    en: { tip: "You must say the word 'antivirus'. Add 'keeping it updated' alongside it." }
+  },
   kw: [["virus", "malware"], ["harmful", "damage", "corrupt", "delete", "steal", "slow"], ["file", "data", "program", "system"], ["update", "updated", "scan"], ["pen drive", "usb", "email", "link", "download", "website"]],
   must: [{ kw: ["antivirus", "anti virus", "anti-virus", "defender", "security software"], gu: "એન્ટિવાયરસ સોફ્ટવેર" }],
   gu: "વાયરસ એ નુકસાનકારક પ્રોગ્રામ છે જે કમ્પ્યુટરમાં ઘૂસીને ફાઇલો બગાડે છે, ડેટા ચોરે છે અથવા કમ્પ્યુટર ધીમું કરી નાખે છે. બચવા માટે એન્ટિવાયરસ સોફ્ટવેર નાખવું અને તેને નિયમિત અપડેટ રાખવું જરૂરી છે. અજાણી ઈમેલની લિંક કે ફાઇલ ખોલવી નહીં, અજાણી વેબસાઇટ પરથી સોફ્ટવેર ડાઉનલોડ કરવું નહીં, અને પેન ડ્રાઇવ વાપરતાં પહેલાં સ્કેન કરવી.",
@@ -72,7 +108,13 @@ registerCourse({
   id: 7,
   cat: "ડેટા સંભાળ",
   q: "How do you take a backup of important files?",
-  i18n: { gu: { q: "મહત્વની files નો backup કેવી રીતે લો છો?" }, hi: { q: "ज़रूरी files का backup कैसे लेते हैं?" } },
+  i18n: {
+    gu: { q: "મહત્વની files નો backup કેવી રીતે લો છો?" },
+    hi: { q: "ज़रूरी files का backup कैसे लेते हैं?",
+          gu: "ज़रूरी files की copy एक से ज़्यादा जगह रखनी चाहिए। एक copy pen drive या external hard disk में और दूसरी copy Google Drive जैसे cloud में रखता हूँ। Backup नियमित लेना ज़रूरी है — हर हफ़्ते या काम के हिसाब से रोज़। सिर्फ़ एक ही जगह copy हो तो वह ख़राब होने पर data हमेशा के लिए चला जाता है।",
+          tip: "«दो जगह» यही मुख्य बात है। सिर्फ़ «pen drive में copy करता हूँ» अधूरा जवाब है।" },
+    en: { tip: "'In two places' is the key point. Just saying 'I copy it to a pen drive' is an incomplete answer." }
+  },
   kw: [["backup", "copy"], ["pen drive", "usb", "external", "hard disk", "dvd"], ["cloud", "google drive", "drive", "onedrive", "online"], ["regular", "regularly", "daily", "weekly", "schedule"], ["folder", "file", "important", "data"]],
   must: [{ kw: ["two", "second", "another", "more than one", "both", "also"], gu: "એકથી વધુ જગ્યાએ કોપી રાખવી" }],
   gu: "જરૂરી ફાઇલોની કોપી એકથી વધુ જગ્યાએ રાખવી જોઈએ. એક કોપી પેન ડ્રાઇવ કે એક્સટર્નલ હાર્ડ ડિસ્કમાં અને બીજી કોપી Google Drive જેવા ક્લાઉડમાં રાખું છું. બેકઅપ નિયમિત લેવો જરૂરી છે — દર અઠવાડિયે અથવા કામ પ્રમાણે દરરોજ. ફક્ત એક જ જગ્યાએ કોપી હોય તો તે બગડે ત્યારે ડેટા કાયમ માટે જતો રહે.",
@@ -83,7 +125,13 @@ registerCourse({
   id: 8,
   cat: "MS ઓફિસ",
   q: "What is the difference between Save and Save As?",
-  i18n: { gu: { q: "Save અને Save As વચ્ચે શું ફરક છે?" }, hi: { q: "Save और Save As में क्या फ़र्क़ है?" } },
+  i18n: {
+    gu: { q: "Save અને Save As વચ્ચે શું ફરક છે?" },
+    hi: { q: "Save और Save As में क्या फ़र्क़ है?",
+          gu: "Save उसी file में नए बदलाव सहेजता है — पुराना लिखा बदल जाता है और नाम वही रहता है। Save As नई file बनाता है, जिसमें हम नया नाम, नई जगह या नया format चुन सकते हैं। मूल file बचाए रखनी हो और साथ में दूसरी copy बनानी हो तो Save As इस्तेमाल कीजिए।",
+          tip: "दो चीज़ों की तुलना करनी हो तो «Save यह करता है… जबकि Save As यह…» इस ढाँचे में बोलिए।" },
+    en: { tip: "When comparing two things, use the structure 'Save does this… whereas Save As does this…'." }
+  },
   kw: [["save"], ["save as"], ["same", "existing", "original", "overwrite", "update"], ["new", "another", "different", "copy", "second"], ["name", "location", "folder", "format"]],
   gu: "Save એ જ ફાઇલમાં નવા ફેરફાર સાચવે છે — જૂનું લખાણ બદલાઈ જાય છે અને નામ એ જ રહે છે. Save As નવી ફાઇલ બનાવે છે, જેમાં આપણે નવું નામ, નવી જગ્યા કે નવો ફોર્મેટ પસંદ કરી શકીએ. મૂળ ફાઇલ સાચવી રાખવી હોય અને સાથે બીજી કોપી બનાવવી હોય તો Save As વાપરવું.",
   en: "Save keeps the changes in the same file, so the old version is replaced and the name stays the same. Save As creates a new file, where I can choose a new name, a new location or a different format. If I want to keep the original file and also make another copy, I use Save As.",
@@ -93,7 +141,13 @@ registerCourse({
   id: 9,
   cat: "MS વર્ડ",
   q: "In MS Word, how will you make a heading bold and centred?",
-  i18n: { gu: { q: "MS Word માં heading ને bold અને centre કેવી રીતે કરશો?" }, hi: { q: "MS Word में heading को bold और centre कैसे करेंगे?" } },
+  i18n: {
+    gu: { q: "MS Word માં heading ને bold અને centre કેવી રીતે કરશો?" },
+    hi: { q: "MS Word में heading को bold और centre कैसे करेंगे?",
+          gu: "पहले mouse से heading का text select कीजिए। फिर Home tab में B button दबाइए या Ctrl और B साथ दबाइए, जिससे text bold हो जाए। फिर Center Align button दबाइए या Ctrl और E साथ दबाइए, जिससे heading बीच में आ जाए।",
+          tip: "Shortcut key बोलने से practical अनुभव दिखता है। «Control plus B» पूरा बोलिए।" },
+    en: { tip: "Saying the shortcut keys shows practical experience. Say 'Control plus B' in full." }
+  },
   kw: [["select", "highlight", "cursor", "drag"], ["bold", "ctrl b", "control b"], ["cent", "centre", "center", "middle", "align"], ["home", "tab", "toolbar", "ribbon"], ["ctrl", "control", "shortcut", "click"]],
   gu: "પહેલાં માઉસથી હેડિંગનું લખાણ પસંદ કરો. પછી Home ટૅબમાં B બટન દબાવો અથવા Ctrl અને B સાથે દબાવો, જેથી લખાણ બોલ્ડ થાય. પછી Center Align બટન દબાવો અથવા Ctrl અને E સાથે દબાવો, જેથી હેડિંગ વચ્ચે આવી જાય.",
   en: "First I select the heading text with the mouse. Then in the Home tab I click the B button, or press Control plus B, to make it bold. After that I click the centre align button, or press Control plus E, so the heading comes in the middle of the page.",
@@ -103,7 +157,13 @@ registerCourse({
   id: 10,
   cat: "ટાઇપિંગ અને ડેટા એન્ટ્રી",
   q: "What is your typing speed, and how do you make sure the data you enter is correct?",
-  i18n: { gu: { q: "તમારી typing speed કેટલી છે, અને તમે નાખેલો data સાચો છે તેની ખાતરી કેવી રીતે કરો છો?" }, hi: { q: "आपकी typing speed कितनी है, और आप जो data भरते हैं वह सही है यह कैसे पक्का करते हैं?" } },
+  i18n: {
+    gu: { q: "તમારી typing speed કેટલી છે, અને તમે નાખેલો data સાચો છે તેની ખાતરી કેવી રીતે કરો છો?" },
+    hi: { q: "आपकी typing speed कितनी है, और आप जो data भरते हैं वह सही है यह कैसे पक्का करते हैं?",
+          gu: "अपनी असली speed बताइए — जैसे तीस शब्द प्रति मिनट — और फिर accuracy की बात कीजिए। कहिए कि type करने के बाद मूल कागज़ से मिलाकर दोबारा पढ़ लेते हैं, ख़ासकर नाम, तारीख़ और अंक। जोड़िए कि speed से ज़्यादा accuracy ज़रूरी है और रोज़ practice करके speed बढ़ाते हैं।",
+          tip: "झूठी ऊँची speed मत बोलिए। सही आँकड़ा देकर «accuracy पहले» कहना ज़्यादा अच्छा लगता है।" },
+    en: { tip: "Do not claim a falsely high speed. Giving the real figure and saying 'accuracy first' sounds much better." }
+  },
   kw: [["speed", "words per minute", "wpm", "word", "minute"], ["accuracy", "accurate", "correct", "mistake", "error"], ["check", "checking", "verify", "recheck", "proofread", "read again"], ["slow", "careful", "carefully", "practice", "practise"], ["source", "document", "compare", "match", "original"]],
   gu: "તમારી ખરી ઝડપ આપો — જેમ કે મિનિટે ત્રીસ શબ્દ — અને પછી ચોકસાઈની વાત કરો. કહો કે ટાઇપ કર્યા પછી મૂળ કાગળ સાથે સરખાવીને ફરી વાંચી લો છો, ખાસ કરીને નામ, તારીખ અને આંકડા. ઉમેરો કે ઝડપ કરતાં ચોકસાઈ વધુ મહત્ત્વની છે અને રોજ પ્રેક્ટિસ કરીને ઝડપ વધારો છો.",
   en: "My typing speed is about thirty words per minute with good accuracy. After typing I always compare my work with the original document and read it again, especially the names, dates and numbers. I believe accuracy is more important than speed, and I practise daily to increase my speed.",
