@@ -47,7 +47,11 @@ const Judge = (function () {
   /* વિદ્યાર્થીએ «હા» કહ્યું છે? ડિફોલ્ટ ના. */
   function consented() { return !!(state && state.settings && state.settings.ai); }
 
-  function active() { return enabled() && consented(); }
+  /* ઇન્ટરનેટ ન હોય તો મોડેલને પૂછવાનો અર્થ નથી — વિદ્યાર્થી ૨૫ સેકન્ડ
+     રાહ જુએ અને છેવટે ઓફલાઇન ગુણ જ મળે. એના કરતાં તરત જ ઓફલાઇન. */
+  function online() { return typeof navigator === "undefined" || navigator.onLine !== false; }
+
+  function active() { return enabled() && consented() && online(); }
 
   function setConsent(on) {
     state.settings.ai = !!on;
@@ -233,7 +237,7 @@ const Judge = (function () {
       .then(r => { if (timer) clearTimeout(timer); return r; });
   }
 
-  return { enabled, consented, active, setConsent, evaluate, merge, clearCache };
+  return { enabled, consented, active, online, setConsent, evaluate, merge, clearCache };
 })();
 
 if (typeof module !== "undefined" && module.exports) module.exports = { Judge };

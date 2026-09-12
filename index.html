@@ -279,7 +279,24 @@ h2.sec{font-size:17px;margin:24px 0 10px;color:var(--ink);font-weight:700}
 .steps li:first-child{border-top:0}
 
 /* ---------- અવતાર — ઇન્ટરવ્યુ લેનારની વિડિયો-ટાઇલ ---------- */
-.stage{text-align:center;padding:6px 0 4px}
+.stage{text-align:center;padding:6px 0 4px;position:relative}
+
+/* ---------- ઇન્ટરવ્યુ સ્ક્રીન પરનું AI બટન ----------
+   સેટિંગમાં દટાયેલું હોય તો વિદ્યાર્થી કદી જોતો નથી. અવતારની બાજુમાં,
+   ઉપર-જમણે, જેથી જવાબ આપતાં પહેલાં ખબર પડે કે કોણ તપાસવાનું છે. */
+.aitog{
+  position:absolute;top:0;right:0;z-index:5;
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;border:0;border-radius:999px;
+  font:inherit;font-size:12px;font-weight:700;letter-spacing:.2px;
+  background:#eef1f5;color:#67707f;cursor:pointer;
+  box-shadow:0 1px 3px rgba(28,54,120,.10),0 0 0 1px rgba(255,255,255,.9);
+  transition:background .18s ease,color .18s ease
+}
+.aitog.on{background:#efe9fd;color:#5b3fa8}
+.aitogdot{width:7px;height:7px;border-radius:50%;background:#bcc3ce;transition:background .18s ease}
+.aitog.on .aitogdot{background:#7b5cd6;box-shadow:0 0 0 3px rgba(123,92,214,.18)}
+.aitog:disabled{opacity:.45;cursor:default;box-shadow:0 0 0 1px rgba(255,255,255,.9)}
 .avatar{width:150px;height:150px;margin:0 auto 22px;position:relative}
 .av-frame{
   position:absolute;inset:0;border-radius:26px;overflow:hidden;background:var(--soft);
@@ -935,6 +952,9 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
 
   <div class="wrap">
     <div class="stage">
+      <button class="aitog" id="btnAiTog" type="button" hidden>
+        <span class="aitogdot" aria-hidden="true"></span><span>AI</span>
+      </button>
       <div class="avatar" id="av"></div>
       <div class="status" id="status" data-i18n="status.ready">Ready</div>
     </div>

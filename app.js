@@ -48,7 +48,10 @@ function newCid() {
    પરવાનગી કે સલામતી આ ટોકન પર આધારિત નથી. */
 const GOOGLE_CLIENT_ID = "604155826405-15oddjk71jr042kbe4bk3j02kdgt547e.apps.googleusercontent.com";
 
-const DEFAULTS = { hands: true, ask: true, speakFb: true, rate: 0.92, silence: 3000, lang: "en", ai: false };
+/* hands ડિફોલ્ટ બંધ: માઇક જાતે ચાલુ થાય તો વર્ગખંડમાં બાજુવાળાનો
+   અવાજ પકડાય છે. ai ડિફોલ્ટ ચાલુ: ઓફલાઇન ગુણ શબ્દો ગણે છે, અને
+   મોટા ભાગના વિદ્યાર્થી સેટિંગ ખોલતા જ નથી. */
+const DEFAULTS = { hands: false, ask: true, speakFb: true, rate: 0.92, silence: 3000, lang: "en", ai: true, dflt2: true };
 
 let state = { settings: Object.assign({}, DEFAULTS), courses: {}, user: null };
 
@@ -59,6 +62,14 @@ function loadState() {
       const p = JSON.parse(raw);
       if (p && typeof p === "object") {
         state.settings = Object.assign({}, DEFAULTS, p.settings || {});
+        /* પહેલાં સાચવેલું સેટિંગ ડિફોલ્ટ કરતાં ઉપર ચડે છે, તેથી જૂના ફોન
+           પર નવો ડિફોલ્ટ કદી લાગુ ન થાય. બંને સુવિધા આજે જ ખૂલી છે,
+           એટલે કોઈએ જાણીજોઈને પસંદ કરેલું નથી — એક વાર સુધારી લઈએ. */
+        if (!p.settings || p.settings.dflt2 !== true) {
+          state.settings.hands = false;
+          state.settings.ai = true;
+          state.settings.dflt2 = true;
+        }
         state.courses = p.courses && typeof p.courses === "object" ? p.courses : {};
         state.user = (p.user && typeof p.user === "object") ? p.user : null;
         return;
@@ -309,6 +320,7 @@ function show(which) {
       b.classList.toggle("on", b.getAttribute("data-tab") === which));
   }
   // પ્રેક્ટિસ સ્ક્રીન છોડીએ તો પ્રશ્નનું ઘડિયાળ થોભાવો
+  if (which === "run") paintAiTog();
   if (which !== "run") qClockPause();
   window.scrollTo(0, 0);
   reloadIfIdle();            // બાકી હોય તો નવી આવૃત્તિ અહીં લાગુ થાય
@@ -932,13 +944,32 @@ function paintSettings() {
    વાંચ્યા પછી જ «ચાલુ કરો» દબાવે. આંગળી અડી જવાથી જવાબનું લખાણ બહાર
    જવું ન જોઈએ. પ્રગતિના બૅકઅપની સંમતિથી આ સાવ અલગ છે. */
 
+/* ઇન્ટરવ્યુ સ્ક્રીન પરનું AI બટન. સેટિંગવાળા બટન સાથે એક જ પસંદગી
+   વાપરે છે — બેમાંથી ગમે ત્યાં બદલો, બીજું પણ બદલાય. */
+function paintAiTog() {
+  const b = $("btnAiTog");
+  if (!b) return;
+  if (!Judge.enabled()) { b.hidden = true; return; }
+  b.hidden = false;
+
+  const net = Judge.online();
+  const on = Judge.consented() && net;
+  b.classList.toggle("on", on);
+  b.disabled = !net;                       // ઇન્ટરનેટ વગર ચાલુ કરવાનો અર્થ નથી
+  b.setAttribute("aria-pressed", on ? "true" : "false");
+  const lab = t("ai.title") + " — " + t(!net ? "ai.stOffline" : (on ? "ai.stOn" : "ai.stOff"));
+  b.setAttribute("aria-label", lab);
+  b.title = lab;
+}
+
 function paintAi() {
   const wrap = $("aiWrap");
   if (!Judge.enabled()) { wrap.hidden = true; return; }
   wrap.hidden = false;
 
   const on = Judge.consented();
-  $("aiState").textContent = t(on ? "ai.stOn" : "ai.stOff");
+  const net = Judge.online();
+  $("aiState").textContent = t(!net ? "ai.stOffline" : (on ? "ai.stOn" : "ai.stOff"));
   $("btnAiOn").hidden = on;
   $("btnAiOff").hidden = !on;
 }
@@ -994,8 +1025,19 @@ function toggle(key, el) {
 Array.prototype.forEach.call($("tabbar").querySelectorAll(".tab"), b =>
   b.addEventListener("click", () => goTab(b.getAttribute("data-tab"))));
 
-$("btnAiOn").addEventListener("click", () => { Judge.setConsent(true); paintAi(); });
-$("btnAiOff").addEventListener("click", () => { Judge.setConsent(false); paintAi(); });
+$("btnAiOn").addEventListener("click", () => { Judge.setConsent(true); paintAi(); paintAiTog(); });
+$("btnAiOff").addEventListener("click", () => { Judge.setConsent(false); paintAi(); paintAiTog(); });
+
+$("btnAiTog").addEventListener("click", () => {
+  if (!Judge.online()) return;
+  Judge.setConsent(!Judge.consented());
+  paintAiTog();
+});
+
+/* ઇન્ટરનેટ આવે કે જાય તો બંને જગ્યાએ તરત દેખાય — વિદ્યાર્થીને ખબર હોવી
+   જોઈએ કે અત્યારે કોણ તપાસી રહ્યું છે. */
+window.addEventListener("online", () => { paintAiTog(); if (curScreen === "profile") paintAi(); });
+window.addEventListener("offline", () => { paintAiTog(); if (curScreen === "profile") paintAi(); });
 
 $("btnHelp").addEventListener("click", () => show("help"));
 $("btnHelpBack").addEventListener("click", () => show("profile"));
