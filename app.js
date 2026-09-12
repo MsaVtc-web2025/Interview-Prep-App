@@ -311,6 +311,7 @@ function show(which) {
   // પ્રેક્ટિસ સ્ક્રીન છોડીએ તો પ્રશ્નનું ઘડિયાળ થોભાવો
   if (which !== "run") qClockPause();
   window.scrollTo(0, 0);
+  reloadIfIdle();            // બાકી હોય તો નવી આવૃત્તિ અહીં લાગુ થાય
 }
 
 /* ટૅબ પર જાઓ — જે ટૅબ ખૂલે તેની માહિતી તાજી કરીએ */
@@ -735,11 +736,20 @@ function submit(text) {
 }
 
 /* ચાલુ ભાષામાં ટૂંકો સાર બોલો — બધું નહીં, ફક્ત જે કામનું છે */
+/* બોલવા માટેનો આંકડો. toFixed(1) હંમેશાં «4.0» આપે છે, અને વાચક એને
+   «four point zero» બોલે છે — જે સાંભળવામાં ખોટું લાગે છે. પૂરો આંક હોય
+   તો દશાંશ કાઢી નાખો; «4.2» જેવો હોય તો એમ જ રહેવા દો. */
+function sayScore(v) {
+  const n = Math.round(Number(v) * 10) / 10;
+  if (!isFinite(n)) return "0";
+  return Number.isInteger(n) ? String(n) : n.toFixed(1);
+}
+
 function speakFeedback(r) {
   const voice = LANG_VOICE[getLang()] || "en";
   if (!state.settings.speakFb || !Speech.hasVoice(voice)) return;
 
-  let msg = t("fb.spoken", { v: r.overall.toFixed(1) });
+  let msg = t("fb.spoken", { v: sayScore(r.overall) });
   if (r.missingMust && r.missingMust.length) {
     msg += t("fb.spokenSafety", { list: r.missingMust.map(tMust).join(", ") });
   }
@@ -1095,6 +1105,30 @@ $("btnType").addEventListener("click", () => {
 });
 
 $("btnCheck").addEventListener("click", () => submit($("ans").value));
+
+/* ---------------- નવી આવૃત્તિ આવે ત્યારે ----------------
+   sw.js સ્ક્રિપ્ટો કૅશમાંથી જ આપે છે, તેથી નવો service worker કબજો લે
+   ત્યારે પણ ખૂલેલું પાનું જૂનું JS ચલાવતું રહે છે — વિદ્યાર્થીએ જાતે બીજી
+   વાર ખોલવું પડે, અને એ કોઈ કરતું નથી. તેથી જાતે તાજું કરી લઈએ.
+
+   પણ વચ્ચે નહીં: જવાબ આપતી વખતે પાનું તાજું થાય તો બોલેલું બધું જાય.
+   ઇન્ટરવ્યુ બહાર નીકળે ત્યારે જ થાય. */
+let swFresh = false;
+
+function reloadIfIdle() {
+  if (!swFresh) return;
+  if (curScreen === "run" || curScreen === "brief") return;
+  swFresh = false;
+  location.reload();
+}
+
+if (navigator.serviceWorker) {
+  navigator.serviceWorker.addEventListener("message", ev => {
+    if (!ev.data || ev.data.type !== "sw-updated") return;
+    swFresh = true;
+    reloadIfIdle();
+  });
+}
 
 $("btnClear").addEventListener("click", () => {
   $("heard").textContent = "";
