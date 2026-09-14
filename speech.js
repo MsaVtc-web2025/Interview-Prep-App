@@ -1,13 +1,16 @@
-/* વાણી એન્જિન — બોલવું (Text to Speech) અને સાંભળવું (Speech to Text)
-   બંને બ્રાઉઝરની Web Speech API વાપરે છે. કોઈ API કી કે સર્વરની જરૂર નથી.
+/* Speech engine - speaking (text to speech) and listening (speech to text).
+   Both use the browser's Web Speech API. No API key and no server required.
 
-   એન્ડ્રોઇડ Chrome ની જાણીતી મર્યાદાઓ અહીં સંભાળી લેવામાં આવી છે:
-   1. getVoices() પહેલી વાર ખાલી યાદી આપે → voiceschanged પર ફરી વાંચીએ છીએ.
-   2. પહેલી વાર બોલવા માટે વપરાશકર્તાનો ટૅપ જરૂરી → prime() વાપરીએ છીએ.
-   3. લાંબું લખાણ વચ્ચેથી કપાઈ જાય → નાના ટુકડામાં વહેંચીને બોલીએ છીએ.
-   4. onend કોઈ વાર આવતું જ નથી → વોચડોગ ટાઇમર રાખ્યો છે.
-   5. continuous recognition એન્ડ્રોઇડમાં જાતે બંધ થઈ જાય → ફરી ચાલુ કરીએ છીએ.
-   6. સ્પીકર ચાલુ હોય ત્યારે માઇક પોતાનો અવાજ સાંભળે → બંને કદી સાથે ચાલુ ન કરીએ.
+   The known Android Chrome limitations are handled here:
+   1. getVoices() returns an empty list at first -> re-read it on voiceschanged.
+   2. The first speak() needs a user tap -> prime() handles that.
+   3. Long text gets cut off mid-way -> we speak it in small chunks.
+   4. onend sometimes never fires -> there is a watchdog timer.
+   5. Continuous recognition stops by itself on Android -> we restart it.
+   6. The mic hears the speaker's own output -> the two are never on together.
+   7. rec.start() throws while the previous session is winding down -> we back
+      off and retry. (Swallowing that error leaves the mic off for good while the
+      screen still says "listening".)
 */
 "use strict";
 
@@ -16,11 +19,11 @@ const Speech = (function () {
   const synth = window.speechSynthesis || null;
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
 
-  /* ---------------- બોલવું (TTS) ---------------- */
+  /* ---------------- Speaking (TTS) ---------------- */
 
   let voices = [];
   let primed = false;
-  let speakToken = 0;          // દરેક નવો speak() જૂનાને રદ કરે
+  let speakToken = 0;          // each new speak() cancels the previous one
   let watchdog = null;
 
   function refreshVoices() {
@@ -35,7 +38,7 @@ const Speech = (function () {
     } else {
       synth.onvoiceschanged = refreshVoices;
     }
-    // કેટલાક ફોનમાં ઇવેન્ટ આવતો નથી — થોડી વાર જાતે ફરી વાંચીએ
+    // On some phones the event never fires - poll for a short while instead
     let tries = 0;
     const poll = setInterval(() => {
       refreshVoices();
@@ -51,9 +54,9 @@ const Speech = (function () {
     hi: ["hi-in", "hi"]
   };
 
-  /* નામથી ઓળખીતા સારા વોઇસ. ફોનમાં એકથી વધુ હિન્દી વોઇસ હોય ત્યારે
-     «Google हिन्दी» જ વપરાય તે માટે. નામ લિપિ પ્રમાણે બદલાય છે, તેથી
-     બંને રીતે તપાસીએ છીએ. */
+  /* Good voices recognised by name, so that "Google Hindi" is the one picked
+     when a phone carries more than one Hindi voice. The name is spelled in
+     either script, so we check both. */
   const VOICE_NAMES = {
     hi: ["google हिन्दी", "google hindi"],
     gu: ["google ગુજરાતી", "google gujarati"]
@@ -68,13 +71,13 @@ const Speech = (function () {
     return null;
   }
 
-  /* વોઇસ પસંદ કરવાનો ક્રમ:
-     1. ભાષા બરાબર મળે (hi-in પહેલાં, પછી hi)
-     2. એમાંથી ફોનમાં જ ચાલતો (offline) વોઇસ પહેલો — ઇન્ટરનેટ વગર પણ બોલે
-     3. offline ન હોય તો નામથી ઓળખીતો સારો વોઇસ (Google हिन्दी)
-     4. તે પણ ન હોય તો જે મળે તે પહેલો
-     ડિઝાઇનનો નિર્ણય: વિદ્યાર્થીને પસંદ કરવાનું આપતા નથી — જાતે જ સૌથી
-     સારો વોઇસ લેવાય, જેથી ખોટો વોઇસ પસંદ થવાની શક્યતા જ ન રહે. */
+  /* Voice selection order:
+     1. Exact language match (hi-in first, then hi)
+     2. Of those, an on-device (offline) voice first - it speaks without internet
+     3. Failing that, a known-good voice by name (Google Hindi)
+     4. Failing that, whichever comes first
+     Design decision: the student is never asked to choose - the best voice is
+     picked automatically, so a wrong choice is not even possible. */
   function pickVoice(prefs, names) {
     if (!voices.length) refreshVoices();
     for (const p of prefs) {
@@ -91,18 +94,18 @@ const Speech = (function () {
     return pickVoice(VOICE_PREFS[lang] || VOICE_PREFS.en, VOICE_NAMES[lang]);
   }
 
-  /* આ વોઇસ ઇન્ટરનેટ વગર બોલે છે? (Google ના વોઇસ નેટવર્ક પર ચાલે છે) */
+  /* Does this voice work without internet? (Google's voices run over the network) */
   function voiceIsOffline(lang) {
     const v = voiceFor(lang);
     return !!(v && v.localService);
   }
 
-  /* ગુજરાતી વોઇસ ફોનમાં નાખેલો છે કે નહીં — ન હોય તો એપ ગુજરાતી બોલવાનું છોડી દે છે */
+  /* Is a Gujarati voice installed? Without one the app stops speaking Gujarati */
   function hasVoice(lang) { return !!voiceFor(lang); }
   function supported() { return !!synth; }
   function micSupported() { return !!SR; }
 
-  /* એન્ડ્રોઇડમાં પહેલો speak() વપરાશકર્તાના ટૅપ પછી જ ચાલે — તેથી ટૅપ વખતે એક વાર જગાડી લઈએ */
+  /* On Android the first speak() only works after a user tap - so wake it once on that tap */
   function prime() {
     if (primed || !synth) return;
     primed = true;
@@ -114,16 +117,16 @@ const Speech = (function () {
     } catch (e) {}
   }
 
-  /* લાંબા લખાણને વાક્ય પ્રમાણે નાના ટુકડામાં વહેંચો (એન્ડ્રોઇડ લાંબું લખાણ કાપી નાખે છે) */
+  /* Split long text into small chunks at sentence boundaries (Android truncates long text) */
   function toChunks(text, max) {
     max = max || 170;
     const out = [];
-    // વાક્યો છૂટાં પાડો (જૂના એન્ડ્રોઇડ WebView માં lookbehind ચાલતું નથી, તેથી match વાપર્યું)
+    // Split into sentences (old Android WebView has no lookbehind, hence match)
     const src = String(text).replace(/\s+/g, " ").trim();
     const parts = (src.match(/[^.!?।]+[.!?।]*/g) || [src]).map(s => s.trim()).filter(Boolean);
     let buf = "";
     parts.forEach(p => {
-      while (p.length > max) {                 // ખૂબ લાંબું વાક્ય — અલ્પવિરામ પર તોડો
+      while (p.length > max) {                 // a very long sentence - break it at a comma
         let cut = p.lastIndexOf(",", max);
         if (cut < max * 0.4) cut = p.lastIndexOf(" ", max);
         if (cut < 1) cut = max;
@@ -146,15 +149,15 @@ const Speech = (function () {
     try { synth.cancel(); } catch (e) {}
   }
 
-  /* text બોલો. Promise પાછું આપે જે બોલવાનું પૂરું થાય (કે રદ થાય) ત્યારે પૂરું થાય.
-     opts = { lang:"en"|"gu", rate, onChunk }  */
+  /* Speak text. Returns a Promise that settles when speaking finishes (or is
+     cancelled).  opts = { lang:"en"|"gu", rate, onChunk }  */
   function speak(text, opts) {
     opts = opts || {};
     const lang = opts.lang || "en";
     const voice = voiceFor(lang);
 
-    // ભારતીય ભાષાનો વોઇસ ન હોય તો બોલવાનું છોડી દો — બીજી ભાષાનો વોઇસ
-    // ગુજરાતી/હિન્દી લિપિ ખોટી બોલે અને વિદ્યાર્થી ગૂંચવાય
+    // With no Indian-language voice, say nothing - a voice for another language
+    // mispronounces Gujarati/Hindi script and only confuses the student
     if (!synth || !text) return Promise.resolve(false);
     if ((lang === "gu" || lang === "hi") && !voice) return Promise.resolve(false);
 
@@ -168,7 +171,7 @@ const Speech = (function () {
       const done = ok => { if (token === speakToken) { clearWatchdog(); resolve(ok); } };
 
       function next() {
-        if (token !== speakToken) return resolve(false);   // વચ્ચે રદ થયું
+        if (token !== speakToken) return resolve(false);   // cancelled mid-way
         clearWatchdog();
         if (i >= chunks.length) return done(true);
 
@@ -179,11 +182,11 @@ const Speech = (function () {
         u.pitch = 1;
         u.volume = 1;
         u.onend = next;
-        u.onerror = next;          // ભૂલ આવે તો અટકી ન રહો, આગળ વધો
+        u.onerror = next;          // on error do not stall, move on
 
         if (opts.onChunk) { try { opts.onChunk(part); } catch (e) {} }
 
-        // onend ન આવે તો પણ આગળ વધીએ: અંદાજે ૧૨ અક્ષર પ્રતિ સેકન્ડ + ૪ સેકન્ડ છૂટ
+        // Move on even if onend never comes: roughly 12 chars a second, plus 4s slack
         const budget = (part.length / (12 * rate)) * 1000 + 4000;
         watchdog = setTimeout(() => {
           if (token !== speakToken) return;
@@ -201,32 +204,34 @@ const Speech = (function () {
     try { return !!(synth && (synth.speaking || synth.pending)); } catch (e) { return false; }
   }
 
-  /* ---------------- સાંભળવું (STT) ---------------- */
+  /* ---------------- Listening (STT) ---------------- */
 
   let rec = null;
   let active = false;
-  let committed = "";         // પહેલાંનાં recogniser સેશનનું પાકું લખાણ (+ seed)
-  let sessionFinal = "";      // ચાલુ સેશનનું પાકું લખાણ
-  let interimText = "";       // ચાલુ સેશનનું કામચલાઉ લખાણ
+  let committed = "";         // settled text from earlier recogniser sessions (+ seed)
+  let sessionFinal = "";      // final text from the current session
+  let interimText = "";       // interim text from the current session
   let lastVoiceAt = 0;
   let silenceTimer = null;
   let startTimer = null;
   let restarts = 0;
+  let restartDelay = 0;       // back-off before restarting when the engine is not ready
   let handlers = {};
   const MAX_RESTARTS = 40;
+  const SILENCE_TICK = 150;   // how often silence is checked
 
   function clearSilence() { if (silenceTimer) { clearInterval(silenceTimer); silenceTimer = null; } }
   function clearStartTimer() { if (startTimer) { clearTimeout(startTimer); startTimer = null; } }
 
-  /* --- લખાણ જોડવાનું કામ ---
-     કેટલાક એન્ડ્રોઇડ ફોન એક જ વાક્ય વધતું વધતું ફરી ફરી «પાકું» તરીકે મોકલે છે
-     («I» → «I am» → «I am Prakash») અને માઇક ફરી ચાલુ થાય ત્યારે જૂનું વાક્ય
-     બીજી વાર મોકલે છે. તેથી નવો ટુકડો સીધો ઉમેરવાને બદલે, જે ભાગ પહેલેથી
-     લખાયેલો છે તે ઓળખીને છોડી દઈએ છીએ — નહીં તો સ્ક્રીન પર લખાણ બમણું થાય. */
+  /* --- Joining the text together ---
+     Some Android phones send the same sentence as "final" over and over as it
+     grows ("I" -> "I am" -> "I am Prakash"), and resend the old sentence when the
+     mic restarts. So rather than appending each new piece, we detect the part
+     already written and skip it - otherwise the text doubles up on screen. */
 
   function toWords(s) { return String(s || "").trim().split(/\s+/).filter(Boolean); }
 
-  /* સરખામણી માટે શબ્દની સાદી ચાવી — નાના અક્ષર, વિરામચિહ્ન વગર */
+  /* A plain key for comparing words - lower case, no punctuation */
   function wordKey(w) { return String(w).toLowerCase().replace(/[.,!?;:।'"“”‘’()\-]/g, ""); }
 
   function sameRun(a, b) {
@@ -234,15 +239,15 @@ const Speech = (function () {
     return true;
   }
 
-  /* acc પછી piece જોડો, પણ પુનરાવર્તન વગર */
+  /* Append piece after acc, without repeating anything */
   function mergeWords(acc, piece) {
     if (!piece.length) return acc;
     if (!acc.length) return piece;
-    // piece એ acc નો જ વિસ્તાર હોય → વધારે પૂરું piece રાખો
+    // piece extends acc -> keep the more complete piece
     if (piece.length >= acc.length && sameRun(acc, piece.slice(0, acc.length))) return piece;
-    // piece પહેલેથી acc માં આવી ગયું છે → કંઈ ઉમેરવાનું નથી
+    // piece is already inside acc -> nothing to add
     if (acc.length >= piece.length && sameRun(piece, acc.slice(0, piece.length))) return acc;
-    // acc ના છેલ્લા n શબ્દ = piece ના પહેલા n શબ્દ → એટલા છોડીને જોડો
+    // last n words of acc == first n of piece -> join, skipping those n
     const max = Math.min(acc.length, piece.length);
     for (let n = max; n > 0; n--) {
       if (sameRun(acc.slice(acc.length - n), piece.slice(0, n))) return acc.concat(piece.slice(n));
@@ -250,45 +255,71 @@ const Speech = (function () {
     return acc.concat(piece);
   }
 
-  /* આખું સાંભળેલું લખાણ — દર વખતે ફરીથી બનાવીએ, જૂનામાં ઉમેરતા નથી */
+  /* The full heard text - rebuilt every time, never appended to in place */
   function fullText() {
     let w = mergeWords(toWords(committed), toWords(sessionFinal));
     w = mergeWords(w, toWords(interimText));
     return w.join(" ");
   }
 
-  /* ચાલુ સેશનનું લખાણ કાયમી ખાતામાં નાખો (માઇક ફરી ચાલુ થાય તે પહેલાં).
+  /* Move the current session's text into the permanent store (before the mic
+     restarts).
 
-     પાકું (final) લખાણ જ નહીં, કામચલાઉ (interim) પણ સાચવીએ છીએ. એન્ડ્રોઇડ
-     સેશન જાતે બંધ કરે ત્યારે છેલ્લો વાક્યાંશ ઘણી વાર «પાકો» થયા વગર જ રહી
-     જાય છે — ફક્ત પાકું લખાણ સાચવીએ તો એ આખો વાક્યાંશ ગુમ થઈ જાય, અને
-     વિદ્યાર્થીનો અડધો જવાબ જ તપાસાય. કામચલાઉ લખાણ સહેજ કાચું હોઈ શકે, પણ
-     ગુમ થયેલા શબ્દો કરતાં કાચા શબ્દો ઘણા સારા. mergeWords બેવડાતું ટાળે છે. */
+     We keep the interim text, not only the final. When Android closes a session
+     by itself the last phrase has often not been finalised - keeping only final
+     text would lose that whole phrase and score half the student's answer.
+     Interim text can be slightly rough, but rough words beat missing words.
+     mergeWords keeps it from doubling up. */
   function commitSession() {
     committed = fullText();
     sessionFinal = "";
     interimText = "";
   }
 
-  /* ડેસ્કટૉપ Chrome માં speechSynthesis પૂરું બંધ ન થયું હોય ત્યાં સુધી માઇક ચાલુ
-     થાય પણ એક પણ શબ્દ પકડાતો નથી. તેથી synth શાંત થાય તેની રાહ જોઈને જ શરૂ કરીએ.
+  /* Roughly how long Android takes to reconnect to the recognition service when
+     the mic restarts. If the silence window would expire within that time,
+     restarting is pointless - the mic would be closed again before it is ready. */
+  const RESTART_MS = 400;
 
-     એન્ડ્રોઇડમાં એક ડગલું આગળ છે: onend આવી ગયા પછી પણ TTS એન્જિન થોડી વાર
-     ઑડિયોનો કબજો છોડતું નથી. એ છૂટે તે પહેલાં માઇક ચાલુ કરીએ તો પહેલું સેશન
-     તરત જ મરી જાય અને નીચેનો onend એને ફરી ચાલુ કરે — વિદ્યાર્થીને «બીપ…
-     બીપ… બીપ» એમ ત્રણ ટહુકા સંભળાય (ચાલુ, બંધ, ફરી ચાલુ), જોકે જવાબ પછી
-     બરાબર પકડાય છે. તેથી synth શાંત *થઈ ગયા પછી* પણ થોડી વાર શાંત રહે તેની
-     ખાતરી કરીને જ માઇક ખોલીએ છીએ. આ થોભો વિદ્યાર્થીને દેખાતો નથી, પણ
-     વધારાના ટહુકા નીકળી જાય છે. */
-  const SETTLE_MS = 600;      // synth શાંત થયા પછી માઇક ખોલતાં પહેલાંનો થોભો
+  /* Is the answer finished, in hands-free mode? Yes if more than three words
+     were spoken and the configured silence has passed since. Two places check
+     this - the silence timer and the end of a session - so the rule lives here
+     once. grace = how much earlier than the deadline to call it finished. */
+  function answerDone(grace) {
+    const ms = handlers.silenceMs;
+    if (!ms) return false;                          // hands-free mode is off
+    // Count exactly the text that will be submitted, interim included. Otherwise
+    // auto-scoring never starts for a student whose answer never went final.
+    if (toWords(fullText()).length < 3) return false;
+    return Date.now() - lastVoiceAt > ms - (grace || 0);
+  }
+
+  function finish() {
+    const t = fullText();
+    stopListen(true);
+    if (handlers.onSilence) handlers.onSilence(t);
+  }
+
+  /* On desktop Chrome, while speechSynthesis has not fully stopped, the mic opens
+     but catches not a single word. So we wait for synth to go quiet before
+     starting.
+
+     Android goes one step further: even after onend, the TTS engine holds on to
+     the audio for a moment. Open the mic before it lets go and the first session
+     dies instantly, and the onend below restarts it - the student hears three
+     chimes (on, off, on again), though the answer is captured correctly after
+     that. So we open the mic only once synth has been quiet *and stayed* quiet
+     for a moment. The student never notices the pause, but the extra chimes go
+     away. */
+  const SETTLE_MS = 600;      // pause after synth goes quiet, before opening the mic
 
   function whenSynthQuiet(cb) {
     clearStartTimer();
     if (!synth) { startTimer = setTimeout(cb, 0); return; }
     const t0 = Date.now();
-    let quietAt = 0;                        // ક્યારથી શાંત છે
+    let quietAt = 0;                        // quiet since when
     (function wait() {
-      // હજી બોલાય છે (અને બહુ વાર નથી થઈ) → રાહ જુઓ, અને થોભો ફરી શરૂ ગણો
+      // Still speaking (and not for too long yet) -> wait, and restart the pause
       if (isSpeaking() && Date.now() - t0 < 1200) {
         quietAt = 0;
         startTimer = setTimeout(wait, 60);
@@ -301,7 +332,7 @@ const Speech = (function () {
     })();
   }
 
-  /* સાંભળવાનું શરૂ કરો.
+  /* Start listening.
      opts = { lang, seed, silenceMs, onInterim, onFinal, onSilence, onError, onStart } */
   function listen(opts) {
     opts = opts || {};
@@ -310,34 +341,27 @@ const Speech = (function () {
     if (!SR) { if (opts.onError) opts.onError("unsupported"); return false; }
 
     stopListen(true);
-    if (isSpeaking()) cancelSpeech();     // અવતાર બોલતો હોય તો પહેલાં બંધ કરો
+    if (isSpeaking()) cancelSpeech();     // stop the avatar first if it is speaking
     committed = opts.seed ? String(opts.seed).trim() : "";
     sessionFinal = "";
     interimText = "";
     restarts = 0;
+    restartDelay = 0;
     active = true;
     lastVoiceAt = Date.now();
 
     whenSynthQuiet(() => {
       if (!active) return;
-      lastVoiceAt = Date.now();           // રાહ જોયેલો સમય મૌન ન ગણાય
+      lastVoiceAt = Date.now();           // time spent waiting does not count as silence
       startRecogniser();
     });
 
-    // મૌન પકડવા માટે — હાથ વગરના મોડમાં જવાબ પૂરો થયો કે નહીં તે નક્કી કરે
+    // Silence detection - decides in hands-free mode whether the answer is done
     if (opts.silenceMs) {
       clearSilence();
       silenceTimer = setInterval(() => {
-        if (!active) return;
-        // જે લખાણ મોકલવાનું છે તે જ ગણીએ — કામચલાઉ સહિત. નહીં તો જેનો આખો
-        // જવાબ «પાકો» થયો ન હોય તે વિદ્યાર્થી માટે જાતે તપાસવાનું ચાલુ જ ન થાય.
-        const words = toWords(fullText()).length;
-        if (words >= 3 && Date.now() - lastVoiceAt > opts.silenceMs) {
-          const t = fullText();
-          stopListen(true);
-          if (handlers.onSilence) handlers.onSilence(t);
-        }
-      }, 400);
+        if (active && answerDone()) finish();
+      }, SILENCE_TICK);
     }
     return true;
   }
@@ -358,8 +382,8 @@ const Speech = (function () {
     rec.onstart = () => { if (handlers.onStart) handlers.onStart(); };
 
     rec.onresult = ev => {
-      // આખી results યાદીમાંથી ફરીથી બનાવીએ — ફક્ત resultIndex પછીના ટુકડા
-      // ઉમેરવાથી કેટલાક ફોનમાં લખાણ બમણું થઈ જાય છે
+      // Rebuild from the whole results list - appending only the pieces after
+      // resultIndex doubles the text on some phones
       let fin = [], inter = [];
       for (let i = 0; i < ev.results.length; i++) {
         const r = ev.results[i];
@@ -371,13 +395,18 @@ const Speech = (function () {
       const hadFinal = fin.length > 0;
       sessionFinal = fin.join(" ");
       interimText = inter.join(" ");
-      if (hadFinal || inter.length) lastVoiceAt = Date.now();
+      if (hadFinal || inter.length) {
+        lastVoiceAt = Date.now();
+        // The mic is clearly working - so reset the restart tally. Otherwise a
+        // student who speaks in pauses has their mic die on them mid-answer.
+        restarts = 0;
+      }
       if (handlers.onInterim) handlers.onInterim(fullText(), hadFinal);
     };
 
     rec.onerror = ev => {
       const m = ev && ev.error ? String(ev.error) : "unknown";
-      // આ બે સામાન્ય છે — વિદ્યાર્થી વિચારતો હોય ત્યારે આવે, ભૂલ ગણવાની જરૂર નથી
+      // These two are routine - they arrive while the student thinks, not errors
       if (m === "no-speech" || m === "aborted") return;
       active = false;
       clearSilence();
@@ -385,26 +414,57 @@ const Speech = (function () {
       if (handlers.onError) handlers.onError(m);
     };
 
-    // એન્ડ્રોઇડમાં continuous હોવા છતાં માઇક જાતે બંધ થઈ જાય — તેથી ફરી ચાલુ કરીએ
+    // On Android the mic stops by itself despite continuous - so restart it
     rec.onend = () => {
       if (!active) return;
-      commitSession();                    // નવું સેશન જૂનું લખાણ ફરી ન મોકલે
+      commitSession();                    // so a new session does not resend old text
+
+      /* If the student's answer is already over there is no point restarting
+         the mic. Restarting plays the chime, and a moment later the silence
+         timer closes it again - so the moment they stop speaking they hear
+         "chime on... chime off" and think the mic has gone wrong. Start scoring
+         right here instead: the submitted text is identical, the useless chime
+         is gone.
+
+         The RESTART_MS grace is there because Android often ends the session
+         just before the silence window expires. The mic could not even finish
+         opening in that time, so there is nothing left for it to hear - only a
+         chime to play. */
+      if (answerDone(RESTART_MS)) return finish();
+
       if (++restarts > MAX_RESTARTS) {
         active = false;
         clearSilence();
         if (handlers.onError) handlers.onError("too-many-restarts");
         return;
       }
-      // આ થોભા દરમિયાન માઇક બંધ છે — વિદ્યાર્થી બોલતો રહે તો એટલા શબ્દો
-      // ગુમ થાય. તેથી જૂનું સેશન સમેટાય એટલો જ થોભો રાખીએ, વધારે નહીં.
+      // The mic is off for the whole of this delay - every word spoken in it is
+      // lost. So restart with no delay at all. If the engine is still winding
+      // down the old session, start() throws, and only then do we back off.
       clearStartTimer();
-      startTimer = setTimeout(() => { if (active) startRecogniser(); }, 150);
+      startTimer = setTimeout(() => { if (active) startRecogniser(); }, restartDelay);
     };
 
-    try { rec.start(); } catch (e) { /* પહેલેથી ચાલુ હોય તો વાંધો નથી */ }
+    try {
+      rec.start();
+      restartDelay = 0;
+    } catch (e) {
+      // The engine is not ready. Drop this recogniser and try again shortly,
+      // doubling the wait each time so a genuine failure does not spin.
+      rec = null;
+      restartDelay = Math.min(restartDelay ? restartDelay * 2 : 50, 400);
+      if (++restarts > MAX_RESTARTS) {
+        active = false;
+        clearSilence();
+        if (handlers.onError) handlers.onError("start-failed");
+        return;
+      }
+      clearStartTimer();
+      startTimer = setTimeout(() => { if (active) startRecogniser(); }, restartDelay);
+    }
   }
 
-  /* સાંભળવાનું બંધ કરો. quiet = true હોય તો કોઈ handler ન બોલાવો. */
+  /* Stop listening. With quiet = true, call no handler. */
   function stopListen(quiet) {
     active = false;
     clearSilence();
@@ -421,15 +481,15 @@ const Speech = (function () {
 
   function isListening() { return active; }
 
-  /* બોલવાનું અને સાંભળવાનું બંને તરત બંધ */
+  /* Stop both speaking and listening at once */
   function stopAll() { cancelSpeech(); stopListen(true); }
 
   return {
-    // બોલવું
+    // speaking
     speak, cancelSpeech, isSpeaking, prime, hasVoice, voiceFor, voiceIsOffline, supported, toChunks,
-    // સાંભળવું
+    // listening
     listen, stopListen, isListening, micSupported,
-    // બંને
+    // both
     stopAll
   };
 })();

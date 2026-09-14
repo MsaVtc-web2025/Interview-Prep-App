@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Microphone restart test - speech.js</title>
+
+<!--
+  After a mic session closes, speech.js restarts it. This page checks that the
+  restart works correctly, without needing a real phone.
+
+  Why it is needed: when a student answers on a phone, Android closes the mic by
+  itself after every sentence (playing a chime), and the app reopens it. Three
+  things can go wrong at that moment:
+    1. start() throws while the old session is still winding down - swallow that
+       error and the mic stays off for good while the screen says "listening".
+    2. Every millisecond of delay before reopening is words lost.
+    3. Reopening after the answer is already over plays a chime for nothing.
+
+  The clock here is fake, so the test finishes instantly.
+  How to use: open this file in a browser (file:// works). Every line should be
+  green. Re-open it whenever you change speech.js.
+-->
+
+<style>
+  body{font:15px/1.5 system-ui,Segoe UI,Roboto,sans-serif;margin:0;padding:22px;background:#eef3fd;color:#101a33}
+  h1{font-size:20px;margin:0 0 4px}
+  p.sub{color:#6c7c99;margin:0 0 18px}
+  #sum{font-weight:700;padding:10px 14px;border-radius:12px;margin-bottom:14px;display:inline-block}
+  .ok{background:#e2f5ec;color:#12915f}
+  .bad{background:#fdeaea;color:#c0392b}
+  .case{background:#fff;border-radius:14px;padding:12px 14px;margin-bottom:10px;box-shadow:0 4px 12px rgba(28,54,120,.08)}
+  .nm{font-weight:650;margin-bottom:6px}
+  .nm .tag{font-size:12px;padding:2px 8px;border-radius:8px;margin-inline-end:8px;vertical-align:2px}
+  .row{font-size:13px;color:#5b6b8c;margin-top:3px;word-break:break-word}
+  .row b{color:#101a33;font-weight:600}
+  .log{font:12px/1.5 ui-monospace,Consolas,monospace;color:#5b6b8c;margin-top:6px;white-space:pre-wrap}
+  .note{background:#fdf1dc;color:#8a5d06;border-radius:12px;padding:12px 14px;font-size:13px;margin-top:16px}
+</style>
+
+<body>
+<h1>Microphone restart test</h1>
+<p class="sub">Simulating how Android closes the mic session by itself - on a fake clock</p>
+<div id="sum">Running...</div>
+<div id="out"></div>
+
+<script>
+/* ---------- Fake clock ----------
+   On real time this test would take minutes. We capture every timer here and
+   advance time ourselves, so results arrive instantly and are identical each run. */
+var now = 0, timers = [], nextId = 1;
+window.setTimeout  = function (fn, ms) { var id = nextId++; timers.push({ at: now + (ms || 0), fn: fn, id: id, rep: 0  }); return id; };
+window.setInterval = function (fn, ms) { var id = nextId++; timers.push({ at: now + ms,        fn: fn, id: id, rep: ms }); return id; };
+window.clearTimeout = window.clearInterval = function (id) {
+  for (var i = 0; i < timers.length; i++) if (timers[i].id === id) { timers.splice(i, 1); return; }
+};
+Date.now = function () { return now; };
+
+function runUntil(end) {
+  for (;;) {
+    var b = -1;
+    for (var i = 0; i < timers.length; i++) if (b < 0 || timers[i].at < timers[b].at) b = i;
+    if (b < 0 || timers[b].at > end) break;
+    var t = timers[b];
+    now = t.at;
+    if (t.rep) t.at = now + t.rep; else timers.splice(b, 1);
+    t.fn();
+  }
+  now = end;
+}
+
+/* ---------- Fake SpeechRecognition - like Android Chrome ----------
+   - after start() the mic does not open at once; it takes a moment to connect
+     to the recognition service
+   - after a final result Android closes the session by itself
+   - with nothing heard it also closes after a while (no-speech)
+   - for a moment after a session closes the engine is busy, and start() throws */
+var WARMUP = 350, NO_SPEECH = 5000;
+var BUSY_MS = 0, busyUntil = -1, live = null, LOG = [];
+
+function mark(ev, x) { LOG.push({ t: now, ev: ev, x: x || "" }); }
+
+function FakeSR() { this.continuous = false; this.interimResults = false; this.lang = ""; }
+
+FakeSR.prototype.start = function () {
+  if (now < busyUntil) { mark("start() threw"); throw new Error("InvalidStateError"); }
+  var self = this;
+  mark("start()");
+  setTimeout(function () {
+    if (self._dead) return;
+    self._open = true; live = self;
+    mark("MIC ON");
+    if (self.onstart) self.onstart({});
+    self._arm();
+  }, WARMUP);
+};
+
+FakeSR.prototype._arm = function () {
+  var self = this;
+  clearTimeout(this._ns);
+  this._ns = setTimeout(function () {
+    if (self._dead || !self._open) return;
+    if (self.onerror) self.onerror({ error: "no-speech" });
+    self._close("closed by Android");
+  }, NO_SPEECH);
+};
+
+FakeSR.prototype._close = function (why) {
+  if (!this._open) return;
+  this._open = false; live = null;
+  clearTimeout(this._ns);
+  busyUntil = now + BUSY_MS;
+  mark("MIC OFF", why);
+  if (this.onend) this.onend({});
+};
+
+FakeSR.prototype.stop  = function () { this._dead = true; clearTimeout(this._ns); this._close("closed by the app"); };
+FakeSR.prototype.abort = function () { this.stop(); };
+
+FakeSR.prototype._say = function (txt, isFinal) {
+  if (!this._open || this._dead) return false;
+  this._r = this._r || [];
+  var r = [{ transcript: txt }];
+  r.isFinal = isFinal;
+  if (this._r.length && !this._r[this._r.length - 1].isFinal) this._r[this._r.length - 1] = r;
+  else this._r.push(r);
+  if (this.onresult) this.onresult({ results: this._r, resultIndex: this._r.length - 1 });
+  this._arm();
+  if (isFinal) { var s = this; setTimeout(function () { s._close("closed by Android"); }, 300); }
+  return true;
+};
+
+window.SpeechRecognition = window.webkitSpeechRecognition = FakeSR;
+
+/* The speaking half is not under test here - just report "quiet" */
+window.speechSynthesis = { speaking: false, pending: false, cancel: function(){}, speak: function(){},
+                           getVoices: function(){ return []; }, addEventListener: function(){}, removeEventListener: function(){} };
+</script>
+
+<script src="../speech.js"></script>
+
+<script>
+/* ---------- Test cases ---------- */
+function manySentences() {          // 60 sentences, roughly five seconds apart
+  var a = [];
+  for (var i = 0; i < 60; i++) a.push({ at: 2000 + i * 6000, txt: "word" + i, final: true });
+  return a;
+}
+
+var CASES = [
+
+  { name: "start() throws while the old session winds down - the mic must come back",
+    why:  "Swallow that error and the mic stays off while the student talks into a dead one",
+    busy: 250, silenceMs: 0, until: 9000,
+    say: [ { at: 1200, txt: "My name is Ravi", final: true },
+           { at: 3500, txt: "I am from Surat", final: true } ],
+    want: { heard: "My name is Ravi I am from Surat", micAtEnd: true, err: null } },
+
+  { name: "The engine stays busy a long time - the mic must still come back eventually",
+    why:  "The wait doubles each time, but we never give up trying",
+    busy: 900, silenceMs: 0, until: 12000,
+    say: [ { at: 1200, txt: "I completed my ITI", final: true },
+           { at: 6000, txt: "in welding trade", final: true } ],
+    want: { heard: "I completed my ITI in welding trade", micAtEnd: true, err: null } },
+
+  { name: "The engine is broken for good - do not stay silent, report the error",
+    why:  "A dead mic while the screen still says \"listening\" is the worst outcome",
+    busy: 1e9, silenceMs: 0, until: 60000,
+    say: [ { at: 1200, txt: "hello sir", final: true } ],
+    want: { micAtEnd: false, err: "start-failed" } },
+
+  { name: "Restarting after a sentence must add no delay of the app's own",
+    why:  "Every millisecond between off and on is words lost",
+    busy: 0, silenceMs: 0, until: 9000,
+    say: [ { at: 1200, txt: "My name is Ravi", final: true } ],
+    want: { maxGapMs: WARMUP } },      // only Android's own warm-up, nothing added
+
+  { name: "Once the answer is over, the mic must not be reopened for nothing",
+    why:  "Opening and closing straight away makes the student hear \"chime on... chime off\"",
+    busy: 0, silenceMs: 6000, until: 20000,
+    // Spoke at 1200, six seconds of silence -> scoring starts around 7200. Android
+    // closes the session twice in between; reopening the second time is pointless.
+    say: [ { at: 1200, txt: "My name is Ravi", final: true } ],
+    want: { micOnCount: 2, silenceFired: true } },
+
+  { name: "A student who speaks in pauses - the mic must not die on them",
+    why:  "The restart tally has to reset whenever speech is actually heard",
+    busy: 0, silenceMs: 0, until: 400000,
+    say: manySentences(),
+    want: { micAtEnd: true, err: null } }
+];
+
+function runCase(c) {
+  // Wind up the previous case's recogniser first. Otherwise closing it marks the
+  // engine busy and this case starts from a wrong state.
+  Speech.stopListen(true);
+
+  now = 0; timers = []; nextId = 1; LOG = []; live = null; busyUntil = -1;
+  BUSY_MS = c.busy;
+  var heard = "", err = null, silenceFired = false;
+
+  Speech.listen({
+    lang: "en-IN", silenceMs: c.silenceMs,
+    onInterim: function (t) { heard = t; },
+    onSilence: function (t) { heard = t; silenceFired = true; },
+    onError:   function (e) { err = e; }
+  });
+
+  c.say.forEach(function (s) {
+    setTimeout(function () { if (live) live._say(s.txt, s.final); }, s.at);
+  });
+
+  runUntil(c.until);
+
+  // The longest stretch between off and on - how long the mic was deaf
+  var maxGap = 0, offAt = null;
+  LOG.forEach(function (l) {
+    if (l.ev === "MIC OFF") offAt = l.t;
+    if (l.ev === "MIC ON" && offAt !== null) { maxGap = Math.max(maxGap, l.t - offAt); offAt = null; }
+  });
+
+  var onCount = LOG.filter(function (l) { return l.ev === "MIC ON"; }).length;
+  return { heard: heard, err: err, silenceFired: silenceFired, maxGap: maxGap,
+           micAtEnd: !!live, micOnCount: onCount, log: LOG };
+}
+
+var out = document.getElementById("out"), pass = 0;
+
+CASES.forEach(function (c) {
+  var got = runCase(c), w = c.want, fails = [];
+
+  if (w.heard !== undefined && got.heard !== w.heard)
+    fails.push('heard "' + got.heard + '", expected "' + w.heard + '"');
+  if (w.micAtEnd !== undefined && got.micAtEnd !== w.micAtEnd)
+    fails.push(w.micAtEnd ? "the mic is dead at the end" : "the mic was left running");
+  if (w.err !== undefined && got.err !== w.err)
+    fails.push('error "' + got.err + '", expected "' + w.err + '"');
+  if (w.maxGapMs !== undefined && got.maxGap > w.maxGapMs)
+    fails.push("the mic was deaf for " + got.maxGap + "ms - no more than " + w.maxGapMs + "ms is acceptable");
+  if (w.micOnCount !== undefined && got.micOnCount !== w.micOnCount)
+    fails.push("the mic opened " + got.micOnCount + " times, expected " + w.micOnCount);
+  if (w.silenceFired !== undefined && got.silenceFired !== w.silenceFired)
+    fails.push("scoring did not start after the silence");
+
+  var ok = !fails.length;
+  if (ok) pass++;
+
+  var d = document.createElement("div");
+  d.className = "case";
+  var h = '<div class="nm"><span class="tag ' + (ok ? "ok" : "bad") + '">' +
+          (ok ? "pass" : "fail") + "</span>" + c.name + "</div>" +
+          '<div class="row">' + c.why + "</div>";
+  if (!ok) {
+    h += fails.map(function (f) { return '<div class="row"><b>wrong:</b> ' + f + "</div>"; }).join("");
+    h += '<div class="log">' + got.log.slice(0, 40).map(function (l) {
+      return String(l.t) + "  " + l.ev + (l.x ? "  (" + l.x + ")" : "");
+    }).join("\n") + "</div>";
+  }
+  d.innerHTML = h;
+  out.appendChild(d);
+});
+
+var s = document.getElementById("sum");
+s.className = pass === CASES.length ? "ok" : "bad";
+s.textContent = pass + " / " + CASES.length + " passing";
+</script>
+
+<div class="note">
+  <b>What cannot be fixed:</b> the moment a student finishes a sentence, Android
+  closes the mic session itself and plays a chime. No browser API can suppress
+  that chime, so on a long answer they will hear one "off... on" after every
+  sentence. All the app can do is keep the gap between the two as short as
+  possible (checked here) and never reopen the mic for nothing.
+</div>
+</body>
+</html>

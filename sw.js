@@ -1,7 +1,7 @@
 /* Service worker — caches everything so the app works with no internet.
    NOTE: bump CACHE whenever any file below changes, otherwise installed
    phones keep running the old version. */
-const CACHE = "interview-practice-v28";
+const CACHE = "interview-practice-v29";
 
 const ASSETS = [
   "./",
@@ -46,7 +46,7 @@ self.addEventListener("activate", ev => {
     caches.keys()
       .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
-      // ખૂલેલાં પાનાં હજુ જૂનું JS ચલાવે છે — તેમને જાણ કરો
+      // Pages already open are still running the old JS — tell them
       .then(() => self.clients.matchAll({ type: "window" }))
       .then(cs => cs.forEach(c => c.postMessage({ type: "sw-updated" })))
   );
