@@ -640,18 +640,34 @@ function beginListen() {
   }
   Speech.cancelSpeech();
   setPhase("listening");
+  micLive(false);
 
   const ok = Speech.listen({
     lang: "en-IN",
     // 0 = never submit on a silence; the mic stays open until the student
     // presses the button. Hands-free mode is the opt-in that changes that.
     silenceMs: state.settings.hands ? state.settings.silence : 0,
-    onStart: () => armMicWatch(),
+    onStart: () => { micLive(true); armMicWatch(); },
     onInterim: txt => { $("heard").textContent = txt; if (txt.trim()) clearMicWatch(); },
     onSilence: txt => { $("heard").textContent = txt; submit(txt); },
     onError: err => onMicError(err)
   });
   if (!ok) setPhase("ready");
+}
+
+/* The mic is not live the moment we ask for it. speech.js first waits for the
+   speaker to let go of the audio (about 600ms), and Android then takes its own
+   time to reach the recognition service - close to a second in total, during
+   which nothing said is heard.
+
+   Telling the student "speak in English" through that window costs them the
+   opening words of every answer, which is exactly when they start talking. So
+   the prompt and the red ring are held back until the mic really opens, and
+   until then the screen says the mic is still getting ready. */
+function micLive(on) {
+  if (phase !== "listening") return;
+  $("status").textContent = t(on ? "status.listening" : "status.micOpening");
+  Avatar.setState(on ? "listening" : "thinking");
 }
 
 /* On some desktop browsers the mic opens but not a single word is picked up

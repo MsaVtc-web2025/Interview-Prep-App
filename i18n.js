@@ -125,6 +125,7 @@ en: {
 
   "status.ready": "Ready — tap “Answer”",
   "status.asking": "Asking the question…",
+  "status.micOpening": "Getting the mic ready…",
   "status.listening": "Listening… speak in English",
   "status.scoring": "Checking your answer…",
   "status.feedback": "Your feedback is ready",
@@ -477,6 +478,7 @@ gu: {
 
   "status.ready": "તૈયાર — «જવાબ આપો» દબાવો",
   "status.asking": "પ્રશ્ન પુછાઈ રહ્યો છે…",
+  "status.micOpening": "માઇક તૈયાર થાય છે…",
   "status.listening": "સાંભળી રહ્યા છીએ… અંગ્રેજીમાં બોલો",
   "status.scoring": "જવાબ તપાસાઈ રહ્યો છે…",
   "status.feedback": "મૂલ્યાંકન તૈયાર છે",
@@ -829,6 +831,7 @@ hi: {
 
   "status.ready": "तैयार — «जवाब दें» दबाएँ",
   "status.asking": "प्रश्न पूछा जा रहा है…",
+  "status.micOpening": "माइक तैयार हो रहा है…",
   "status.listening": "सुन रहे हैं… अंग्रेज़ी में बोलें",
   "status.scoring": "जवाब जाँचा जा रहा है…",
   "status.feedback": "मूल्यांकन तैयार है",
