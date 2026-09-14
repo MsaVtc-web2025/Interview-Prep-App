@@ -226,7 +226,7 @@ en: {
 
   "set.title": "Settings",
   "set.hands": "Hands-free mode",
-  "set.handsD": "The avatar asks the question, then the mic opens by itself and your answer is checked automatically when you stop speaking.",
+  "set.handsD": "The mic always opens once the question has been asked. Turn this on and your answer is also checked automatically when you stop speaking, instead of waiting for the button.",
   "set.ask": "Ask questions aloud",
   "set.askD": "The avatar reads the question out in English.",
   "set.fb": "Read the feedback aloud",
@@ -578,7 +578,7 @@ gu: {
 
   "set.title": "સેટિંગ",
   "set.hands": "હાથ વગરનો મોડ",
-  "set.handsD": "અવતાર પ્રશ્ન પૂછે, પછી માઇક જાતે ચાલુ થાય અને તમે બોલવાનું બંધ કરો ત્યારે જવાબ જાતે તપાસાય.",
+  "set.handsD": "પ્રશ્ન પુછાઈ જાય એટલે માઇક તો હંમેશાં ચાલુ થાય જ છે. આ ચાલુ કરો તો બટન દબાવવાની રાહ જોયા વગર, તમે બોલવાનું બંધ કરો ત્યારે જ જવાબ જાતે તપાસાય.",
   "set.ask": "પ્રશ્ન બોલીને પુછાય",
   "set.askD": "અવતાર પ્રશ્ન અંગ્રેજીમાં મોટેથી બોલે.",
   "set.fb": "મૂલ્યાંકન બોલીને સંભળાવો",
@@ -930,7 +930,7 @@ hi: {
 
   "set.title": "सेटिंग",
   "set.hands": "हाथ लगाए बिना चलने वाला मोड",
-  "set.handsD": "अवतार प्रश्न पूछता है, फिर माइक अपने आप चालू होता है और आप बोलना बंद करें तो जवाब अपने आप जाँचा जाता है।",
+  "set.handsD": "प्रश्न पूछे जाने के बाद माइक हमेशा अपने आप चालू हो जाता है। यह चालू करें तो बटन दबाने का इंतज़ार किए बिना, आप बोलना बंद करें तभी जवाब अपने आप जाँचा जाता है।",
   "set.ask": "प्रश्न बोलकर पूछा जाए",
   "set.askD": "अवतार प्रश्न अंग्रेज़ी में ज़ोर से बोलता है।",
   "set.fb": "मूल्यांकन बोलकर सुनाएँ",

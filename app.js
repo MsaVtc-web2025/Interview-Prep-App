@@ -610,7 +610,12 @@ function askQuestion() {
   setPhase("asking");
   Speech.speak(spokenQuestion(), { lang: spokenQuestionLang(), rate: state.settings.rate }).then(() => {
     if (phase !== "asking") return;                // the student did something meanwhile
-    if (state.settings.hands && Speech.micSupported()) beginListen();
+    /* The question has been asked, so open the mic and leave it open. The
+       student talks when they are ready and presses the button when they are
+       done - nothing closes it in between. Hands-free mode no longer decides
+       whether the mic opens, only whether a silence submits the answer by
+       itself (beginListen passes silenceMs for that). */
+    if (Speech.micSupported()) beginListen();
     else setPhase("ready");
   });
 }
@@ -638,6 +643,8 @@ function beginListen() {
 
   const ok = Speech.listen({
     lang: "en-IN",
+    // 0 = never submit on a silence; the mic stays open until the student
+    // presses the button. Hands-free mode is the opt-in that changes that.
     silenceMs: state.settings.hands ? state.settings.silence : 0,
     onStart: () => armMicWatch(),
     onInterim: txt => { $("heard").textContent = txt; if (txt.trim()) clearMicWatch(); },
@@ -1128,7 +1135,7 @@ $("btnRepeat").addEventListener("click", () => {
   setPhase("asking");
   Speech.speak(spokenQuestion(), { lang: spokenQuestionLang(), rate: state.settings.rate }).then(() => {
     if (phase !== "asking") return;
-    if (state.settings.hands && Speech.micSupported()) beginListen();
+    if (Speech.micSupported()) beginListen();
     else setPhase("ready");
   });
 });
