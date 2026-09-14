@@ -1,14 +1,13 @@
-/* પ્રશ્ન બેંકના નામોનું ભાષાંતર — Translations for question-bank labels.
+/* Translations for question-bank labels.
 
-   ડિઝાઇન: bank-*.js ફાઇલોમાં કંઈ બદલવું પડતું નથી. અહીં ગુજરાતી લખાણને
-   ચાવી બનાવીને અંગ્રેજી અને હિન્દી આપી છે. ચાવી ન મળે તો ગુજરાતી જ દેખાય —
-   એટલે નવો પ્રશ્ન ઉમેર્યા પછી એપ તૂટતી નથી, ફક્ત એ નામ ગુજરાતીમાં દેખાય.
-
-   Keyed on the Gujarati source string; falls back to it when unmapped.
+   By design, nothing in the bank-*.js files has to change. The Gujarati string
+   is the key here, and English and Hindi hang off it. An unmapped key simply
+   shows the Gujarati - so adding a new question never breaks the app, its label
+   just appears in Gujarati until it is mapped.
 */
 "use strict";
 
-/* કોર્સનું નામ અને ઓળખ — કોર્સના id પ્રમાણે */
+/* Course name and tagline, keyed by course id */
 const COURSE_I18N = {
   interview:   { en: { name: "Interview (general)", tagline: "Questions asked in every interview" },
                  hi: { name: "इंटरव्यू (सामान्य)",   tagline: "हर इंटरव्यू में पूछे जाने वाले प्रश्न" } },
@@ -28,7 +27,7 @@ const COURSE_I18N = {
                  hi: { name: "वेल्डिंग",             tagline: "आर्क, MIG, TIG और वेल्डिंग सुरक्षा" } }
 };
 
-/* પ્રશ્નનો વિભાગ (cat) */
+/* Question category (cat) */
 const CAT_I18N = {
   "MS એક્સેલ":                        { en: "MS Excel",                    hi: "MS एक्सेल" },
   "MS ઓફિસ":                         { en: "MS Office",                   hi: "MS ऑफ़िस" },
@@ -94,7 +93,7 @@ const CAT_I18N = {
   "હાર્ડવેર":                          { en: "Hardware",                    hi: "हार्डवेयर" }
 };
 
-/* ફરજિયાત સલામતીના મુદ્દાનાં નામ (must) */
+/* Labels for the mandatory safety points (must) */
 const MUST_I18N = {
   "ઇમરજન્સી સ્ટોપ બટન તપાસવું":
     { en: "Check the emergency stop button", hi: "इमरजेंसी स्टॉप बटन जाँचना" },
@@ -162,22 +161,22 @@ const MUST_I18N = {
     { en: "Hand washing / hand hygiene", hi: "हाथ धोना / हैंड हाइजीन" }
 };
 
-/* ---------------- લુકઅપ ---------------- */
+/* ---------------- Lookup ---------------- */
 
 function pick(map, key, lang) {
   const row = map[key];
-  if (!row) return key;                       // નકશામાં નથી → મૂળ ગુજરાતી
+  if (!row) return key;                       // not in the map -> the original Gujarati
   if (lang === "gu") return key;
   return (row[lang] != null) ? row[lang] : key;
 }
 
-/* વિભાગનું નામ ચાલુ ભાષામાં */
+/* Category name in the current language */
 function tCat(cat) { return pick(CAT_I18N, cat, getLang()); }
 
-/* ફરજિયાત મુદ્દાનું નામ ચાલુ ભાષામાં */
+/* Mandatory-point label in the current language */
 function tMust(label) { return pick(MUST_I18N, label, getLang()); }
 
-/* કોર્સનું નામ / ઓળખ ચાલુ ભાષામાં */
+/* Course name / tagline in the current language */
 function tCourse(course, field) {
   const lang = getLang();
   if (lang === "gu") return course[field];

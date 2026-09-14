@@ -1,24 +1,24 @@
-/* પ્રગતિનું વિશ્લેષણ — હોમ ડૅશબોર્ડના આંકડા, આલેખ અને સૂચનો.
+/* Progress analysis — the numbers, charts and suggestions on the home dashboard.
 
-   કોઈ બહારની લાઇબ્રેરી નથી. બધા આલેખ CSS અને inline SVG થી બનાવ્યા છે,
-   જેથી એપ ઓફલાઇન પણ બરાબર દેખાય.
+   No external libraries. Every chart is built from CSS and inline SVG, so the
+   app still looks right offline.
 
-   સમયની નોંધ: જૂના જવાબોમાં `secs` નથી (એ સુવિધા પછી ઉમેરાઈ). તેથી
-   સમયના આલેખ ફક્ત `secs` વાળા જવાબો ગણે છે — ગુણ અને સરેરાશ તો બધા
-   જવાબોના જ રહે છે. એટલે નવો વપરાશકર્તા «સમય» ખાલી જુએ તો નવાઈ નહીં.
+   A note on timing: older answers have no `secs` (that came later). So the time
+   charts count only answers that carry `secs` — scores and averages still cover
+   every answer. A new user seeing an empty "time" section is therefore expected.
 */
 "use strict";
 
 const Stats = (function () {
 
   const DAY = 86400000;
-  const MAX_SECS = 600;      // એક જવાબ માટે વધુમાં વધુ ૧૦ મિનિટ ગણીએ
-  const WEEK_TARGET = 30;    // અઠવાડિયે આટલી મિનિટ પ્રેક્ટિસનું લક્ષ્ય
+  const MAX_SECS = 600;      // count at most 10 minutes for a single answer
+  const WEEK_TARGET = 30;    // weekly practice target, in minutes
   const DAY_KEYS = ["day.sun", "day.mon", "day.tue", "day.wed", "day.thu", "day.fri", "day.sat"];
 
   function startOfDay(ts) { const d = new Date(ts); d.setHours(0, 0, 0, 0); return d.getTime(); }
 
-  /* અઠવાડિયું સોમવારથી ગણીએ */
+  /* Weeks start on Monday */
   function startOfWeek(ts) {
     const d = new Date(startOfDay(ts));
     d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
@@ -31,19 +31,19 @@ const Stats = (function () {
 
   function mean(a) { return a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0; }
 
-  /* પટ્ટીનો રંગ લખાણના રંગ કરતાં થોડો ઘાટો — ડિઝાઇન એમ જ કરે છે */
+  /* The bar colour is a shade darker than the text colour — that is the design */
   function barFor(n) {
     return n >= 7.5 ? "var(--goodbar)" : n >= 5 ? "var(--midbar)" : "var(--lowbar)";
   }
 
-  /* સમય વાંચી શકાય તેવો — એક કલાકથી વધુ હોય તો દશાંશ કલાકમાં */
+  /* Readable duration — shown in decimal hours once it passes an hour */
   function fmtDur(min) {
     if (!min) return "—";
     if (min >= 60) return t("unit.h", { v: (min / 60).toFixed(1) });
     return t("unit.min", { v: Math.max(1, Math.round(min)) });
   }
 
-  /* ---------------- માહિતી એકત્ર ---------------- */
+  /* ---------------- Gathering the data ---------------- */
 
   function summarise() {
     const hist = allHistory().slice().sort((a, b) => (a.ts || 0) - (b.ts || 0));
@@ -51,7 +51,7 @@ const Stats = (function () {
     const totalSecs = timed.reduce((a, e) => a + secsOf(e), 0);
     const today = startOfDay(Date.now());
 
-    // છેલ્લા સાત દિવસ — દરરોજની મિનિટ
+    // Last seven days — minutes per day
     const days = [];
     for (let i = 6; i >= 0; i--) {
       const d0 = today - i * DAY;
@@ -59,7 +59,7 @@ const Stats = (function () {
       days.push({ ts: d0, min: s / 60, today: i === 0 });
     }
 
-    // અઠવાડિયાવાર — સરેરાશ કાઢવા માટે
+    // Per week — used for the average
     const wk = {};
     timed.forEach(e => { const k = startOfWeek(e.ts); wk[k] = (wk[k] || 0) + secsOf(e); });
     const wkKeys = Object.keys(wk);
@@ -67,33 +67,33 @@ const Stats = (function () {
     const thisWeekMin = (wk[startOfWeek(Date.now())] || 0) / 60;
     const lastWeekMin = (wk[startOfWeek(Date.now() - 7 * DAY)] || 0) / 60;
 
-    // સળંગ કેટલા દિવસ પ્રેક્ટિસ કરી — સમય નહીં, જવાબ ગણીએ
+    // Practice streak in days — counted by answers, not by time
     const seen = {};
     hist.forEach(e => { seen[startOfDay(e.ts)] = true; });
     let streak = 0, cur = today;
-    if (!seen[cur]) cur -= DAY;                  // આજે ન કર્યું હોય તો ગઈકાલથી ગણો
+    if (!seen[cur]) cur -= DAY;                  // nothing today? start counting from yesterday
     while (seen[cur]) { streak++; cur -= DAY; }
 
-    // માપદંડવાર સરેરાશ
+    // Average per criterion
     const crit = CRITERIA.map(c => {
       const vals = hist.map(e => e.scores && e.scores[c.key]).filter(v => typeof v === "number");
       return { key: c.key, label: t("crit." + c.key), v: mean(vals), n: vals.length };
     }).filter(c => c.n);
 
-    // કોર્સવાર સરેરાશ (bucket() ન વાપરો — એ ખાલી કોર્સ પણ સંગ્રહમાં ઉમેરી દે)
+    // Average per course (do not use bucket() — it adds empty courses to storage)
     const courses = COURSES.map(c => {
       const h = (state.courses[c.id] && state.courses[c.id].history) || [];
       return { def: c, n: h.length, avg: mean(h.map(e => e.overall)) };
     });
 
-    // પ્રશ્નના પ્રકાર પ્રમાણે — સામાન્ય ઇન્ટરવ્યુ કે તકનીકી
+    // By question type — general interview or technical
     function modeOf(id) { const c = getCourse(id); return c && c.mode === "technical" ? "technical" : "interview"; }
     const byMode = ["interview", "technical"].map(m => {
       const h = hist.filter(e => modeOf(e.course) === m);
       return { mode: m, n: h.length, avg: mean(h.map(e => e.overall)) };
     });
 
-    // છેલ્લા દસ ગુણ — વલણનો આલેખ
+    // Last ten scores — the trend chart
     const trend = hist.slice(-10).map(e => e.overall);
     let delta = null;
     if (hist.length >= 6) {
@@ -112,15 +112,15 @@ const Stats = (function () {
     };
   }
 
-  /* ---------------- ટુકડા ---------------- */
+  /* ---------------- Pieces ---------------- */
 
   function cell(v, k, cls) {
     return '<div class="sc"><div class="v' + (cls ? " " + cls : "") + '">' + v +
            '</div><div class="k">' + esc(k) + "</div></div>";
   }
 
-  /* પહેલી પટ્ટી ડિઝાઇન પ્રમાણે: જવાબ · સરેરાશ · સૌથી નબળો માપદંડ.
-     ત્રીજા ખાનામાં આંકડો નહીં, ચિહ્ન અને માપદંડનું નામ આવે છે. */
+  /* The top strip, per the design: answers, average, weakest criterion.
+     The third cell holds an icon and the criterion name, not a number. */
   function panels(s) {
     const weak = s.crit.slice().sort((a, b) => a.v - b.v)[0];
     const weakCell =
@@ -144,7 +144,7 @@ const Stats = (function () {
       "</div>";
   }
 
-  /* એકંદર ગુણ — વર્તુળ, વલણ અને છેલ્લા જવાબોની રેખા */
+  /* Overall score — the ring, the trend, and the line of recent answers */
   function overallCard(s) {
     const C = 2 * Math.PI * 33;
     const off = C * (1 - s.avg / 10);
@@ -167,9 +167,9 @@ const Stats = (function () {
       "</div>" + sparkline(s.trend) + "</div>";
   }
 
-  /* છેલ્લા જવાબોના ગુણની રેખા — ત્રણથી ઓછા હોય તો દોરવાનો અર્થ નથી.
-     આખો ૦–૧૦ પટ્ટો વાપરીએ તો રેખા સપાટ દેખાય, તેથી જેટલા ગુણ છે તેની
-     આસપાસનો જ પટ્ટો લઈએ — ચઢ-ઉતાર સાચી રીતે દેખાય. */
+  /* Line of recent scores — not worth drawing for fewer than three.
+     Using the full 0-10 range makes the line look flat, so we scale to the
+     range the scores actually span, which shows the ups and downs properly. */
   function sparkline(vals) {
     if (!vals || vals.length < 3) return "";
     const W = 300, H = 76, P = 8;
@@ -182,14 +182,14 @@ const Stats = (function () {
     const dots = vals.map((v, i) =>
       '<circle class="dt" cx="' + (P + i * step).toFixed(1) + '" cy="' + y(v).toFixed(1) + '" r="2.6"/>').join("");
 
-    /* ભરણ સીધું rgba થી. CSS માં fill:url(#gradient) કેટલાક સંદર્ભમાં
-       ઉકેલાતું નથી અને આખો ભાગ કાળો દેખાઈ જાય છે. */
+    /* Fill straight from rgba. In some contexts CSS fill:url(#gradient) does
+       not resolve and the whole area renders black. */
     return '<svg class="spark" viewBox="0 0 ' + W + " " + H + '" aria-hidden="true">' +
       '<polygon class="ar" points="' + P + "," + (H - P) + " " + pts.join(" ") + " " + (W - P) + "," + (H - P) + '"/>' +
       '<polyline class="ln" points="' + pts.join(" ") + '"/>' + dots + "</svg>";
   }
 
-  /* દરરોજ કેટલો સમય — સાત ઊભી પટ્ટી */
+  /* Time per day — seven vertical bars */
   function timeCard(s) {
     let body, foot;
 
@@ -197,8 +197,8 @@ const Stats = (function () {
       body = '<p class="note">' + esc(t("stats.noTime")) + "</p>";
       foot = "";
     } else {
-      // ડિઝાઇનમાં પટ્ટીનો રંગ ઊંચાઈ પ્રમાણે આછાથી ઘાટો થાય છે અને
-      // સૌથી ઊંચો દિવસ પૂરો accent રંગનો હોય છે
+      // In the design the bar colour goes from light to dark with height, and
+      // the tallest day gets the full accent colour
       const top = Math.max.apply(null, s.days.map(d => d.min));
       const scale = Math.max(top, 5);
       body = '<div class="chart">' + s.days.map(d => {
@@ -217,7 +217,7 @@ const Stats = (function () {
         esc(t("stats.weekFoot", { n: s.n, dur: fmtDur(s.thisWeekMin) })) + "</div>";
     }
 
-    // ગયા અઠવાડિયા સામે કેટલો ફેર — ડિઝાઇનમાં જમણી ટોચે આ લખાણ છે
+    // Change against last week — the design puts this text at the top right
     let delta = "";
     if (s.timedN && s.lastWeekMin > 0) {
       const d = s.thisWeekMin - s.lastWeekMin;
@@ -231,7 +231,7 @@ const Stats = (function () {
       body + foot + "</div>";
   }
 
-  /* તાજા જવાબ — ગુણનું ચોકઠું, વિભાગ, કોર્સ અને દિવસ */
+  /* Recent answers — score chip, category, course and day */
   function recentCard(s) {
     const rows = s.hist.slice().reverse().slice(0, 3).map(e => {
       const c = getCourse(e.course);
@@ -247,7 +247,7 @@ const Stats = (function () {
       '<div class="card tight">' + rows + "</div>";
   }
 
-  /* «આજે», «ગઈકાલે», «૩ દિવસ પહેલાં» */
+  /* "Today", "Yesterday", "3 days ago" */
   function relDay(ts) {
     const days = Math.round((startOfDay(Date.now()) - startOfDay(ts)) / DAY);
     if (days <= 0) return t("rel.today");
@@ -255,11 +255,11 @@ const Stats = (function () {
     return t("rel.days", { n: days });
   }
 
-  /* માપદંડવાર — પરિણામ કાર્ડ જેવી જ પટ્ટીઓ, જેથી ઓળખીતું લાગે */
+  /* Per criterion — the same bars as the result card, so it feels familiar */
   function critCard(s) {
     if (!s.crit.length) return "";
-    /* ડિઝાઇનમાં નામ અને ગુણ એક લીટીમાં ઉપર, પટ્ટી નીચે આખી પહોળી —
-       પરિણામ કાર્ડની પટ્ટીઓથી અલગ ઘાટ છે. */
+    /* The design puts the name and score on one line above, with a full-width
+       bar below — a different shape from the result card's bars. */
     const rows = s.crit.slice().sort((a, b) => b.v - a.v).map(c =>
       '<div class="skill"><div class="sl">' +
         '<span class="sn">' + esc(c.label) + "</span>" +
@@ -271,18 +271,18 @@ const Stats = (function () {
       '<div class="card"><div class="skills">' + rows + "</div></div>";
   }
 
-  /* પ્રશ્નના પ્રકાર પ્રમાણે — સામાન્ય ઇન્ટરવ્યુ અને તકનીકી */
+  /* By question type — general interview and technical */
   function modeCard(s) {
     const c = s.byMode.map(m =>
       cell(m.n ? '<span style="color:' + colorFor(m.avg) + '">' + m.avg.toFixed(1) + "</span>" : "—",
            t(m.mode === "interview" ? "stats.modeInterview" : "stats.modeTech") +
            (m.n ? " · " + t("stats.nAns", { n: m.n }) : ""))).join("");
-    // બે જ ખાનાં છે, તેથી બે કૉલમની પટ્ટી — નહીં તો ત્રીજું ખાલી દેખાય
+    // Only two cells, so a two-column strip — otherwise a third sits there empty
     return '<div class="card"><p class="ctitle">' + esc(t("stats.byMode")) + "</p>" +
       '<p class="csub">' + esc(t("stats.byModeD")) + '</p><div class="statpanel two">' + c + "</div></div>";
   }
 
-  /* કોર્સવાર — શરૂ કરેલા કોર્સ પહેલાં, પછી બાકીના */
+  /* Per course — courses already started first, then the rest */
   function courseCard(s) {
     const done = s.courses.filter(c => c.n).sort((a, b) => b.avg - a.avg);
     const rest = s.courses.filter(c => !c.n);
@@ -299,35 +299,35 @@ const Stats = (function () {
       done.map(row).join("") + rest.slice(0, 3).map(row).join("") + "</div>";
   }
 
-  /* ---------------- સૂચનો ---------------- */
+  /* ---------------- Suggestions ---------------- */
 
   function recommendations(s) {
     const out = [];
 
-    // ૧. સલામતીના મુદ્દા ચૂક્યા હોય — સૌથી અગત્યનું
+    // 1. Safety points missed — the most important one
     const missed = s.hist.slice(-5).reduce((a, e) => a + ((e.missed && e.missed.length) || 0), 0);
     if (missed) out.push({ ic: "i-info", tint: "red", t: t("rec.safety.t"), d: t("rec.safety.d", { n: missed }) });
 
-    // ૨. સૌથી નબળો માપદંડ
+    // 2. Weakest criterion
     const weak = s.crit.slice().sort((a, b) => a.v - b.v)[0];
     if (weak && weak.v < 7.5) {
       out.push({ ic: "i-trend", tint: "amber", t: t("rec.weak.t", { crit: weak.label }), d: t("rec.crit." + weak.key) });
     }
 
-    // ૩. આ અઠવાડિયે ઓછી પ્રેક્ટિસ (સમય નોંધાવા લાગ્યો હોય ત્યારે જ)
+    // 3. Light practice this week (only once timings are being recorded)
     if (s.timedN && s.thisWeekMin < WEEK_TARGET) {
       const left = { m: Math.max(1, Math.round(WEEK_TARGET - s.thisWeekMin)) };
       out.push({ ic: "i-clock", tint: "blue", t: t("rec.time.t", left), d: t("rec.time.d", left) });
     }
 
-    // ૪. પૂરો મૉક ઇન્ટરવ્યુ બાકી છે
+    // 4. A full mock interview is still pending
     const iv = s.courses.filter(c => c.def.mode === "interview")[0];
     if (iv && iv.n < iv.def.questions.length) {
       out.push({ ic: "i-mic", tint: "green", t: t("rec.mock.t"),
                  d: t("rec.mock.d", { n: iv.def.questions.length - iv.n }) });
     }
 
-    // ૫. હજી અડ્યા ન હોય એવો કોર્સ
+    // 5. A course not touched yet
     const fresh = s.courses.filter(c => !c.n)[0];
     if (fresh) {
       out.push({ ic: "i-play", tint: "purple",
@@ -354,9 +354,9 @@ const Stats = (function () {
       '<button class="act" id="statsGo">' + esc(t("stats.goPractise")) + "</button></div></div>";
   }
 
-  /* ---------------- બહાર દેખાતું ---------------- */
+  /* ---------------- Public surface ---------------- */
 
-  /* ડૅશબોર્ડ ફરી લખો. onPractise = «પ્રેક્ટિસ કરો» દબાય ત્યારે શું કરવું. */
+  /* Redraw the dashboard. onPractise = what to do when "Practise" is pressed. */
   function render(el, onPractise) {
     const s = summarise();
     if (!s.n) {
@@ -365,8 +365,8 @@ const Stats = (function () {
       if (g && onPractise) g.addEventListener("click", onPractise);
       return s;
     }
-    /* ડિઝાઇનનો ક્રમ: આંકડા → આ અઠવાડિયે → તમારી કુશળતા → તાજા જવાબ,
-       પછી અગાઉથી હતાં તે વધારાનાં કાર્ડ, અને છેલ્લે «પ્રેક્ટિસ ચાલુ રાખો». */
+    /* Design order: numbers -> this week -> your skills -> recent answers,
+       then the extra cards that already existed, and finally "Keep practising". */
     el.innerHTML = panels(s) + timeCard(s) + critCard(s) + recentCard(s) +
                    overallCard(s) + modeCard(s) + courseCard(s) + recCard(s) +
                    '<button class="act" id="statsGo" style="margin-top:4px">' +
@@ -378,7 +378,7 @@ const Stats = (function () {
     return s;
   }
 
-  /* પ્રોફાઇલ પરની નાની પટ્ટી */
+  /* The small strip on the profile screen */
   function renderProfileStats(el) {
     const s = summarise();
     const best = s.courses.filter(c => c.n).sort((a, b) => b.avg - a.avg)[0];

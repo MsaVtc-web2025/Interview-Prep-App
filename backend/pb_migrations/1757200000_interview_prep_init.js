@@ -1,39 +1,38 @@
 /// <reference path="../pb_data/types.d.ts" />
 
-/* Interview Prep — બૅકએન્ડનું ઢાંચું (schema).
+/* Interview Prep - the backend schema.
 
-   આ PocketBase migration છે. `pb_migrations/` માં મૂકીને સર્વર ચાલુ કરો
-   એટલે જાતે લાગુ થઈ જાય છે. હાથે admin UI માં કંઈ બનાવવાનું નથી.
+   This is a PocketBase migration. Drop it in `pb_migrations/` and start the
+   server; it applies itself. Nothing needs creating by hand in the admin UI.
 
-   ડિઝાઇનના ત્રણ મુદ્દા, જે બદલતાં પહેલાં સમજવા જરૂરી છે:
+   Three design points worth understanding before changing anything:
 
-   1. વિદ્યાર્થીના જવાબનું લખાણ સર્વર પર કદી આવતું નથી. ફક્ત ગુણ, માપદંડ
-      અને સમય આવે છે. `progress` માં જવાબનું કોઈ ખાનું જ નથી — તેથી ભૂલથી
-      મોકલાય તો પણ સચવાય નહીં.
+   1. The text of a student's answer never reaches the server. Only scores,
+      criteria and timings do. `progress` has no field for an answer at all - so
+      even if one were sent by mistake, it could not be stored.
 
-   2. «કોણ બધું જોઈ શકે» એ `instructors` નામના અલગ collection થી નક્કી થાય
-      છે, `users` માં role રાખીને નહીં. કારણ: PocketBase માં ખાના-દીઠ
-      (field-level) નિયમ નથી. role જો users માં હોય તો વિદ્યાર્થી પોતાનો
-      record અપડેટ કરીને પોતાને instructor બનાવી શકે અને આખા વર્ગની
-      માહિતી જોઈ શકે. `instructors` પર કોઈ API નિયમ ખુલ્લો નથી (બધા null),
-      તેથી ફક્ત superuser જ admin UI માંથી કોઈને instructor બનાવી શકે.
+   2. Who can see everything is decided by a separate `instructors` collection,
+      not by a role on `users`. Why: PocketBase has no field-level rules. With a
+      role on users, a student could update their own record to make themselves
+      an instructor and read the whole class's data. No API rule on `instructors`
+      is open (all null), so only a superuser can make someone an instructor,
+      from the admin UI.
 
-   3. `progress` ફક્ત ઉમેરાય છે (append-only) — update નો નિયમ null છે.
-      દરેક record સાથે `cid` (client id) આવે છે અને (user, cid) પર unique
-      index છે. તેથી ફોન ઇન્ટરનેટ ન હોય ત્યારે કતારમાં રાખેલો જવાબ ફરી ફરી
-      મોકલે તો પણ બમણો સંગ્રહાતો નથી.
+   3. `progress` is append-only - its update rule is null. Every record carries a
+      `cid` (client id) and there is a unique index on (user, cid). So a phone
+      that queues an answer while offline and re-sends it never stores it twice.
 */
 
 migrate((app) => {
 
   const usersId = app.findCollectionByNameOrId("users").id;
 
-  /* ---------- batches — વર્ગ / બૅચ ---------- */
+  /* ---------- batches - classes / cohorts ---------- */
   const batches = new Collection({
     name: "batches",
     type: "base",
-    // કોઈ પણ સાઇન-ઇન થયેલો વિદ્યાર્થી બૅચનું નામ વાંચી શકે; બનાવવા-બદલવાનું
-    // ફક્ત superuser પાસે (નિયમ null = ફક્ત admin UI / superuser ટોકન).
+    // Any signed-in student can read a batch name; creating and editing is
+    // superuser only (a null rule means admin UI / superuser token only).
     listRule: '@request.auth.id != ""',
     viewRule: '@request.auth.id != ""',
     createRule: null,
@@ -50,13 +49,13 @@ migrate((app) => {
   });
   app.save(batches);
 
-  /* ---------- instructors — કોણ આખો વર્ગ જોઈ શકે ---------- */
+  /* ---------- instructors - who can see the whole class ---------- */
   const instructors = new Collection({
     name: "instructors",
     type: "base",
-    // બધા નિયમ null: આ યાદી ફક્ત superuser બદલી શકે. બીજા collection ના
-    // નિયમો અંદરથી @collection.instructors વાંચે છે — એ join સર્વર પર થાય
-    // છે અને આ નિયમોથી બંધાયેલો નથી.
+    // All rules null: only a superuser can change this list. Other collections'
+    // rules read @collection.instructors internally - that join happens on the
+    // server and is not bound by these rules.
     listRule: null,
     viewRule: null,
     createRule: null,
@@ -68,8 +67,8 @@ migrate((app) => {
         collectionId: usersId, cascadeDelete: true, maxSelect: 1, presentable: true
       },
       {
-        // ખાલી હોય તો બધા બૅચ દેખાય; ભરેલું હોય તો ફક્ત એ બૅચ.
-        // (નિયમમાં આ વપરાયું નથી — dashboard આના પરથી ગાળે છે.)
+        // Empty means every batch is visible; filled means only those batches.
+        // (Not used in any rule - the dashboard filters on it.)
         type: "relation", name: "batches",
         collectionId: batches.id, cascadeDelete: false, maxSelect: 0
       },
@@ -82,22 +81,22 @@ migrate((app) => {
   });
   app.save(instructors);
 
-  /* ---------- progress — એક જવાબનો ગુણ અને સમય ---------- */
+  /* ---------- progress - the score and timing of one answer ---------- */
   const progress = new Collection({
     name: "progress",
     type: "base",
 
-    // વિદ્યાર્થી પોતાના record જુએ; instructor બધા જુએ.
+    // A student sees their own records; an instructor sees all of them.
     listRule: 'user = @request.auth.id || @request.auth.id ?= @collection.instructors.user',
     viewRule: 'user = @request.auth.id || @request.auth.id ?= @collection.instructors.user',
 
-    // પોતાના નામે જ ઉમેરી શકાય — બીજા વિદ્યાર્થીના નામે નહીં.
+    // You can only add records under your own name, never another student's.
     createRule: '@request.auth.id != "" && user = @request.auth.id',
 
-    // ઉમેર્યા પછી બદલી શકાતું નથી (ગુણ સાથે છેડછાડ ન થાય).
+    // Immutable once added, so scores cannot be tampered with.
     updateRule: null,
 
-    // પોતાની માહિતી ભૂંસવાનો હક વિદ્યાર્થી પાસે રહે.
+    // A student keeps the right to erase their own data.
     deleteRule: 'user = @request.auth.id',
 
     fields: [
@@ -105,19 +104,19 @@ migrate((app) => {
         type: "relation", name: "user", required: true,
         collectionId: usersId, cascadeDelete: true, maxSelect: 1
       },
-      // ફોન પર બનેલી ઓળખ — બમણું ન સંગ્રહાય તે માટે
+      // An id generated on the phone - what stops duplicate storage
       { type: "text", name: "cid", required: true, max: 60 },
 
       { type: "text", name: "course", required: true, max: 40, presentable: true },
       { type: "text", name: "category", max: 60 },
-      // પ્રશ્નની ઓળખ જ — પ્રશ્નનું લખાણ નહીં
+      // The question's id only - never the question text
       { type: "text", name: "question", max: 60 },
       { type: "select", name: "mode", maxSelect: 1, values: ["interview", "technical"] },
 
       { type: "number", name: "overall", required: true, min: 0, max: 10 },
 
-      // છ માપદંડ — અલગ ખાનાં રાખ્યાં છે, જેથી admin UI માં જ ક્રમમાં
-      // ગોઠવી શકાય અને SQL માં સરેરાશ કાઢી શકાય
+      // Six criteria, kept as separate columns so they can be sorted in the
+      // admin UI and averaged in SQL
       { type: "number", name: "communication", min: 0, max: 10 },
       { type: "number", name: "sentences", min: 0, max: 10 },
       { type: "number", name: "thought", min: 0, max: 10 },
@@ -127,32 +126,32 @@ migrate((app) => {
 
       { type: "number", name: "words", onlyInt: true, min: 0 },
       { type: "number", name: "coverage", onlyInt: true, min: 0, max: 100 },
-      // આ જવાબ પર ગયેલી સેકન્ડ — ડૅશબોર્ડનો «કેટલો સમય પ્રેક્ટિસ» આના પરથી
+      // Seconds spent on this answer - the dashboard's "time practised" comes from this
       { type: "number", name: "secs", onlyInt: true, min: 0, max: 600 },
 
-      // ચૂકેલા ફરજિયાત સલામતીના મુદ્દા (ફક્ત ચાવીઓ)
+      // Mandatory safety points that were missed (keys only)
       { type: "json", name: "missed", maxSize: 2000 },
 
-      // ફોનની ઘડિયાળ પ્રમાણે — ઓફલાઇન જવાબનો ખરો સમય આ છે
+      // By the phone's clock - the true time of an answer given offline
       { type: "date", name: "answered_at", required: true },
-      // સર્વરની ઘડિયાળ પ્રમાણે — ક્યારે પહોંચ્યું
+      // By the server's clock - when it arrived
       { type: "autodate", name: "created", onCreate: true, onUpdate: false }
     ],
 
     indexes: [
-      // એક જ જવાબ બે વાર ન સંગ્રહાય — ઓફલાઇન કતાર માટે આ સૌથી અગત્યનું
+      // Stops one answer being stored twice - the key guarantee for the offline queue
       "CREATE UNIQUE INDEX `idx_progress_user_cid` ON `progress` (`user`, `cid`)",
-      // ડૅશબોર્ડની સામાન્ય પૂછપરછ ઝડપી રહે
+      // Keeps the dashboard's common queries fast
       "CREATE INDEX `idx_progress_user_time` ON `progress` (`user`, `answered_at`)",
       "CREATE INDEX `idx_progress_course` ON `progress` (`course`)"
     ]
   });
   app.save(progress);
 
-  /* ---------- users — થોડાં ખાનાં અને નિયમ ઉમેરીએ ---------- */
+  /* ---------- users - add a few fields and rules ---------- */
   const users = app.findCollectionByNameOrId("users");
 
-  // instructor આખા વર્ગનાં નામ જોઈ શકે; વિદ્યાર્થી ફક્ત પોતાનું.
+  // An instructor sees the whole class's names; a student sees only their own.
   users.listRule = 'id = @request.auth.id || @request.auth.id ?= @collection.instructors.user';
   users.viewRule = 'id = @request.auth.id || @request.auth.id ?= @collection.instructors.user';
   users.updateRule = 'id = @request.auth.id';
@@ -163,15 +162,15 @@ migrate((app) => {
     collectionId: batches.id, cascadeDelete: false, maxSelect: 1
   }));
   users.fields.add(new Field({ type: "text", name: "institute", max: 160 }));
-  // વિદ્યાર્થીએ પ્રગતિ મોકલવાની સંમતિ ક્યારે આપી. ખાલી હોય તો કંઈ મોકલાતું નથી.
+  // When the student consented to sending progress. Empty means nothing is sent.
   users.fields.add(new Field({ type: "date", name: "consent_at" }));
 
   app.save(users);
 
 }, (app) => {
 
-  /* પાછું ફેરવવું — ઉલટા ક્રમમાં, કારણ કે progress અને instructors
-     બંને batches/users સાથે જોડાયેલા છે. */
+  /* Rolling back - in reverse order, because progress and instructors are both
+     linked to batches/users. */
 
   const users = app.findCollectionByNameOrId("users");
   users.fields.removeByName("batch");

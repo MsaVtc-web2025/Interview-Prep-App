@@ -1,20 +1,21 @@
-/* અવતાર — સ્ક્રીન પર દેખાતો ઇન્ટરવ્યુ લેનાર.
+/* Avatar — the interviewer the student sees on screen.
 
-   ફોટો `interviewer.jpg` માંથી આવે છે અને વિડિયો-કૉલ જેવી ટાઇલમાં દેખાય છે.
-   ફોટો બદલવો હોય તો એ જ નામની ચોરસ ફાઇલ મૂકી દો — બીજું કંઈ બદલવું ન પડે.
-   ફોટો ન મળે તો નીચે આપેલો SVG ચહેરો દેખાય છે, જેથી એપ કદી ખાલી ન લાગે.
+   The photo comes from `interviewer.jpg` and sits in a video-call style tile.
+   To change it, drop in a square file with the same name — nothing else to edit.
+   If the photo is missing, the SVG face below is shown instead, so the app
+   never looks empty.
 
-   ફોટો હોઠ હલાવી શકતો નથી, તેથી અવતાર શું કરે છે તે નીચેના બૅજથી દેખાડીએ છીએ:
-   speaking → અવાજની પટ્ટીઓ · listening → લાલ ટપકું · thinking → ત્રણ ટપકાં
+   A photo cannot move its lips, so the badge below shows what the avatar is
+   doing: speaking -> sound bars, listening -> red dot, thinking -> three dots.
 */
 "use strict";
 
 const Avatar = (function () {
 
-  /* આર્ટિફેક્ટ બિલ્ડમાં ફોટો data: URI તરીકે અંદર જ મુકાય છે */
+  /* In the artifact build the photo is inlined as a data: URI */
   const PHOTO = (typeof window !== "undefined" && window.AVATAR_PHOTO) || "./interviewer.jpg";
 
-  /* ફોટો ન મળે તો આ ચહેરો — માથું ઉપર, ખભા નીચે */
+  /* Shown when there is no photo — head on top, shoulders below */
   const FACE_SVG =
     '<svg viewBox="0 0 120 120" class="av-svg" aria-hidden="true">' +
       '<path   class="av-body" d="M16 116q0-32 44-32t44 32z"/>' +
@@ -52,7 +53,7 @@ const Avatar = (function () {
     mouth = root.querySelector(".av-mouth");
     eyes = root.querySelector(".av-eyes");
 
-    /* ફોટો ન લોડ થાય તો દોરેલા ચહેરા પર જાઓ */
+    /* Fall back to the drawn face if the photo fails to load */
     img.addEventListener("error", useFallback);
     if (img.complete && img.naturalWidth === 0) useFallback();
 
@@ -65,7 +66,7 @@ const Avatar = (function () {
     if (root) root.classList.add("no-photo");
   }
 
-  /* દોરેલો ચહેરો દેખાતો હોય ત્યારે આંખો પલકારે */
+  /* Blink the eyes while the drawn face is showing */
   function scheduleBlink() {
     clearTimeout(blinkTimer);
     blinkTimer = setTimeout(() => {
@@ -77,7 +78,7 @@ const Avatar = (function () {
     }, 2600 + Math.random() * 3800);
   }
 
-  /* દોરેલા ચહેરાના હોઠ — ફોટો હોય ત્યારે જરૂર નથી */
+  /* Lips on the drawn face — not needed when there is a photo */
   function startMouth() {
     stopMouth();
     if (photoOk) return;

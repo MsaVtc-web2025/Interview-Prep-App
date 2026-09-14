@@ -1,5 +1,5 @@
-/* કમ્પ્યુટર કોર્સ — તકનીકી પ્રશ્ન બેંક (COPA / CCC સ્તર)
-   must = ફરજિયાત મુદ્દા. આ ચૂકી જાય તો ચેતવણી મળે અને કુલ ગુણ મર્યાદિત થાય. */
+/* Computer course — technical question bank (COPA / CCC level)
+   must = mandatory points. Missing one triggers a warning and caps the score. */
 registerCourse({
   id: "computer",
   name: "કમ્પ્યુટર",

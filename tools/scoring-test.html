@@ -1,19 +1,19 @@
 <!doctype html>
-<html lang="gu">
+<html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>મૂલ્યાંકનની ચકાસણી — scoring.js</title>
 
 <!--
-  scoring.js ની ચકાસણી. બે ભાગ:
+  Tests for scoring.js. Two parts:
 
-  ૧. બધા કોર્સના બધા નમૂનારૂપ જવાબ (q.en) સારા ગુણ મેળવે છે કે નહીં, અને
-     સલામતીનો દરવાજો ખોટી રીતે તો નથી વાગતો ને.
-  ૨. ખરાબ જવાબને ખરાબ ગુણ મળે છે કે નહીં — ચાવીરૂપ શબ્દોની સૂકી યાદી,
-     «મને ખબર નથી», અને શબ્દની અંદર છુપાયેલા શબ્દો (feedback માં feed).
+  1. Do all the model answers (q.en), across every course, score well - and does
+     the safety gate ever fire when it should not?
+  2. Do bad answers score badly - a bare list of keywords, "I don't know", and
+     words hidden inside other words (feed inside feedback)?
 
-  વાપરવાની રીત: બ્રાઉઝરમાં ખોલો. બધી લીટી લીલી હોવી જોઈએ.
-  scoring.js કે પ્રશ્ન બેંક બદલો ત્યારે ફરી જોઈ લેવું.
+  How to use: open it in a browser. Every line should be green.
+  Re-check it whenever you change scoring.js or the question bank.
 -->
 
 <style>
@@ -69,7 +69,7 @@ const q1  = cnc.questions.filter(q => q.id === 1)[0];   // સલામતીન
 const q5  = cnc.questions.filter(q => q.id === 5)[0];   // feed rate / cutting speed
 const sc  = (txt, q, mode) => scoreAnswer(txt, q || q5, mode || "technical");
 
-/* ---------- ૧. બધા નમૂનારૂપ જવાબ ---------- */
+/* ---------- 1. All the model answers ---------- */
 head("બધા કોર્સના નમૂનારૂપ જવાબ");
 
 let worst = null, falseSafety = [], falseFlag = [];
@@ -91,7 +91,7 @@ line(!falseSafety.length, "સલામતીનો દરવાજો ખોટ
 line(!falseFlag.length, "કોઈ નમૂનારૂપ જવાબ «વિષય બહાર» કે «ખબર નથી» ગણાતો નથી",
      falseFlag.length ? "ગણાયો: <code>" + falseFlag.join(", ") + "</code>" : "");
 
-/* ---------- ૨. ખરાબ જવાબ ---------- */
+/* ---------- 2. Bad answers ---------- */
 head("ખરાબ જવાબને ઊંચા ગુણ ન મળે");
 
 const salad = sc("feed speed tool fast finish");
@@ -111,7 +111,7 @@ const junk = sc("I gave feedback to my summer programme comment");
 line(junk.stats.coverage === 0, "સંબંધ વગરનું વાક્ય — કવરેજ શૂન્ય",
      "કવરેજ <code>" + junk.stats.coverage + "%</code>, કુલ <code>" + junk.overall + "</code>");
 
-/* ---------- ૩. સાચા જવાબને નુકસાન ન થાય ---------- */
+/* ---------- 3. Good answers must not be penalised ---------- */
 head("સાચા જવાબને નુકસાન ન થાય");
 
 const honest = sc("I do not know the exact number but feed rate is how fast the tool moves into the job in mm per minute and cutting speed is the spindle rpm");
@@ -126,7 +126,7 @@ line(infl.stats.coverage === 100, "«feeds», «rotates» જેવાં રૂ
 const shortOk = sc("Cutting speed is the spindle rotation speed. Feed rate is how fast the tool moves into the job.");
 line(shortOk.overall >= 7.5, "ટૂંકો પણ સાચો જવાબ", "કુલ <code>" + shortOk.overall + "</code>");
 
-/* ---------- ૪. સલામતીનો દરવાજો ---------- */
+/* ---------- 4. The safety gate ---------- */
 head("સલામતીનો દરવાજો");
 
 const noPPE = sc("I close all the guards and doors, I check the coolant level, I check the tool is tight in the holder and the job is clamped in the vice, then I verify the program and zero offset.", q1);
@@ -138,7 +138,7 @@ const fullSafe = sc(q1.en, q1);
 line(!fullSafe.missingMust.length, "પૂરો સલામતી જવાબ — દરવાજો વાગતો નથી",
      "કુલ <code>" + fullSafe.overall + "</code>");
 
-/* ---------- સાર ---------- */
+/* ---------- Summary ---------- */
 const s = document.getElementById("sum");
 s.className = pass === total ? "ok" : "bad";
 s.textContent = pass + " / " + total + " બરાબર";

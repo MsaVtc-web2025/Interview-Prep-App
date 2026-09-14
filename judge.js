@@ -1,67 +1,68 @@
-/* AI મૂલ્યાંકન — વૈકલ્પિક, ડિફોલ્ટ બંધ.
+/* AI evaluation - optional, off by default.
 
-   scoring.js ચાવીરૂપ શબ્દો ગણે છે, અર્થ સમજતું નથી. તેથી «I like cricket
-   and my favourite food is pizza with speed and feed tool» જેવો જવાબ પણ
-   સારા ગુણ મેળવી જાય છે — શબ્દો ખરેખર હાજર છે, પણ સમજ નથી. એ ભેદ પારખવા
-   માટે અર્થ વાંચતું મોડેલ જોઈએ.
+   scoring.js counts keywords; it does not understand meaning. So an answer like
+   "I like cricket and my favourite food is pizza with speed and feed tool" still
+   scores well - the words really are there, the understanding is not. Telling
+   those two apart needs a model that reads for meaning.
 
-   ચાર નિયમ, જે કદી તોડવા નહીં:
+   Four rules, never to be broken:
 
-   1. એપ પહેલાં ઓફલાઇન છે. JUDGE_URL ખાલી હોય, ઇન્ટરનેટ ન હોય, વિદ્યાર્થીએ
-      «હા» ન કહ્યું હોય, કે મોડેલ જવાબ ન આપે — દરેક સ્થિતિમાં scoring.js
-      નું ઓફલાઇન પરિણામ વપરાય છે અને એપ પૂરેપૂરી ચાલે છે. આ ફાઇલ કદી
-      અપવાદ (throw) ફેંકતી નથી; નિષ્ફળ જાય તો null આપે છે.
+   1. The app is offline first. JUDGE_URL empty, no internet, the student has not
+      said yes, or the model does not answer - in every one of those cases the
+      offline result from scoring.js is used and the app works completely. This
+      file never throws; on failure it returns null.
 
-   2. વિદ્યાર્થી સ્પષ્ટ «હા» કહે ત્યાં સુધી જવાબનું લખાણ ફોન બહાર જતું નથી.
-      ડિફોલ્ટ બંધ છે. સેટિંગમાં વાંચીને બટન દબાવે ત્યારે જ ચાલુ થાય છે.
-      આ સંમતિ પ્રગતિના બૅકઅપની સંમતિથી સાવ અલગ છે — બૅકઅપમાં ફક્ત ગુણ
-      જાય છે, અહીં જવાબનું લખાણ જાય છે. એકની «હા» બીજા માટે ચાલે નહીં.
+   2. Answer text does not leave the phone until the student explicitly says yes.
+      It is off by default, and turns on only when they read the setting and press
+      the switch. This consent is entirely separate from the progress-backup
+      consent - backup sends only scores, this sends the answer text. Yes to one
+      is not yes to the other.
 
-   3. ઓળખ સાથે જતી નથી. પ્રશ્ન, જવાબનું લખાણ અને ભાષા — બસ એટલું જ.
-      નામ નહીં, ઈમેલ નહીં, વપરાશકર્તાની ઓળખ નહીં. મોડેલને કોણ બોલે છે તે
-      જાણવાની જરૂર નથી. નીચે payload() માં જે ખાનાં છે તે જ જાય છે.
+   3. No identity is sent. The question, the answer text and the language, and
+      nothing else. No name, no email, no user id. The model does not need to know
+      who is speaking. Only the fields in payload() below are sent.
 
-   4. API કી કદી ફોનમાં આવતી નથી. ફોન ફક્ત આપણા Worker સાથે વાત કરે છે;
-      કી Worker ના env માં રહે છે. backend/worker/README.md જુઓ.
+   4. The API key never reaches the phone. The phone talks only to our Worker; the
+      key lives in the Worker's env. See backend/worker/README.md.
 */
 "use strict";
 
-/* ⚙ Cloudflare Worker નું સરનામું. ખાલી હોય તો આખી સુવિધા દેખાતી જ નથી
-   અને એપ પહેલાં જેવી ઓફલાઇન એપ રહે છે.
-   ઉદાહરણ: "https://interview-judge.<તમારું-નામ>.workers.dev"  (છેલ્લે સ્લૅશ નહીં) */
+/* The Cloudflare Worker address. Leave it empty and the whole feature does not
+   appear; the app stays the offline app it was before.
+   Example: "https://interview-judge.<your-name>.workers.dev"  (no trailing slash) */
 const JUDGE_URL = "https://interview-judge.msa-vtc.workers.dev";
 
 const Judge = (function () {
 
-  const TIMEOUT_MS = 25000;              // આટલી વારમાં જવાબ ન આવે તો ઓફલાઇન ગુણ વાપરો
-  const MAX_ANSWER = 4000;               // આનાથી લાંબું લખાણ મોકલવું નથી
+  const TIMEOUT_MS = 25000;              // no reply within this time -> use the offline score
+  const MAX_ANSWER = 4000;               // do not send text longer than this
   const CACHE_KEY = "interview_judge_cache_v1";
-  const CACHE_MAX = 150;                 // આટલાં પરિણામ સાચવો, પછી જૂનાં કાઢો
+  const CACHE_MAX = 150;                 // keep this many results, then drop the oldest
 
   const CRIT_KEYS = ["communication", "sentences", "thought", "speechGrammar", "accuracy", "coherence"];
 
-  /* ---------------- ચાલુ છે કે નહીં ---------------- */
+  /* ---------------- Is it on? ---------------- */
 
   function enabled() { return !!JUDGE_URL; }
 
-  /* વિદ્યાર્થીએ «હા» કહ્યું છે? ડિફોલ્ટ ના. */
+  /* Has the student said yes? No by default. */
   function consented() { return !!(state && state.settings && state.settings.ai); }
 
-  /* ઇન્ટરનેટ ન હોય તો મોડેલને પૂછવાનો અર્થ નથી — વિદ્યાર્થી ૨૫ સેકન્ડ
-     રાહ જુએ અને છેવટે ઓફલાઇન ગુણ જ મળે. એના કરતાં તરત જ ઓફલાઇન. */
+  /* With no internet there is no point asking the model - the student waits
+     25 seconds and ends up with the offline score anyway. Go offline at once. */
   function online() { return typeof navigator === "undefined" || navigator.onLine !== false; }
 
   function active() { return enabled() && consented() && online(); }
 
   function setConsent(on) {
     state.settings.ai = !!on;
-    if (!on) clearCache();               // «ના» કહે તો સાચવેલાં પરિણામ પણ જાય
+    if (!on) clearCache();               // saying no also drops the cached results
     save();
   }
 
-  /* ---------------- સાચવેલાં પરિણામ ----------------
-     પ્રશ્ન બેંક નાની છે અને મફત મર્યાદા ટૂંકી, તેથી એક જ પ્રશ્ન-જવાબ
-     ફરી આવે તો મોડેલને બીજી વાર પૂછતા નથી. ફક્ત આ ફોનમાં રહે છે. */
+  /* ---------------- Cached results ----------------
+     The question bank is small and the free tier is tight, so the model is not
+     asked twice for the same question-and-answer pair. Stays on this phone only. */
 
   function readCache() {
     try { return JSON.parse(localStorage.getItem(CACHE_KEY)) || {}; } catch (e) { return {}; }
@@ -73,12 +74,12 @@ const Judge = (function () {
 
   function clearCache() { try { localStorage.removeItem(CACHE_KEY); } catch (e) {} }
 
-  /* લખાણને સરખાવવા લાયક બનાવો — નાના અક્ષર, વધારાની જગ્યા અને વિરામ કાઢીને */
+  /* Make text comparable - lower case, no punctuation, no extra spaces */
   function norm(s) {
     return String(s || "").toLowerCase().replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
   }
 
-  /* ટૂંકી ચાવી — આખું લખાણ ચાવી તરીકે રાખીએ તો સંગ્રહ ભરાઈ જાય */
+  /* A short key - using the whole text as the key would fill up storage */
   function hash(s) {
     let h = 5381;
     for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
@@ -107,8 +108,8 @@ const Judge = (function () {
     writeCache(c);
   }
 
-  /* ---------------- મોડેલને શું મોકલવું ----------------
-     ઓળખ સાથે જતી નથી — નિયમ ૩ જુઓ. */
+  /* ---------------- What is sent to the model ----------------
+     No identity goes with it - see rule 3. */
 
   function payload(answer, question, mode, lang) {
     const kw = Array.isArray(question.kw)
@@ -128,9 +129,9 @@ const Judge = (function () {
     };
   }
 
-  /* ---------------- મોડેલનો જવાબ ભરોસાપાત્ર બનાવો ----------------
-     મોડેલ ગમે તે આકારનું લખાણ પાછું આપી શકે. તેથી દરેક ખાનું તપાસીએ
-     છીએ; જે ખોટું હોય તે છોડી દઈએ અને ત્યાં ઓફલાઇન ગુણ જ રહેવા દઈએ. */
+  /* ---------------- Making the model's reply trustworthy ----------------
+     The model can return text in any shape, so every field is checked; anything
+     malformed is dropped and the offline score is left in its place. */
 
   function num(v) {
     const n = typeof v === "number" ? v : parseFloat(v);
@@ -154,7 +155,7 @@ const Judge = (function () {
         if (n !== null) scores[k] = n;
       });
     }
-    // બધા છ માપદંડ ન આવ્યા હોય તો ગુણ વાપરવા નહીં — અડધું ભેળવવું ખોટું
+    // If all six criteria did not arrive, use none of them - a half merge is wrong
     const haveAll = CRIT_KEYS.every(k => scores[k] != null);
 
     const out = {
@@ -169,15 +170,15 @@ const Judge = (function () {
     return out;
   }
 
-  /* ---------------- ઓફલાઇન પરિણામ સાથે ભેળવો ----------------
-     આધાર હંમેશાં ઓફલાઇન પરિણામ જ રહે છે — તેમાં બધાં ખાનાં પાકાં હોય છે.
-     મોડેલે જે બરાબર આપ્યું હોય તે જ ઉપર ચડે. તેથી મોડેલ અડધું-પડધું
-     આપે તોય સ્ક્રીન પર કશું ખૂટતું નથી. */
+  /* ---------------- Merging with the offline result ----------------
+     The offline result is always the base - every field in it is sound. Only what
+     the model got right is layered on top. So even a half-formed model reply
+     leaves nothing missing on screen. */
 
   function merge(offline, judged) {
-    // ભરોસો ન રાખીએ: જે આવે તે પહેલાં ચાળી લઈએ. evaluate() પહેલેથી ચાળીને
-    // આપે છે, પણ merge બહારથી પણ બોલાવી શકાય — અને ત્યાં કાચો જવાબ આવે
-    // તો overall «undefined» થઈ જતું હતું. ચાળેલું ફરી ચાળવાથી બદલાતું નથી.
+    // Trust nothing: sanitise whatever arrives. evaluate() already hands over
+    // sanitised data, but merge can be called from outside too - and a raw reply
+    // there used to leave overall as undefined. Sanitising twice changes nothing.
     judged = clean(judged);
     if (!judged) return offline;
 
@@ -187,7 +188,7 @@ const Judge = (function () {
 
     if (judged.scores) {
       CRIT_KEYS.forEach(k => { r.scores[k] = judged.scores[k]; });
-      // સૌથી નબળો માપદંડ નવા ગુણ પ્રમાણે ફરી શોધો
+      // Find the weakest criterion again, using the new scores
       let weakest = CRIT_KEYS[0];
       CRIT_KEYS.forEach(k => { if (r.scores[k] < r.scores[weakest]) weakest = k; });
       r.weakest = weakest;
@@ -196,17 +197,17 @@ const Judge = (function () {
     if (judged.overall !== null) r.overall = judged.overall;
     if (judged.advice) r.advice = judged.advice;
 
-    /* સલામતીનો દરવાજો ઓફલાઇન જ રહે છે. ફરજિયાત મુદ્દો ચૂક્યા હોય તો
-       મોડેલ ગમે તે કહે, કુલ ગુણ ૬ થી વધુ ન મળે — ઉદ્યોગમાં આ મુદ્દા
-       ચૂકવાથી નોકરી મળતી નથી, અને એ નિયમ મોડેલને સોંપવો નથી. */
+    /* The safety gate stays offline. If a mandatory point was missed, the score
+       is capped at 6 whatever the model says - missing these costs you the job in
+       industry, and that rule is not being handed to a model. */
     if (offline.missingMust && offline.missingMust.length && r.overall > 6) r.overall = 6;
 
     r.byAi = true;
     return r;
   }
 
-  /* ---------------- મુખ્ય કામ ----------------
-     હંમેશાં Promise આપે છે અને કદી નકારતું નથી. નિષ્ફળ જાય તો null. */
+  /* ---------------- The main job ----------------
+     Always returns a Promise and never rejects. On failure, null. */
 
   function evaluate(answer, question, mode, lang) {
     if (!active() || !answer || !question) return Promise.resolve(null);

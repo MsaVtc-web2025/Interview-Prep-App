@@ -93,8 +93,9 @@ code{background:#eef2fa;padding:1px 5px;border-radius:5px;font-size:12.5px}
 </div>
 
 <script>
-/* આ પાનું એપનો ભાગ નથી — ફક્ત તપાસ માટે. એપ જે રીતે વોઇસ પસંદ કરે છે
-   તે જ ક્રમ અહીં વાપર્યો છે, જેથી «એપ કયો વોઇસ વાપરશે» સાચું દેખાય. */
+/* This page is not part of the app - it is for inspection only. It uses the
+   same selection order the app does, so "which voice the app will use" is
+   shown accurately. */
 "use strict";
 
 var SAMPLES = {
@@ -103,7 +104,7 @@ var SAMPLES = {
   hi: "आपको दस में से छह दशमलव आठ अंक मिले। पूरे वाक्य में जवाब दें और थोड़ा धीरे बोलें।"
 };
 
-/* speech.js માંનો એ જ ક્રમ — બદલો તો બંને જગ્યાએ બદલજો */
+/* The same order as in speech.js - change it in both places */
 var VOICE_PREFS = {
   en: ["en-in", "en-gb", "en-au", "en-us", "en"],
   gu: ["gu-in", "gu"],
@@ -117,7 +118,7 @@ var speaking = null;
 
 function norm(l) { return String(l || "").toLowerCase().replace("_", "-"); }
 
-/* નામથી ઓળખીતા સારા વોઇસ — speech.js માંનું જ VOICE_NAMES */
+/* Good voices recognised by name - the VOICE_NAMES from speech.js */
 var VOICE_NAMES = {
   hi: ["google हिन्दी", "google hindi"],
   gu: ["google ગુજરાતી", "google gujarati"]
@@ -133,7 +134,7 @@ function byName(list, names) {
   return null;
 }
 
-/* speech.js નો જ ક્રમ: ભાષા → offline પહેલો → નામથી ઓળખીતો → જે મળે તે */
+/* The order from speech.js: language -> offline first -> known by name -> whatever is there */
 function pickFor(lang) {
   var prefs = VOICE_PREFS[lang] || [];
   var names = VOICE_NAMES[lang];
@@ -256,7 +257,7 @@ function refresh() {
   render();
 }
 
-/* વોઇસની યાદી પહેલી વાર ખાલી આવે છે — એપ પણ આ જ રીતે રાહ જુએ છે */
+/* The voice list comes back empty at first - the app waits the same way */
 if (synth) {
   refresh();
   if (synth.addEventListener) synth.addEventListener("voiceschanged", refresh);

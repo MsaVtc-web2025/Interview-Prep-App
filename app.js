@@ -1,4 +1,5 @@
-/* એપ લોજિક — સ્ક્રીન, કોર્સ પસંદગી, અવતાર સાથેનો વાણી-સંવાદ, પરિણામ અને પ્રગતિ */
+/* App logic - screens, course selection, the spoken exchange with the avatar,
+   results and progress */
 "use strict";
 
 const STORE = "interview_practice_gu_v2";
@@ -10,8 +11,8 @@ const esc = s => String(s == null ? "" : s)
   .replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
 const colorFor = n => n >= 7.5 ? "var(--good)" : n >= 5 ? "var(--mid)" : "var(--low)";
 
-/* દરેક જવાબની પોતાની ઓળખ — બૅકઅપ બમણો ન થાય તે માટે.
-   randomUUID ફક્ત https/localhost પર મળે છે, તેથી પડતી વ્યવસ્થા રાખી છે. */
+/* A unique id per answer, so a backup never duplicates one.
+   randomUUID exists only on https/localhost, hence the fallback. */
 function newCid() {
   try {
     if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
@@ -19,38 +20,38 @@ function newCid() {
   return "c" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10);
 }
 
-/* ---------------- સંગ્રહ ---------------- */
+/* ---------------- Storage ---------------- */
 
-/* ---------------- Google સાઇન-ઇન ----------------
+/* ---------------- Google sign-in ----------------
 
-   Client ID જાહેર માહિતી છે — તે દરેક વેબ એપની સ્ક્રિપ્ટમાં દેખાય જ છે.
-   (Client SECRET કદી અહીં ન મુકવું — તે ફક્ત સર્વર પર રહે.)
+   The Client ID is public information - it appears in the script of every web
+   app. (The Client SECRET must never go here; it belongs on a server only.)
 
-   ⚠ ચાલવા માટે Google Cloud Console → APIs & Services → Credentials →
-   (આ OAuth client) → «Authorized JavaScript origins» માં એપનું સરનામું
-   નોંધાયેલું હોવું જરૂરી છે. ફક્ત scheme + host (+ port) — રસ્તો (path) નહીં:
-       https://msavtc-web2025.github.io      ✓ આમ લખો
-       https://msavtc-web2025.github.io/Interview-Prep-App/   ✗ Google સ્વીકારશે નહીં
-       http://localhost:8123                 (કમ્પ્યુટર પર ટેસ્ટ કરવા માટે)
-   સરનામું નોંધ્યું ન હોય તો Google «Error 400: origin_mismatch» આપે છે.
+   For this to work, the app's address must be registered under Google Cloud
+   Console -> APIs & Services -> Credentials -> (this OAuth client) ->
+   "Authorized JavaScript origins". Scheme + host (+ port) only, never a path:
+       https://msavtc-web2025.github.io      correct
+       https://msavtc-web2025.github.io/Interview-Prep-App/   Google rejects this
+       http://localhost:8123                 (for testing on a computer)
+   An unregistered address gives "Error 400: origin_mismatch".
 
-   આ પ્રવાહમાં «Authorized redirect URIs» ની જરૂર નથી — બ્રાઉઝર જ ટોકન
-   મેળવે છે, કોઈ સર્વર પર પાછું જવાનું નથી.
+   This flow needs no "Authorized redirect URIs" - the browser itself receives
+   the token and there is no server to return to.
 
-   OAuth consent screen «Testing» માં હોય તો ફક્ત «Test users» માં નોંધેલા
-   ખાતાં સાઇન-ઇન કરી શકે. બધા વિદ્યાર્થીઓ માટે «Publish app» દબાવવું પડે
-   (openid/email/profile બિન-સંવેદનશીલ છે, તેથી ચકાસણીની જરૂર નથી).
+   While the OAuth consent screen is in "Testing", only accounts listed under
+   "Test users" can sign in. Press "Publish app" to open it to every student
+   (openid/email/profile are non-sensitive, so no verification is required).
 
-   નોંધ: આર્ટિફેક્ટની અંદર Google ની સ્ક્રિપ્ટ બ્લોક થાય છે, તેથી બટન ત્યાં
-   દેખાતું નથી — ત્યાં નામનું ખાનું વાપરો. તમારા પોતાના સરનામે જ ચાલશે.
+   Note: Google's script is blocked inside an artifact, so the button does not
+   appear there - use the name field instead. It works on your own address.
 
-   ટોકનમાંથી ફક્ત નામ વાંચીએ છીએ. ઈમેલ કે ફોટો સાચવતા નથી, અને કોઈ
-   પરવાનગી કે સલામતી આ ટોકન પર આધારિત નથી. */
+   Only the name is read out of the token. No email or photo is stored, and no
+   permission or security decision rests on this token. */
 const GOOGLE_CLIENT_ID = "604155826405-15oddjk71jr042kbe4bk3j02kdgt547e.apps.googleusercontent.com";
 
-/* hands ડિફોલ્ટ બંધ: માઇક જાતે ચાલુ થાય તો વર્ગખંડમાં બાજુવાળાનો
-   અવાજ પકડાય છે. ai ડિફોલ્ટ ચાલુ: ઓફલાઇન ગુણ શબ્દો ગણે છે, અને
-   મોટા ભાગના વિદ્યાર્થી સેટિંગ ખોલતા જ નથી. */
+/* hands defaults to off: a mic that opens by itself picks up the student
+   sitting next to you in a classroom. ai defaults to on: the offline score only
+   counts words, and most students never open the settings at all. */
 const DEFAULTS = { hands: false, ask: true, speakFb: true, rate: 0.92, silence: 3000, lang: "en", ai: true, dflt2: true };
 
 let state = { settings: Object.assign({}, DEFAULTS), courses: {}, user: null };
@@ -62,9 +63,9 @@ function loadState() {
       const p = JSON.parse(raw);
       if (p && typeof p === "object") {
         state.settings = Object.assign({}, DEFAULTS, p.settings || {});
-        /* પહેલાં સાચવેલું સેટિંગ ડિફોલ્ટ કરતાં ઉપર ચડે છે, તેથી જૂના ફોન
-           પર નવો ડિફોલ્ટ કદી લાગુ ન થાય. બંને સુવિધા આજે જ ખૂલી છે,
-           એટલે કોઈએ જાણીજોઈને પસંદ કરેલું નથી — એક વાર સુધારી લઈએ. */
+        /* A previously saved setting overrides the default, so a new default
+           would never reach an existing phone. Both features shipped today, so
+           nobody has deliberately chosen either - correct them once. */
         if (!p.settings || p.settings.dflt2 !== true) {
           state.settings.hands = false;
           state.settings.ai = true;
@@ -75,7 +76,7 @@ function loadState() {
         return;
       }
     }
-    // જૂની આવૃત્તિનો ડેટા સાચવી લો (પહેલાં ફક્ત ઇન્ટરવ્યુ વિભાગ હતો)
+    // Carry over data from the old version (which had only the interview section)
     const old = localStorage.getItem(OLD_STORE);
     if (old) {
       const p = JSON.parse(old);
@@ -100,13 +101,13 @@ function bucket(id) {
   return b;
 }
 
-/* ---------------- વપરાશકર્તાનું નામ ---------------- */
+/* ---------------- User name ---------------- */
 
 function userName() {
   return (state.user && state.user.name) ? String(state.user.name).trim() : "";
 }
 
-/* નામનો પહેલો શબ્દ — ઇન્ટરવ્યુમાં «Hello Ravi» એમ સંબોધવા માટે */
+/* First word of the name - for greeting them as "Hello Ravi" in the interview */
 function firstName() {
   const n = userName();
   return n ? n.split(/\s+/)[0] : "";
@@ -124,20 +125,20 @@ function allHistory() {
   return out;
 }
 
-/* ---------------- ચાલુ સત્ર ---------------- */
+/* ---------------- Current session ---------------- */
 
-let course = null;      // ચાલુ કોર્સ
-let current = null;      // ચાલુ પ્રશ્ન
+let course = null;      // the current course
+let current = null;      // the current question
 let phase = "idle";      // idle · asking · listening · scoring · feedback
 let lastResult = null;
-let micWatch = null;     // માઇક ચાલુ છે પણ કંઈ સંભળાતું નથી તે પકડવા
+let micWatch = null;     // catches a mic that is on but hearing nothing
 
-/* ---------------- પ્રશ્નનું ઘડિયાળ ----------------
+/* ---------------- Question clock ----------------
 
-   દરેક જવાબ પર કેટલો સમય ગયો તે નોંધીએ છીએ, જેથી ડૅશબોર્ડ «કેટલો સમય
-   પ્રેક્ટિસ કરી» દેખાડી શકે. ફક્ત ખરો સમય ગણાય — એપ પાછળ જાય કે વિદ્યાર્થી
-   બીજા ટૅબ પર જાય તો ઘડિયાળ થોભી જાય, નહીં તો રાતભર ખૂલી રહેલી એપ
-   ખોટા કલાકો ઉમેરી દે. */
+   Records how long each answer took, so the dashboard can show how much time
+   was spent practising. Only real time counts - the clock pauses when the app
+   goes to the background or the student switches tabs, otherwise an app left
+   open overnight would add hours that never happened. */
 
 let qClock = { start: 0, acc: 0 };
 
@@ -147,15 +148,15 @@ function qClockPause() {
 }
 function qClockResume() { if (!qClock.start) qClock.start = Date.now(); }
 
-/* આ પ્રશ્ન પર ગયેલી સેકન્ડ — એક જવાબ માટે વધુમાં વધુ દસ મિનિટ ગણીએ */
+/* Seconds spent on this question - at most ten minutes for a single answer */
 function qClockSecs() {
   const acc = qClock.acc + (qClock.start ? Date.now() - qClock.start : 0);
   return Math.min(Math.round(acc / 1000), Stats.MAX_SECS);
 }
 
-/* ---------------- હોમ (વિશ્લેષણ) અને પ્રેક્ટિસ ટૅબ ---------------- */
+/* ---------------- Home (stats) and practice tabs ---------------- */
 
-/* બંને ટૅબ ફરી લખો — જવાબ તપાસાય કે ભાષા બદલાય ત્યારે બોલાવાય છે */
+/* Redraw both tabs - called when an answer is scored or the language changes */
 function renderDash() {
   renderTiles();
   renderStats();
@@ -175,7 +176,7 @@ function renderTiles() {
     const meta = n
       ? '<div class="mt done">' + esc(t("tile.done", { n: n, a: avg.toFixed(1) })) + "</div>"
       : '<div class="mt">' + esc(t("tile.questions", { n: c.questions.length })) + "</div>";
-    // ઇમોજી પાછળનો પેસ્ટલ રંગ — કોર્સના ક્રમ પ્રમાણે ફરતો રહે
+    // Pastel colour behind the emoji - cycles with the course's position
     return '<button class="tile" data-id="' + esc(c.id) + '">' +
       '<div class="chip t' + (i % 8 + 1) + '">' + esc(c.icon) + "</div>" +
       '<div class="nm">' + esc(tCourse(c, "name")) + "</div>" +
@@ -187,7 +188,7 @@ function renderTiles() {
   });
 }
 
-/* સૌથી નબળો માપદંડ. mode આપ્યો હોય તો તકનીકી કોર્સનું નામ વપરાય. */
+/* The weakest criterion. Pass mode to get the technical course's label. */
 function weakestLabel(h, mode) {
   const avgs = CRITERIA.map(c => ({
     label: criterionLabel(c, mode),
@@ -197,13 +198,14 @@ function weakestLabel(h, mode) {
   return avgs[0].label;
 }
 
-/* ---------------- ભાષા ---------------- */
+/* ---------------- Language ---------------- */
 
-/* પ્રશ્નનું કોચિંગ લખાણ (gu = સમજૂતી, tip = સૂચન) ચાલુ ભાષામાં.
+/* The question's coaching text (gu = explanation, tip = hint) in the current
+   language.
 
-   પ્રશ્નમાં આ રીતે ઉમેરો તો બીજી ભાષા વપરાશે:
-     i18n: { en: { gu: "…", tip: "…" }, hi: { gu: "…", tip: "…" } }
-   ન ઉમેરો તો મૂળ ગુજરાતી લખાણ દેખાય — એપ તૂટતી નથી. */
+   Add this to a question and the other language is used:
+     i18n: { en: { gu: "...", tip: "..." }, hi: { gu: "...", tip: "..." } }
+   Leave it out and the original Gujarati shows - the app does not break. */
 function qField(q, field) {
   const lang = getLang();
   if (lang !== "gu" && q.i18n && q.i18n[lang] && q.i18n[lang][field] != null) {
@@ -212,40 +214,40 @@ function qField(q, field) {
   return q[field];
 }
 
-/* ---------------- પ્રશ્નની ભાષા ----------------
+/* ---------------- Question language ----------------
 
-   મૂળ નિયમ હજી એ જ છે: વિદ્યાર્થી જવાબ અંગ્રેજીમાં જ આપે છે અને તપાસ
-   અંગ્રેજી પર જ થાય છે. પણ પ્રશ્ન સમજાય નહીં તો જવાબ આપી જ ન શકાય —
-   તેથી જે ભાષામાં એપ ચાલે છે તેમાં પ્રશ્નનો અનુવાદ હોય તો એ દેખાય છે
-   અને એ જ બોલાય છે.
+   The core rule is unchanged: the student answers in English and the scoring
+   runs on English. But a question you cannot understand is a question you
+   cannot answer - so if a translation exists in the app's current language, it
+   is the one shown and spoken.
 
-   અનુવાદ પ્રશ્નમાં આ રીતે મુકાય છે:
-       i18n: { hi: { q: "…" } }
-   ન હોય તો અંગ્રેજી પ્રશ્ન જ રહે — એપ કદી ખાલી દેખાતી નથી. */
+   A translation goes on the question like this:
+       i18n: { hi: { q: "..." } }
+   Without one the English question stays - the app never renders blank. */
 
-/* આ પ્રશ્ન ચાલુ ભાષામાં લખાયેલો — અનુવાદ ન હોય તો અંગ્રેજી */
+/* This question in the current language - English when there is no translation */
 function qText(q) {
   const lang = getLang();
   if (lang !== "en" && q && q.i18n && q.i18n[lang] && q.i18n[lang].q) return q.i18n[lang].q;
   return q ? q.q : "";
 }
 
-/* આ પ્રશ્નનો અનુવાદ છે? (દેખાવ માટે — લિપિ પ્રમાણે ફોન્ટ બદલવો પડે) */
+/* Does this question have a translation? (for display - the font changes with the script) */
 function qHasTranslation(q) {
   const lang = getLang();
   return lang !== "en" && !!(q && q.i18n && q.i18n[lang] && q.i18n[lang].q);
 }
 
-/* પ્રશ્નનું લખાણ સ્ક્રીન પર મૂકો.
-   .lat વર્ગ લેટિન ફોન્ટ પકડી રાખે છે — દેવનાગરી/ગુજરાતી અનુવાદ હોય
-   ત્યારે એ કાઢી નાખવો પડે, નહીં તો અક્ષર તૂટેલા દેખાય. */
+/* Put the question text on screen.
+   The .lat class pins the Latin font - it has to come off for a Devanagari or
+   Gujarati translation, otherwise the glyphs render broken. */
 function paintQuestionText() {
   if (!current) return;
   const el = $("qtext");
   el.textContent = qText(current);
   el.classList.toggle("lat", !qHasTranslation(current));
 
-  /* પહેલા પ્રશ્ન પહેલાંનું અભિવાદન — હવે ચાલુ ભાષામાં */
+  /* The greeting before the first question - now in the current language */
   const g = greetingLine();
   const ge = $("qgreet");
   ge.hidden = !g;
@@ -253,23 +255,24 @@ function paintQuestionText() {
   ge.classList.toggle("lat", getLang() === "en");
 }
 
-/* પ્રશ્ન કઈ ભાષામાં બોલવો.
-   અનુવાદ હોય અને એ ભાષાનો વોઇસ ફોનમાં હોય તો જ એ ભાષામાં બોલાય.
-   વોઇસ ન હોય તો અંગ્રેજીમાં બોલીએ — ચૂપ રહેવા કરતાં એ સારું, અને
-   સ્ક્રીન પર અનુવાદ તો દેખાતો જ રહે છે. */
+/* Which language to speak the question in.
+   Only spoken in another language when a translation exists AND the phone has a
+   voice for it. With no voice we speak English - better than silence, and the
+   translation stays visible on screen either way. */
 function spokenQuestionLang() {
   const lang = getLang();
   if (qHasTranslation(current) && Speech.hasVoice(lang)) return lang;
   return "en";
 }
 
-/* આ પ્રશ્નની સમજૂતી ભાષાંતર થઈ નથી? (તો વિદ્યાર્થીને જણાવીએ) */
+/* Is this question's explanation untranslated? (then we tell the student) */
 function qIsGuOnly(q) {
   const lang = getLang();
   return lang !== "gu" && !(q.i18n && q.i18n[lang] && q.i18n[lang].gu != null);
 }
 
-/* ભાષાની પસંદગી બે જગ્યાએ છે — હોમના તળિયે અને સેટિંગમાં. બંને સાથે રંગાય. */
+/* The language picker appears twice - at the foot of home and in settings.
+   Both are painted together. */
 function paintLang() {
   ["langSeg", "langSeg2"].forEach(id => {
     Array.prototype.forEach.call($(id).children, b =>
@@ -278,7 +281,7 @@ function paintLang() {
   $("setLangVal").textContent = langDef(getLang()).label;
 }
 
-/* ભાષા બદલાય ત્યારે આખી સ્ક્રીન ફરી લખો */
+/* Redraw the whole screen when the language changes */
 function relocalize() {
   setLang(state.settings.lang);
   applyI18n();
@@ -287,7 +290,7 @@ function relocalize() {
   if (course) {
     renderBrief();
     $("runName").textContent = tCourse(course, "name");
-    // ભાષા બદલાય તો પ્રશ્ન પણ એ ભાષામાં ફરી લખાય
+    // A language change redraws the question in that language too
     if (current) { $("qcat").textContent = tCat(current.cat); paintQuestionText(); }
     renderProgress();
     if (lastResult) showResult(lastResult);
@@ -296,21 +299,21 @@ function relocalize() {
   if (!$("scProfile").hidden) paintSettings();
 }
 
-/* ---------------- સ્ક્રીન બદલવી ---------------- */
+/* ---------------- Switching screens ---------------- */
 
 const SC_ID = {
   splash: "scSplash", welcome: "scWelcome", stats: "scStats", practice: "scPractice",
   brief: "scBrief", run: "scRun", profile: "scProfile", help: "scHelp"
 };
-/* તળિયેની પટ્ટીવાળા ત્રણ ટૅબ — બાકીની સ્ક્રીન પર પટ્ટી છુપાય છે */
+/* The three tabs with the bottom bar - the bar hides on every other screen */
 const TABS = ["stats", "practice", "profile"];
 
-let curScreen = "splash";        // હાલ કઈ સ્ક્રીન ખૂલી છે — «પાછળ» બટન માટે
+let curScreen = "splash";        // which screen is open - used by the back button
 
 function show(which) {
   Object.keys(SC_ID).forEach(s => { $(SC_ID[s]).hidden = s !== which; });
   curScreen = which;
-  armBack();                  // ફોનનું «પાછળ» બટન એપની અંદર જ રહે
+  armBack();                  // keep the phone's back button inside the app
 
   const isTab = TABS.indexOf(which) >= 0;
   $("tabbar").hidden = !isTab;
@@ -319,14 +322,14 @@ function show(which) {
     Array.prototype.forEach.call($("tabbar").querySelectorAll(".tab"), b =>
       b.classList.toggle("on", b.getAttribute("data-tab") === which));
   }
-  // પ્રેક્ટિસ સ્ક્રીન છોડીએ તો પ્રશ્નનું ઘડિયાળ થોભાવો
+  // Leaving the practice screen pauses the question clock
   if (which === "run") paintAiTog();
   if (which !== "run") qClockPause();
   window.scrollTo(0, 0);
-  reloadIfIdle();            // બાકી હોય તો નવી આવૃત્તિ અહીં લાગુ થાય
+  reloadIfIdle();            // a pending new version is applied here
 }
 
-/* ટૅબ પર જાઓ — જે ટૅબ ખૂલે તેની માહિતી તાજી કરીએ */
+/* Go to a tab - refresh whatever that tab shows */
 function goTab(tab) {
   Speech.stopAll();
   if (tab === "stats") renderStats();
@@ -335,33 +338,32 @@ function goTab(tab) {
   show(tab);
 }
 
-/* ---------------- ફોનનું «પાછળ» બટન ----------------
+/* ---------------- The phone's back button ----------------
 
-   આ એક જ પાનાની એપ છે, તેથી એન્ડ્રોઇડનું «પાછળ» બટન સીધું એપ બંધ કરી
-   દેતું હતું — ભલે વિદ્યાર્થી ઇન્ટરવ્યુની વચ્ચે હોય. હવે એ સ્ક્રીન પરના
-   «પાછળ» બટન જેવું જ કામ કરે છે.
+   This is a single-page app, so Android's back button used to close it outright
+   - even mid-interview. It now behaves like the back button on the screen itself.
 
-   રીત: history માં આપણી એક વધારાની નોંધ મૂકી રાખીએ છીએ. «પાછળ» એ નોંધ
-   ખાય છે અને આપણને popstate મળે છે — એટલે બ્રાઉઝર એપ છોડતું નથી, અને
-   આપણે જાતે એક પગથિયું ઉપર જઈએ છીએ. ઉપર જતાં show() ફરી નોંધ મૂકી દે
-   છે, તેથી પછીનું «પાછળ» પણ પકડાય.
+   How: we keep one extra entry of our own in history. Back consumes that entry
+   and we get popstate - so the browser does not leave the app, and we move up
+   one step ourselves. Moving up calls show(), which pushes the entry again, so
+   the next back press is caught too.
 
-   તળિયેની ત્રણ ટૅબ મૂળ સ્ક્રીન છે — ત્યાંથી ઉપર જવાનું કંઈ નથી. ત્યાં
-   નોંધ ફરી મૂકતા નથી અને «ફરી દબાવો તો એપ બંધ» એટલું કહીએ છીએ, એટલે
-   એન્ડ્રોઇડની જાણીતી «બે વાર દબાવો» રીત મળી રહે અને ભૂલથી એપ બંધ ન થાય. */
+   The three bottom tabs are root screens - there is nowhere above them. There we
+   do not push the entry again and simply say "press again to exit", which gives
+   the familiar Android double-press and stops accidental exits. */
 
-/* દરેક અંદરની સ્ક્રીન પરથી «પાછળ» ક્યાં લઈ જાય — સ્ક્રીન પરના પોતાના
-   «પાછળ» બટન જે કરે છે તે જ, જેથી બંને એકસરખાં વર્તે. */
+/* Where back goes from each inner screen - exactly what that screen's own back
+   button does, so the two behave identically. */
 const BACK_TO = {
-  splash:  null,                                                  // સૌથી પહેલી સ્ક્રીન
+  splash:  null,                                                  // the very first screen
   welcome: () => { show(state.user ? "practice" : "splash"); },
-  brief:   () => leaveCourse(),      // $("btnBriefBack") જે કરે છે તે જ
-  run:     () => leaveCourse(),      // $("btnBack") જે કરે છે તે જ
-  help:    () => show("profile")     // $("btnHelpBack") જે કરે છે તે જ
+  brief:   () => leaveCourse(),      // same as $("btnBriefBack")
+  run:     () => leaveCourse(),      // same as $("btnBack")
+  help:    () => show("profile")     // same as $("btnHelpBack")
 };
 
-/* history માં આપણી નોંધ ન હોય તો મૂકી દો. હોય તો બીજી ઉમેરતા નથી —
-   નહીં તો એક «પાછળ» માટે ઘણી વાર દબાવવું પડે. */
+/* Push our entry if history does not already hold one. Never push a second -
+   that would make one "back" take several presses. */
 function armBack() {
   try {
     if (!(history.state && history.state.appBack)) history.pushState({ appBack: true }, "");
@@ -370,12 +372,12 @@ function armBack() {
 
 window.addEventListener("popstate", () => {
   const up = BACK_TO[curScreen];
-  if (up) { up(); return; }          // up() → show() → armBack() ફરી નોંધ મૂકે
-  // મૂળ સ્ક્રીન — નોંધ ફરી મૂકતા નથી, તેથી હવે પછીનું «પાછળ» એપ બંધ કરશે
+  if (up) { up(); return; }          // up() -> show() -> armBack() pushes it again
+  // A root screen - we do not push again, so the next back press exits the app
   toast(t("nav.exitHint"));
 });
 
-/* તળિયે થોડી વાર દેખાતો સંદેશો */
+/* A message that appears briefly at the bottom */
 let toastTimer = null;
 
 function toast(msg) {
@@ -383,7 +385,7 @@ function toast(msg) {
   if (!el) return;
   $("toastMsg").textContent = msg;
   el.hidden = false;
-  // hidden કાઢ્યા પછીની ફ્રેમમાં વર્ગ ઉમેરીએ તો જ સરકવાની અસર દેખાય
+  // The slide only animates if the class is added a frame after hidden comes off
   requestAnimationFrame(() => el.classList.add("on"));
   if (toastTimer) clearTimeout(toastTimer);
   toastTimer = setTimeout(() => {
@@ -392,7 +394,7 @@ function toast(msg) {
   }, 2200);
 }
 
-/* ---------------- પહેલી વારની સ્ક્રીન (નામ) ---------------- */
+/* ---------------- First-run screen (name) ---------------- */
 
 function openWelcome() {
   $("uname").value = userName();
@@ -402,25 +404,25 @@ function openWelcome() {
 
 function finishWelcome(name, via) {
   setUser(name, via || "typed");
-  relocalize();          // «નમસ્તે, રવિ» વગેરે ફરી લખાય
+  relocalize();          // redraws "Hello, Ravi" and the rest
   show("practice");
 }
 
-/* Google સાઇન-ઇન — GOOGLE_CLIENT_ID ભરેલો હોય તો જ બટન દેખાય.
-   ટોકનમાંથી ફક્ત નામ વાંચીએ છીએ; કોઈ પરવાનગી એના પર આધારિત નથી,
-   તેથી અહીં ટોકનની ખરાઈ કરવાની જરૂર નથી. */
+/* Google sign-in - the button appears only when GOOGLE_CLIENT_ID is filled in.
+   Only the name is read from the token; no permission rests on it, so there is
+   no need to verify the token here. */
 let googleLoading = false;
 
 function initGoogle() {
   if (!GOOGLE_CLIENT_ID) return;
   $("gerr").hidden = true;
 
-  // સ્ક્રિપ્ટ પહેલેથી આવી ગઈ હોય તો ફક્ત બટન ફરી દોરો
+  // Script already loaded - just redraw the button
   if (window.google && window.google.accounts && window.google.accounts.id) {
     renderGoogleButton();
     return;
   }
-  if (googleLoading) return;         // બે વાર સ્ક્રિપ્ટ ન ઉમેરો
+  if (googleLoading) return;         // do not add the script twice
   googleLoading = true;
 
   const s = document.createElement("script");
@@ -428,23 +430,23 @@ function initGoogle() {
   s.async = true;
   s.defer = true;
   s.onload = () => { googleLoading = false; renderGoogleButton(); };
-  /* સ્ક્રિપ્ટ બ્લોક થાય કે ઇન્ટરનેટ ન હોય તો ચૂપચાપ નામના ખાના પર જ રહો —
-     Google વગર પણ એપ પૂરેપૂરી ચાલે છે. */
+  /* If the script is blocked or there is no internet, fall back quietly to the
+     name field - the app works completely without Google. */
   s.onerror = () => { googleLoading = false; $("gwrap").hidden = true; };
   document.head.appendChild(s);
 }
 
 function renderGoogleButton() {
   try {
-    /* ખાનું પહેલાં દેખાડો: છુપાયેલા (display:none) ખાનામાં Google બટન
-       પોતાનું માપ ખોટું ગણે છે અને કોઈ વાર દેખાતું જ નથી. */
+    /* Show the wrapper first: inside a display:none element the Google button
+       measures itself wrongly and sometimes never appears at all. */
     $("gwrap").hidden = false;
     $("gbtn").innerHTML = "";
 
     window.google.accounts.id.initialize({
       client_id: GOOGLE_CLIENT_ID,
       callback: onGoogleCredential,
-      auto_select: false,          // જાતે સાઇન-ઇન ન કરો — વિદ્યાર્થી પોતે દબાવે
+      auto_select: false,          // never sign in automatically - the student presses it
       cancel_on_tap_outside: true,
       ux_mode: "popup",
       error_callback: onGoogleError
@@ -458,11 +460,12 @@ function renderGoogleButton() {
   }
 }
 
-/* Google ના પડી ભાંગે તો વિદ્યાર્થીને અટકવા ન દો — નામ ટાઇપ કરી શકાય છે.
-   ખરી ભૂલ કન્સોલમાં જ રાખીએ; વિદ્યાર્થીને «origin_mismatch» કહેવાનો અર્થ નથી.
+/* If Google falls over, do not leave the student stuck - they can type a name.
+   Keep the real error in the console; telling a student "origin_mismatch" helps
+   nobody.
 
-   વિદ્યાર્થીએ પોતે પૉપ-અપ બંધ કર્યું હોય (popup_closed) તો એ ભૂલ નથી —
-   એમાં કંઈ કહેવાનું નથી. */
+   A popup the student closed themselves (popup_closed) is not an error - there
+   is nothing to report. */
 function onGoogleError(err) {
   const type = (err && (err.type || err.message)) || "unknown";
   if (type === "popup_closed") return;
@@ -471,7 +474,7 @@ function onGoogleError(err) {
   $("gerr").textContent = t("err.google");
 }
 
-/* Google માંથી ફક્ત નામ લઈએ — ઈમેલ કે ફોટો સાચવતા નથી */
+/* Take only the name from Google - no email or photo is stored */
 function onGoogleCredential(res) {
   const p = res && res.credential ? decodeJwt(res.credential) : null;
   const name = p && (p.name || p.given_name);
@@ -482,18 +485,18 @@ function onGoogleCredential(res) {
 function decodeJwt(jwt) {
   try {
     let part = String(jwt).split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
-    while (part.length % 4) part += "=";       // base64url માં ગાદી હોતી નથી
+    while (part.length % 4) part += "=";       // base64url carries no padding
     const bin = atob(part);
     const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
     return JSON.parse(new TextDecoder().decode(bytes));
   } catch (e) { return null; }
 }
 
-/* કોર્સ પસંદ થાય → પહેલાં સૂચના સ્ક્રીન, પ્રશ્નો પછી */
+/* Course picked -> the briefing screen first, questions after */
 function openCourse(id) {
   const c = getCourse(id);
   if (!c) return;
-  Speech.prime();                 // વપરાશકર્તાનો ટૅપ — અહીં જ TTS જગાડી લેવો પડે
+  Speech.prime();                 // a user tap - TTS has to be woken right here
   course = c;
   renderBrief();
   show("brief");
@@ -507,16 +510,16 @@ function renderBrief() {
   const n = course.questions.length;
   $("briefIcon").textContent = course.icon;
   $("briefName").textContent = tCourse(course, "name");
-  // આશરે દોઢ મિનિટ પ્રતિ પ્રશ્ન — પુછાવું, જવાબ આપવો અને મૂલ્યાંકન વાંચવું
+  // Roughly a minute and a half per question - being asked, answering, reading feedback
   $("briefMeta").textContent = t("brief.meta", { n: n, m: Math.round(n * 1.5) });
   $("briefI3").textContent = t("brief.i3", { n: n });
 }
 
-/* «મૉક ઇન્ટરવ્યુ શરૂ કરો» — અહીંથી ખરી પ્રેક્ટિસ ચાલુ થાય */
+/* "Start mock interview" - the real practice begins here */
 function startInterview() {
   if (!course) { show("practice"); return; }
-  Speech.prime();                 // પહેલા speak() પહેલાંનો ટૅપ
-  // મૉક ઇન્ટરવ્યુ હંમેશા પહેલા પ્રશ્નથી શરૂ થાય
+  Speech.prime();                 // the tap that must precede the first speak()
+  // A mock interview always starts at the first question
   if (isSequential()) { bucket(course.id).pos = 0; save(); }
   $("runName").textContent = tCourse(course, "name");
   show("run");
@@ -535,25 +538,25 @@ function leaveCourse() {
   renderDash();
 }
 
-/* ---------------- પ્રશ્ન પસંદગી ---------------- */
+/* ---------------- Question selection ---------------- */
 
-/* ક્રમમાં ચાલતો કોર્સ છે? (ઇન્ટરવ્યુ સામાન્ય — order યાદી પ્રમાણે) */
+/* Is this a sequential course? (general interview - follows the order list) */
 function isSequential() { return !!(course && Array.isArray(course.order) && course.order.length); }
 
-/* છેલ્લો પ્રશ્ન પુછાઈ ગયો? */
+/* Have we reached the last question? */
 function atLastQuestion() {
   if (!isSequential()) return false;
   return bucket(course.id).pos >= course.order.length - 1;
 }
 
-/* advance = true હોય તો ક્રમમાં આગળ વધો; false હોય તો ચાલુ સ્થાન પર જ રહો */
+/* advance = true moves forward in the order; false stays where we are */
 function pickQuestion(advance) {
   const b = bucket(course.id);
   const qs = course.questions;
 
   if (isSequential()) {
     if (advance) b.pos++;
-    if (b.pos >= course.order.length) b.pos = 0;      // ફરી શરૂથી
+    if (b.pos >= course.order.length) b.pos = 0;      // wrap around to the start
     const id = course.order[b.pos];
     current = qs.filter(q => q.id === id)[0] || qs[b.pos];
     $("runProg").textContent = (b.pos + 1) + "/" + course.order.length;
@@ -577,15 +580,15 @@ function pickQuestion(advance) {
   $("btnType").classList.remove("on");
   lastResult = null;
 
-  qClockReset();          // આ પ્રશ્નનો સમય અહીંથી ગણાય
+  qClockReset();          // this question's timing starts here
   askQuestion();
 }
 
-/* અભિવાદન — ફક્ત ક્રમવાળા કોર્સના પહેલા પ્રશ્ન પર, અને greet:true હોય તો.
-   હંમેશા અંગ્રેજીમાં, કારણ કે ઇન્ટરવ્યુ લેનાર અંગ્રેજી બોલે છે. */
-/* lang આપો તો એ ભાષામાં — બોલવા માટે વોઇસની ભાષા વપરાય છે, જે
-   સ્ક્રીનની ભાષાથી અલગ હોઈ શકે. અંગ્રેજી વોઇસ દેવનાગરી વાંચે તો
-   ગરબડ થાય, તેથી બોલવાનું અને લખવાનું અલગ રાખ્યું છે. */
+/* The greeting - only on the first question of a sequential course, and only
+   when greet:true.
+   Pass lang to get it in that language - speaking uses the voice's language,
+   which can differ from the screen's. An English voice reading Devanagari comes
+   out as nonsense, so what is spoken and what is written are kept separate. */
 function greetingLine(lang) {
   if (!course || !course.greet || !isSequential()) return "";
   if (bucket(course.id).pos !== 0) return "";
@@ -594,7 +597,7 @@ function greetingLine(lang) {
   return fn ? tIn(l, "q.greetName", { name: fn }) : tIn(l, "q.greet");
 }
 
-/* ---------------- અવતાર પ્રશ્ન પૂછે ---------------- */
+/* ---------------- The avatar asks the question ---------------- */
 
 function askQuestion() {
 
@@ -606,16 +609,15 @@ function askQuestion() {
   }
   setPhase("asking");
   Speech.speak(spokenQuestion(), { lang: spokenQuestionLang(), rate: state.settings.rate }).then(() => {
-    if (phase !== "asking") return;                // વચ્ચે વિદ્યાર્થીએ કંઈ કર્યું
+    if (phase !== "asking") return;                // the student did something meanwhile
     if (state.settings.hands && Speech.micSupported()) beginListen();
     else setPhase("ready");
   });
 }
 
-/* અવતાર જે બોલે — અભિવાદન (હોય તો) અને પછી પ્રશ્ન */
-/* બોલવાનું આખું વાક્ય — અભિવાદન અને પ્રશ્ન, બંને એક જ ભાષામાં.
-   સ્ક્રીન પર જે દેખાય છે તે અલગ હોઈ શકે: અનુવાદ હોય પણ એ ભાષાનો વોઇસ
-   ન હોય તો સ્ક્રીન પર હિન્દી રહે અને બોલાય અંગ્રેજીમાં. */
+/* What the avatar says - the greeting (if any) and then the question, both in
+   the same language. What is on screen can differ: with a translation but no
+   voice for it, the screen stays Hindi while the speech is English. */
 function spokenQuestion() {
   const lang = spokenQuestionLang();
   const g = greetingLine(lang);
@@ -623,7 +625,7 @@ function spokenQuestion() {
   return (g ? g + " " : "") + q;
 }
 
-/* ---------------- વિદ્યાર્થી બોલે ---------------- */
+/* ---------------- The student speaks ---------------- */
 
 function beginListen() {
   if (!Speech.micSupported()) {
@@ -645,9 +647,10 @@ function beginListen() {
   if (!ok) setPhase("ready");
 }
 
-/* કેટલાક કમ્પ્યુટર બ્રાઉઝરમાં માઇક ચાલુ થાય પણ એક પણ શબ્દ પકડાતો નથી
-   (ખોટો માઇક પસંદ થયો હોય, કે બ્રાઉઝરમાં આ સેવા ન હોય). થોડી વાર પછી
-   વિદ્યાર્થીને જણાવીએ જેથી તે અટકી ન રહે — સાંભળવાનું ચાલુ જ રહે છે. */
+/* On some desktop browsers the mic opens but not a single word is picked up
+   (the wrong microphone is selected, or the browser has no such service). After
+   a while we tell the student so they are not left waiting - listening carries
+   on regardless. */
 function armMicWatch() {
   clearMicWatch();
   micWatch = setTimeout(() => {
@@ -678,7 +681,7 @@ function showTypeFallback(msg) {
   if (msg) { $("hint").className = "hint warn"; $("hint").textContent = msg; }
 }
 
-/* ---------------- જવાબ તપાસો ---------------- */
+/* ---------------- Score the answer ---------------- */
 
 function submit(text) {
   const ans = String(text || "").trim();
@@ -693,24 +696,24 @@ function submit(text) {
 
   setPhase("scoring");
   $("heard").textContent = ans;
-  const secs = qClockSecs();          // આ પ્રશ્ન પર ગયેલો ખરો સમય
+  const secs = qClockSecs();          // real time spent on this question
 
-  // તપાસ તરત થાય છે; અવતાર «વિચારે» તે દેખાડવા સહેજ થોભો
+  // Scoring is instant; a short pause so the avatar is seen to think
   setTimeout(() => {
-    // ઓફલાઇન ગુણ હંમેશાં પહેલાં ગણાય છે — AI ચાલુ હોય તોય. એ જ આધાર છે,
-    // અને AI ન પહોંચે તો એ જ પરિણામ દેખાય છે.
+    // The offline score is always computed first, even with AI on. It is the
+    // base, and it is what shows if the AI never arrives.
     const offline = scoreAnswer(ans, current, course.mode);
-    const q = current, c = course;      // વિદ્યાર્થી આગળ વધી જાય તો ઓળખવા માટે
+    const q = current, c = course;      // so we can tell if the student moved on
 
     function finish(r) {
-      if (current !== q || course !== c) return;   // વચ્ચે બીજો પ્રશ્ન આવી ગયો
+      if (current !== q || course !== c) return;   // another question came up meanwhile
       lastResult = r;
 
-      /* `q` અને `answer` ફક્ત આ ફોનમાં રહે છે. `cid` બૅકઅપ માટે છે —
-         સર્વર (user, cid) પર unique રાખે છે, તેથી કતાર ફરી મોકલાય તો પણ
-         બમણું થતું નથી. sync.js માં કયાં ખાનાં બહાર જાય તે જોઈ લો. */
+      /* `q` and `answer` stay on this phone. `cid` is for the backup - the
+         server keeps (user, cid) unique, so re-sending the queue never
+         duplicates anything. See sync.js for which fields actually leave. */
       bucket(c.id).history.push({
-        // પ્રશ્નની ઓળખ આંકડો છે, પણ ઓળખ તરીકે વાપરીએ છીએ — તેથી લખાણમાં
+        // The question id is a number but used as an identifier - store it as text
         ts: Date.now(), cid: newCid(), course: c.id,
         qid: q.id == null ? "" : String(q.id),
         q: q.q, cat: q.cat,
@@ -720,7 +723,7 @@ function submit(text) {
         byAi: !!r.byAi
       });
       save();
-      Sync.flush();                  // ચાલુ ન હોય તો કંઈ કરતું નથી
+      Sync.flush();                  // does nothing when backup is off
 
       showResult(r);
       renderProgress();
@@ -730,12 +733,12 @@ function submit(text) {
 
     if (!Judge.active()) { finish(offline); return; }
 
-    // AI વાંચે ત્યાં સુધી વિદ્યાર્થીને ખબર પડે કે કંઈક ચાલી રહ્યું છે
+    // Let the student see something is happening while the AI reads
     $("hint").className = "hint";
     $("hint").textContent = t("ai.reading");
-    /* મોડેલ વ્યસ્ત હોય તો Worker ફરી પૂછે છે, અને એમાં અડધી મિનિટ સુધી જઈ
-       શકે છે. એટલી વાર એક જ લીટી વાંચ્યા કરવાથી એપ અટકી ગઈ હોય એવું લાગે —
-       તેથી થોડી વાર પછી કહી દઈએ કે હજુ ચાલુ જ છે. */
+    /* When the model is busy the Worker retries, which can run to half a
+       minute. Staring at one unchanging line that long makes the app look
+       frozen - so after a while we say it is still going. */
     const patience = setTimeout(() => {
       if (phase === "scoring") $("hint").textContent = t("ai.stillReading");
     }, 7000);
@@ -747,10 +750,11 @@ function submit(text) {
   }, 420);
 }
 
-/* ચાલુ ભાષામાં ટૂંકો સાર બોલો — બધું નહીં, ફક્ત જે કામનું છે */
-/* બોલવા માટેનો આંકડો. toFixed(1) હંમેશાં «4.0» આપે છે, અને વાચક એને
-   «four point zero» બોલે છે — જે સાંભળવામાં ખોટું લાગે છે. પૂરો આંક હોય
-   તો દશાંશ કાઢી નાખો; «4.2» જેવો હોય તો એમ જ રહેવા દો. */
+/* Speak a short summary in the current language - not everything, only what is
+   useful. */
+/* The number as it is spoken. toFixed(1) always gives "4.0", which a voice reads
+   as "four point zero" - wrong to the ear. Drop the decimal on a whole number;
+   leave something like "4.2" alone. */
 function sayScore(v) {
   const n = Math.round(Number(v) * 10) / 10;
   if (!isFinite(n)) return "0";
@@ -772,9 +776,9 @@ function speakFeedback(r) {
   });
 }
 
-/* ---------------- સ્થિતિ પ્રમાણે સ્ક્રીન ---------------- */
+/* ---------------- Screen state by phase ---------------- */
 
-/* દરેક સ્થિતિ માટે અવતાર, સ્થિતિનું લખાણ અને બટન. લખાણ i18n કી છે. */
+/* Avatar, status text and button per phase. The text values are i18n keys. */
 const PHASE_UI = {
   ready:     { av: "idle",      cls: "",    st: "status.ready",     btn: "btn.answer",      rec: false },
   asking:    { av: "speaking",  cls: "",    st: "status.asking",    btn: "btn.startAnswer", rec: false },
@@ -793,14 +797,14 @@ function setPhase(p) {
   $("status").textContent = t(u.st);
   $("status").className = "status " + u.cls;
   const b = $("btnAct");
-  // ક્રમવાળા કોર્સનો છેલ્લો પ્રશ્ન પતે તો «આગળનો પ્રશ્ન» નહીં, «પૂરું કરો»
+  // After the last question of a sequential course: "Finish", not "Next question"
   b.textContent = (p === "feedback" && atLastQuestion()) ? t("btn.finish") : t(u.btn);
   b.className = "act" + (u.rec ? " rec" : "");
   b.disabled = p === "scoring";
   if (p === "ready" || p === "asking") { $("hint").className = "hint"; $("hint").textContent = ""; }
 }
 
-/* ---------------- પરિણામ દેખાડો ---------------- */
+/* ---------------- Show the result ---------------- */
 
 function showResult(r) {
   const C = 2 * Math.PI * 33;
@@ -840,16 +844,16 @@ function showResult(r) {
       r.grammar.map(g => "<li>" + esc(g) + "</li>").join("") + "</ul></div>";
   }
 
-  // AI એ તપાસ્યું હોય તો કહી દઈએ — વિદ્યાર્થીને ખબર હોવી જોઈએ કે ગુણ કોણે આપ્યા
+  // Say so when the AI scored it - the student should know who marked them
   if (r.byAi) h += '<div class="aibadge">' + esc(t("ai.badge")) + "</div>";
 
   h += '<div class="box adv"><b>' + esc(t("res.advice")) + "</b>" + esc(r.advice) + "</div>";
   if (r.tip) h += '<div class="box tip"><b>' + esc(t("res.tip")) + '</b><span class="' +
     (qIsGuOnly(current) ? "guscript" : "") + '">' + esc(qField(current, "tip")) + "</span></div>";
 
-  /* સમજૂતી ચાલુ ભાષામાં. અંગ્રેજી મોડમાં એ બતાવવાની જરૂર નથી — નીચે
-     «અંગ્રેજીમાં આ રીતે બોલો» માં એ જ વાત એ જ ભાષામાં આવે છે, અને એક જ
-     ફકરો બે વાર વાંચવો પડે એ મદદ નહીં, ગૂંચવણ છે. */
+  /* The explanation in the current language. Not needed in English mode - the
+     "say it in English like this" section below carries the same words in the
+     same language, and reading one paragraph twice confuses rather than helps. */
   h += '<details class="model"><summary>' + esc(t("res.model")) + "</summary>" +
     (getLang() === "en" ? "" :
       (qIsGuOnly(current) ? '<span class="enlab" style="margin-top:0">' + esc(t("res.modelGuOnly")) + "</span>" : "") +
@@ -873,7 +877,7 @@ function showResult(r) {
   $("result").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-/* ---------------- પ્રગતિ ---------------- */
+/* ---------------- Progress ---------------- */
 
 function renderProgress() {
   const h = bucket(course.id).history;
@@ -899,13 +903,13 @@ function renderProgress() {
     esc(t("res.thScore")) + "</th></tr></thead><tbody>" + rows + "</tbody></table>";
 }
 
-/* ---------------- પ્રોફાઇલ અને સેટિંગ ---------------- */
+/* ---------------- Profile and settings ---------------- */
 
 function paintSettings() {
   const s = state.settings;
   const nm = userName();
   $("setNameVal").textContent = nm || t("set.nameNotSet");
-  // નામનો પહેલો અક્ષર — ગોળ ચકતીમાં
+  // First letter of the name - shown in the round avatar
   $("setAva").textContent = nm ? nm.trim().charAt(0).toUpperCase() : "•";
   $("setVer").textContent = t("set.version", { v: APP_VERSION });
   Stats.renderProfileStats($("profStats"));
@@ -934,22 +938,22 @@ function paintSettings() {
   $("setDiag").innerHTML = lines.map(l => esc(l)).join("<br>");
 }
 
-/* ---------------- પ્રગતિનો બૅકઅપ ----------------
+/* ---------------- Progress backup ----------------
 
-   sync.js માં PB_URL ખાલી હોય તો આખો વિભાગ દેખાતો જ નથી — એપ પહેલાં
-   જેવી ઓફલાઇન એપ રહે છે. ભરેલું હોય તો ત્રણ પગથિયાં છે:
-   સાઇન-ઇન → સંમતિ → મોકલવાનું ચાલુ. */
+   With PB_URL empty in sync.js the whole section does not appear - the app stays
+   the offline app it was. When it is filled in there are three steps:
+   sign in -> consent -> sending starts. */
 
-/* ---------------- AI મૂલ્યાંકન ----------------
+/* ---------------- AI evaluation ----------------
 
-   judge.js માં JUDGE_URL ખાલી હોય તો આખો વિભાગ દેખાતો જ નથી.
+   With JUDGE_URL empty in judge.js the whole section does not appear.
 
-   સંમતિ જાણી જોઈને સ્વિચ નથી, બટન છે: વિદ્યાર્થી શું બહાર જાય છે તે
-   વાંચ્યા પછી જ «ચાલુ કરો» દબાવે. આંગળી અડી જવાથી જવાબનું લખાણ બહાર
-   જવું ન જોઈએ. પ્રગતિના બૅકઅપની સંમતિથી આ સાવ અલગ છે. */
+   The consent is deliberately a button, not a switch: the student presses "turn
+   on" only after reading what leaves the phone. A stray finger must not send
+   answer text out. This is entirely separate from the backup consent. */
 
-/* ઇન્ટરવ્યુ સ્ક્રીન પરનું AI બટન. સેટિંગવાળા બટન સાથે એક જ પસંદગી
-   વાપરે છે — બેમાંથી ગમે ત્યાં બદલો, બીજું પણ બદલાય. */
+/* The AI button on the interview screen. It shares one setting with the button
+   in settings - change either and the other follows. */
 function paintAiTog() {
   const b = $("btnAiTog");
   if (!b) return;
@@ -959,7 +963,7 @@ function paintAiTog() {
   const net = Judge.online();
   const on = Judge.consented() && net;
   b.classList.toggle("on", on);
-  b.disabled = !net;                       // ઇન્ટરનેટ વગર ચાલુ કરવાનો અર્થ નથી
+  b.disabled = !net;                       // no point turning it on with no internet
   b.setAttribute("aria-pressed", on ? "true" : "false");
   const lab = t("ai.title") + " — " + t(!net ? "ai.stOffline" : (on ? "ai.stOn" : "ai.stOff"));
   b.setAttribute("aria-label", lab);
@@ -986,14 +990,14 @@ function paintSync() {
   const s = Sync.status();
   const show = (id, on) => { $(id).hidden = !on; };
 
-  // પટ્ટી પર એક શબ્દમાં સ્થિતિ
+  // One-word status on the row
   $("syncState").textContent =
     !s.signedIn ? t("sync.stOff")
     : !s.consented ? t("sync.stReady")
     : s.pending ? t("sync.stPending", { n: s.pending })
     : t("sync.stOn");
 
-  // વિગત — શું બાકી છે, છેલ્લે ક્યારે ગયું, કંઈ અટક્યું છે?
+  // Detail - what is pending, when it last went, is anything stuck?
   const bits = [];
   if (s.signedIn) bits.push(t("sync.asName", { name: s.name || "—" }));
   if (s.consented && !s.pending && s.lastAt) {
@@ -1017,15 +1021,15 @@ function toggle(key, el) {
   save();
   paintSettings();
   if (key === "hands" && !state.settings.hands && phase === "listening") {
-    // હાથ વગરનો મોડ બંધ કર્યો — મૌન પર જાતે તપાસવાનું બંધ કરો
+    // Hands-free was switched off - stop auto-scoring on silence
     Speech.stopListen(true);
     setPhase("ready");
   }
 }
 
-/* ---------------- જોડાણ ---------------- */
+/* ---------------- Wiring ---------------- */
 
-/* તળિયેની ટૅબ પટ્ટી */
+/* The bottom tab bar */
 Array.prototype.forEach.call($("tabbar").querySelectorAll(".tab"), b =>
   b.addEventListener("click", () => goTab(b.getAttribute("data-tab"))));
 
@@ -1038,16 +1042,16 @@ $("btnAiTog").addEventListener("click", () => {
   paintAiTog();
 });
 
-/* ઇન્ટરનેટ આવે કે જાય તો બંને જગ્યાએ તરત દેખાય — વિદ્યાર્થીને ખબર હોવી
-   જોઈએ કે અત્યારે કોણ તપાસી રહ્યું છે. */
+/* Show the connection coming and going in both places at once - the student
+   should know who is marking them right now. */
 window.addEventListener("online", () => { paintAiTog(); if (curScreen === "profile") paintAi(); });
 window.addEventListener("offline", () => { paintAiTog(); if (curScreen === "profile") paintAi(); });
 
 $("btnHelp").addEventListener("click", () => show("help"));
 $("btnHelpBack").addEventListener("click", () => show("profile"));
 
-/* બૅકઅપના બટન. બધું નિષ્ફળ જાય તો પણ એપ ચાલુ રહે — તેથી દરેક જગ્યાએ
-   catch છે અને ભૂલ ફક્ત સ્થિતિની લીટીમાં દેખાય છે. */
+/* The backup buttons. The app keeps running however badly these fail - hence a
+   catch everywhere, with the error surfacing only on the status line. */
 Sync.onChange(() => { if (!$("scProfile").hidden) paintSync(); });
 
 $("btnSyncIn").addEventListener("click", () => {
@@ -1080,7 +1084,7 @@ Array.prototype.forEach.call($("segRate").children, b =>
 Array.prototype.forEach.call($("segSil").children, b =>
   b.addEventListener("click", () => { state.settings.silence = parseInt(b.dataset.s, 10); save(); paintSettings(); }));
 
-/* ભાષાની બંને પસંદગી-પટ્ટી — હોમના તળિયે અને સેટિંગમાં */
+/* Both language pickers - at the foot of home and in settings */
 ["langSeg", "langSeg2"].forEach(id =>
   Array.prototype.forEach.call($(id).children, b =>
     b.addEventListener("click", () => {
@@ -1094,11 +1098,11 @@ $("btnReset").addEventListener("click", () => {
   if (!confirm(t("set.resetAsk"))) return;
   state.courses = {};
   save();
-  // પ્રેક્ટિસ ચાલુ હોય તો જ નવો પ્રશ્ન લાવો — સૂચના સ્ક્રીન પર હોઈએ તો નહીં
+  // Only pull a new question if practice is running - not on the briefing screen
   if (course && !$("scRun").hidden) { renderProgress(); pickQuestion(false); }
   renderBriefIfOpen();
   renderDash();
-  paintSettings();       // પ્રોફાઇલ પરનો સાર પણ ખાલી થાય
+  paintSettings();       // the profile summary empties too
 });
 
 $("btnSaveName").addEventListener("click", () => finishWelcome($("uname").value));
@@ -1108,7 +1112,8 @@ $("uname").addEventListener("keydown", ev => {
 });
 $("btnChangeName").addEventListener("click", openWelcome);
 
-/* પરિચય સ્ક્રીન — «શરૂ કરો» નામ પૂછે, «પછી જોઈશ» સીધા પ્રેક્ટિસ પર લઈ જાય */
+/* Intro screen - "Get started" asks for a name, "Maybe later" goes straight to
+   practice */
 $("btnGetStarted").addEventListener("click", () => { Speech.prime(); openWelcome(); });
 $("btnMaybeLater").addEventListener("click", () => { Speech.prime(); show("practice"); });
 
@@ -1131,8 +1136,8 @@ $("btnAct").addEventListener("click", () => {
   if (phase === "listening") { const t = Speech.stopListen(true); submit(t || $("heard").textContent); return; }
   if (phase === "feedback") {
     Speech.cancelSpeech();
-    if (atLastQuestion()) leaveCourse();   // મૉક ઇન્ટરવ્યુ પૂરો
-    else pickQuestion(true);               // ક્રમમાં આગળનો પ્રશ્ન
+    if (atLastQuestion()) leaveCourse();   // the mock interview is over
+    else pickQuestion(true);               // the next question in the order
     return;
   }
   if (phase === "ready") { beginListen(); return; }
@@ -1152,13 +1157,13 @@ $("btnType").addEventListener("click", () => {
 
 $("btnCheck").addEventListener("click", () => submit($("ans").value));
 
-/* ---------------- નવી આવૃત્તિ આવે ત્યારે ----------------
-   sw.js સ્ક્રિપ્ટો કૅશમાંથી જ આપે છે, તેથી નવો service worker કબજો લે
-   ત્યારે પણ ખૂલેલું પાનું જૂનું JS ચલાવતું રહે છે — વિદ્યાર્થીએ જાતે બીજી
-   વાર ખોલવું પડે, અને એ કોઈ કરતું નથી. તેથી જાતે તાજું કરી લઈએ.
+/* ---------------- When a new version arrives ----------------
+   sw.js serves scripts from the cache, so even once a new service worker takes
+   over, an open page keeps running the old JS - the student would have to reopen
+   the app themselves, and nobody does. So we refresh it for them.
 
-   પણ વચ્ચે નહીં: જવાબ આપતી વખતે પાનું તાજું થાય તો બોલેલું બધું જાય.
-   ઇન્ટરવ્યુ બહાર નીકળે ત્યારે જ થાય. */
+   But never mid-answer: reloading while they are speaking loses everything they
+   said. It happens only on leaving the interview. */
 let swFresh = false;
 
 function reloadIfIdle() {
@@ -1182,8 +1187,9 @@ $("btnClear").addEventListener("click", () => {
   if (phase === "listening") { Speech.stopListen(true); setPhase("ready"); }
 });
 
-/* એપ પાછળ જાય તો માઇક અને સ્પીકર બંધ — બેટરી અને પ્રાઇવસી બંને માટે.
-   પ્રશ્નનું ઘડિયાળ પણ થોભે, જેથી બંધ પડેલી એપનો સમય ન ગણાય. */
+/* Mic and speaker both stop when the app goes to the background - for battery
+   and for privacy. The question clock pauses too, so time spent with the app put
+   away is never counted. */
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) {
     qClockPause();
@@ -1194,7 +1200,7 @@ document.addEventListener("visibilitychange", () => {
   }
 });
 
-/* ---------------- શરૂઆત ---------------- */
+/* ---------------- Startup ---------------- */
 
 loadState();
 setLang(state.settings.lang);
@@ -1203,14 +1209,14 @@ paintLang();
 paintSettings();
 renderDash();
 
-/* નામ ખબર ન હોય તો પહેલાં એપનો પરિચય. નામ ખબર હોય તો — પ્રેક્ટિસ કરી
-   હોય તો પ્રગતિ દેખાડો, નહીં તો સીધા પ્રેક્ટિસ ટૅબ પર (ખાલી આલેખ કરતાં
-   કોર્સની યાદી વધુ કામની છે). */
+/* No name yet: introduce the app first. Name known: show progress if they have
+   practised, otherwise go straight to the practice tab (a course list is more
+   use than an empty chart). */
 if (!state.user) show("splash");
 else show(allHistory().length ? "stats" : "practice");
 
-/* એપ ખૂલે ત્યારે બાકી રહેલી પ્રગતિ મોકલી દો — ચાલુ ન હોય તો કંઈ થતું નથી.
-   શરૂઆતમાં જ નહીં, થોડું મોડું: પહેલો પડદો દોરાવા દો. */
+/* Send any pending progress when the app opens - a no-op when backup is off.
+   Not right at startup but slightly after: let the first screen paint. */
 setTimeout(() => { try { Sync.flush(); } catch (e) {} }, 2500);
 
 if ("serviceWorker" in navigator) {

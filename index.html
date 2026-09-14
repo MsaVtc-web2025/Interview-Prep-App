@@ -10,7 +10,7 @@
 <style>
 :root{
   color-scheme: light;
-  /* રંગ Claude Design ના «Interview Prep App» કૅન્વાસ પરથી જ લીધા છે */
+  /* Colours taken straight from the "Interview Prep App" Claude Design canvas */
   --bg:#eef3fd; --card:rgba(255,255,255,.82); --cardsolid:#fff;
   --cardline:rgba(255,255,255,.92);
   --ink:#101a33; --muted:#6c7c99; --lead:#66779a; --lab:#5b6b8c;
@@ -27,8 +27,8 @@
   --shs:0 6px 18px rgba(28,54,120,.06);
   --shb:0 10px 22px rgba(36,71,196,.28);
   --r:22px; --rs:14px; --rl:24px; --rb:18px;
-  /* ઇન્ટરફેસનો ફોન્ટ — ભાષા બદલાય ત્યારે i18n.js આ બદલે છે.
-     બધા ફોન્ટ સિસ્ટમના છે, તેથી એપ ઓફલાઇન પણ બરાબર દેખાય. */
+  /* The interface font - i18n.js changes this when the language changes.
+     Every font is a system font, so the app renders correctly offline. */
   --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Arial,sans-serif;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -42,12 +42,13 @@ body{
   font-size:15px;line-height:1.6;
 }
 .lat{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Arial,sans-serif}
-/* ભાષાંતર બાકી હોય એવું ગુજરાતી લખાણ — ઇન્ટરફેસ બીજી ભાષામાં હોય ત્યારે પણ સાચો ફોન્ટ */
+/* Gujarati text still awaiting translation - keeps the right font even when the
+   interface is in another language */
 .guscript{font-family:"Noto Sans Gujarati","Shruti",sans-serif}
 .wrap{max-width:600px;margin:0 auto;padding:0 20px 44px}
 [hidden]{display:none !important}
 
-/* ---------- લીટીથી દોરેલાં ચિહ્ન (SVG સ્પ્રાઇટ) ---------- */
+/* ---------- Line-drawn icons (SVG sprite) ---------- */
 .sprite{position:absolute;width:0;height:0;overflow:hidden}
 .svi{
   width:22px;height:22px;display:block;flex:none;
@@ -56,7 +57,7 @@ body{
 .svi.sm{width:15px;height:15px;stroke-width:2.4}
 .svi.xs{width:15px;height:15px;stroke-width:2}
 
-/* ---------- લોગો ---------- */
+/* ---------- Logo ---------- */
 .logo{
   width:44px;height:44px;border-radius:14px;flex:none;
   background:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.95);
@@ -64,7 +65,7 @@ body{
   color:var(--accent);display:flex;align-items:center;justify-content:center
 }
 .logo .svi{width:26px;height:26px;stroke-width:4.5;stroke-linejoin:round}
-/* બે કમાનના પોતાના રંગ — currentColor થી નહીં */
+/* The two arches carry their own colours, not currentColor */
 .logo .svi .a1{stroke:#2f5fe0}
 .logo .svi .a2{stroke:#6f8ef5}
 .logo.lg{width:96px;height:96px;border-radius:28px;box-shadow:0 14px 34px rgba(40,70,150,.16)}
@@ -72,7 +73,7 @@ body{
 .logo.sm{width:30px;height:30px;border-radius:0;background:none;border:0;box-shadow:none}
 .logo.sm .svi{width:30px;height:30px;stroke-width:5}
 
-/* ---------- ટોપ બાર ---------- */
+/* ---------- Top bar ---------- */
 .bar{
   display:flex;align-items:center;gap:11px;
   padding:16px 20px 10px;padding-top:calc(16px + env(safe-area-inset-top));
@@ -82,7 +83,7 @@ body{
 .bar h1{margin:0;font-size:17px;font-weight:700;flex:1;min-width:0;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink)}
 .bar h1.mid{text-align:center}
-/* ગોળ કાચ જેવું બટન — ડિઝાઇનમાં પાછળ જવાનું બટન આવું છે */
+/* A round glassy button - this is what the back button looks like in the design */
 .ib{
   width:40px;height:40px;flex:none;padding:0;cursor:pointer;
   border-radius:20px;border:1px solid rgba(255,255,255,.9);
@@ -96,17 +97,17 @@ body{
   padding:7px 13px;border-radius:16px;flex:none
 }
 
-/* ---------- કાર્ડ અને વિભાગ ---------- */
+/* ---------- Cards and sections ---------- */
 .card{
   background:var(--card);border:1px solid var(--cardline);border-radius:var(--r);
   padding:16px;margin-bottom:14px;box-shadow:var(--shc)
 }
 .card.flat{background:transparent;box-shadow:none;border:0;padding:0}
-/* આ કાર્ડમાં padding નથી — અંદરની હાર પોતે padding રાખે છે */
+/* This card has no padding - the rows inside carry their own */
 .card.tight{padding:0;overflow:hidden}
 h2.sec{font-size:17px;margin:24px 0 10px;color:var(--ink);font-weight:700}
 
-/* પેસ્ટલ ચોકઠામાં ઇમોજી — કોર્સ અને સૂચનાની યાદી માટે */
+/* Emoji in a pastel tile - used by the course and suggestion lists */
 .chip{
   width:38px;height:38px;border-radius:12px;flex:none;
   display:flex;align-items:center;justify-content:center;
@@ -117,13 +118,13 @@ h2.sec{font-size:17px;margin:24px 0 10px;color:var(--ink);font-weight:700}
 .chip.t7{background:#e6ecfe} .chip.t8{background:#fdece2}
 .chip.sm{width:34px;height:34px;border-radius:11px;font-size:16px}
 
-/* ---------- પહેલી સ્ક્રીન — એપનો પરિચય ---------- */
+/* ---------- First screen - introducing the app ---------- */
 #scSplash{
   position:relative;overflow:hidden;
   min-height:100vh;min-height:100dvh;
   background:linear-gradient(165deg,#e6edfc 0%,#f5f9ff 42%,#e9f0fd 100%)
 }
-/* બે ધૂંધળાં વર્તુળ — ડિઝાઇનની સજાવટ */
+/* Two blurred circles - decoration from the design */
 #scSplash::before,#scSplash::after{
   content:"";position:absolute;border-radius:50%;pointer-events:none
 }
@@ -160,7 +161,8 @@ h2.sec{font-size:17px;margin:24px 0 10px;color:var(--ink);font-weight:700}
 .li.amber{background:#fdf1dc;color:#d99205}
 .li.red{background:#fdeaea;color:var(--rec)}
 
-/* સ્ક્રીનની નીચે ચીપકેલું બટન — પરિચય અને સૂચના બંને સ્ક્રીન વાપરે છે */
+/* Button pinned to the bottom of the screen - used by both the intro and the
+   briefing screens */
 .startbar{
   margin-top:auto;padding:44px 0 0;
   display:flex;flex-direction:column;gap:18px
@@ -169,10 +171,10 @@ h2.sec{font-size:17px;margin:24px 0 10px;color:var(--ink);font-weight:700}
   position:sticky;bottom:0;padding:22px 0 calc(6px + env(safe-area-inset-bottom));
   background:linear-gradient(to top,#f4f8ff 58%,rgba(244,248,255,0))
 }
-/* પરિચયનું મોટું ગોળ બટન */
+/* The large round button on the intro screen */
 .act.pill{height:60px;border-radius:30px;font-size:18px;box-shadow:0 12px 26px rgba(36,71,196,.34)}
 
-/* ---------- નામ પૂછવાની સ્ક્રીન ---------- */
+/* ---------- Name entry screen ---------- */
 .wel{
   display:flex;flex-direction:column;justify-content:center;
   min-height:calc(100vh - 40px);min-height:calc(100dvh - 40px);
@@ -194,12 +196,12 @@ h2.sec{font-size:17px;margin:24px 0 10px;color:var(--ink);font-weight:700}
 .wel .or::before,.wel .or::after{content:"";height:1px;background:var(--line);flex:1}
 #gbtn{display:flex;justify-content:center;min-height:44px}
 
-/* ---------- હોમ અને પ્રેક્ટિસ ---------- */
+/* ---------- Home and practice ---------- */
 .hero{padding:0 0 20px}
 .hero .big{font-size:34px;font-weight:800;line-height:1.08;margin:16px 0 6px;letter-spacing:-.8px}
 .hero .lead{font-size:17px;color:var(--lead);margin:0;line-height:1.35;font-weight:500}
 
-/* ત્રણ આંકડાની પટ્ટી — વચલું ખાનું પાતળી લીટીથી અલગ */
+/* A strip of three figures - the middle cell is separated by a hairline */
 .statpanel{
   display:grid;grid-template-columns:1fr 1fr 1fr;
   background:var(--card);border:1px solid var(--cardline);
@@ -216,15 +218,15 @@ h2.sec{font-size:17px;margin:24px 0 10px;color:var(--ink);font-weight:700}
   background:linear-gradient(180deg,rgba(230,236,254,.8),rgba(230,236,254,.3))
 }
 .statpanel .v{font-size:24px;font-weight:750;line-height:1.15}
-/* લાંબું નામ (જેમ કે «Accuracy of the answer») ખાનામાં સમાય તે માટે નાનું */
+/* Smaller, so a long label (like "Accuracy of the answer") fits the cell */
 .statpanel .v.sm{font-size:12.5px;font-weight:650;line-height:1.25;padding:4px 0 2px}
 .statpanel .k{font-size:12px;color:var(--muted);margin-top:2px;line-height:1.3}
-/* ફક્ત બે ખાનાં હોય ત્યારે ત્રીજું ખાલી ન દેખાય */
+/* With only two cells, do not leave an empty third */
 .statpanel.two{grid-template-columns:1fr 1fr}
 .statpanel.two .sc:nth-child(2){border-right:0}
 .statpanel.two .sc:last-child{background:linear-gradient(180deg,rgba(230,236,254,.8),rgba(230,236,254,.3))}
 
-/* કોર્સની ટાઇલ */
+/* Course tile */
 .tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .tile{
   background:var(--card);border:1px solid rgba(255,255,255,.9);border-radius:20px;
@@ -240,7 +242,7 @@ h2.sec{font-size:17px;margin:24px 0 10px;color:var(--ink);font-weight:700}
 .tile .mt{font-size:12.5px;color:var(--accent);font-weight:600;margin-top:auto;padding-top:2px}
 .tile .mt.done{color:var(--good)}
 
-/* ભાષા પસંદગી — હોમ સ્ક્રીનના તળિયે */
+/* Language picker - at the foot of the home screen */
 .langbar{display:flex;align-items:center;gap:11px;margin:24px 0 4px}
 .langbar .cap{font-size:12px;font-weight:600;color:var(--grp);flex:none}
 .langseg{
@@ -255,7 +257,7 @@ h2.sec{font-size:17px;margin:24px 0 10px;color:var(--ink);font-weight:700}
 .langseg button[data-l="hi"]{font-family:"Noto Sans Devanagari","Nirmala UI","Mangal",sans-serif}
 .langseg button.on{background:var(--soft);color:var(--accent-d);font-weight:650}
 
-/* ---------- સૂચના સ્ક્રીન — મૉક ઇન્ટરવ્યુ શરૂ કરતાં પહેલાં ---------- */
+/* ---------- Briefing screen - before the mock interview starts ---------- */
 .briefwrap{
   display:flex;flex-direction:column;padding-bottom:6px;
   min-height:calc(100vh - 120px);min-height:calc(100dvh - 120px)
@@ -278,12 +280,12 @@ h2.sec{font-size:17px;margin:24px 0 10px;color:var(--ink);font-weight:700}
 }
 .steps li:first-child{border-top:0}
 
-/* ---------- અવતાર — ઇન્ટરવ્યુ લેનારની વિડિયો-ટાઇલ ---------- */
+/* ---------- Avatar - the interviewer's video tile ---------- */
 .stage{text-align:center;padding:6px 0 4px;position:relative}
 
-/* ---------- ઇન્ટરવ્યુ સ્ક્રીન પરનું AI બટન ----------
-   સેટિંગમાં દટાયેલું હોય તો વિદ્યાર્થી કદી જોતો નથી. અવતારની બાજુમાં,
-   ઉપર-જમણે, જેથી જવાબ આપતાં પહેલાં ખબર પડે કે કોણ તપાસવાનું છે. */
+/* ---------- The AI button on the interview screen ----------
+   Buried in settings, a student would never see it. Beside the avatar, top
+   right, so they know who is marking them before they answer. */
 .aitog{
   position:absolute;top:0;right:0;z-index:5;
   display:inline-flex;align-items:center;gap:6px;
@@ -359,19 +361,19 @@ h2.sec{font-size:17px;margin:24px 0 10px;color:var(--ink);font-weight:700}
 .status.rec{color:var(--rec)}
 .status.ok{color:var(--good)}
 
-/* ---------- પ્રશ્ન ---------- */
+/* ---------- Question ---------- */
 .card.qcard{border-radius:var(--rl);padding:18px 18px 20px}
 .qbox{text-align:center}
 .qcat{
   display:inline-block;padding:5px 12px;border-radius:var(--rs);background:var(--line);
   font-size:12px;font-weight:600;color:var(--lab)
 }
-/* ઇન્ટરવ્યુ લેનારનું અભિવાદન — પહેલા પ્રશ્ન પહેલાં (અંગ્રેજીમાં જ) */
+/* The interviewer's greeting - before the first question (always English) */
 .qgreet{font-size:14.5px;color:var(--muted);margin:12px 0 0;line-height:1.45;font-style:italic}
 .qtext{font-size:21px;font-weight:750;line-height:1.3;margin:12px 0 0;letter-spacing:-.3px;text-wrap:pretty}
 .qhelp{font-size:12.5px;color:var(--muted);margin-top:10px}
 
-/* ---------- બટન ---------- */
+/* ---------- Buttons ---------- */
 button{font:inherit;font-weight:600;cursor:pointer}
 .act{
   width:100%;border:0;border-radius:16px;background:var(--grad);color:#fff;
@@ -391,7 +393,7 @@ button{font:inherit;font-weight:600;cursor:pointer}
   border-radius:var(--rb);font-size:16px;min-height:54px
 }
 .act.danger:active{background:#fadede}
-/* સાદું લખાણ-બટન */
+/* Plain text button */
 .mini{
   border:0;background:none;color:var(--lab);font-size:13.5px;font-weight:600;
   padding:4px;border-radius:8px
@@ -401,7 +403,7 @@ button{font:inherit;font-weight:600;cursor:pointer}
 .mini.blk{color:var(--lab);font-size:16px;font-weight:550}
 .mini.danger{color:var(--rec)}
 .mini.ico{display:inline-flex;align-items:center;gap:6px}
-/* ગોળ પટ્ટી જેવું નાનું બટન — ચિહ્ન સાથે */
+/* Small pill-shaped button, with an icon */
 .chipbtn{
   border:1px solid rgba(20,40,90,.07);background:#f2f5fb;color:var(--icon);
   font-size:13px;font-weight:600;padding:9px 15px;border-radius:var(--rb);
@@ -413,7 +415,7 @@ button{font:inherit;font-weight:600;cursor:pointer}
 .row.tight{gap:22px}
 .stack{display:flex;flex-direction:column;gap:10px}
 
-/* ---------- જવાબનું ખાનું ---------- */
+/* ---------- Answer box ---------- */
 textarea{
   width:100%;min-height:96px;font-size:15px;line-height:1.45;padding:12px 13px;
   border:1px solid rgba(20,40,90,.12);border-radius:var(--rs);resize:none;
@@ -433,7 +435,7 @@ textarea:focus{outline:2px solid rgba(47,95,224,.35);outline-offset:1px}
   padding:11px 13px;border-radius:var(--rs);text-align:left
 }
 
-/* ---------- પરિણામ ---------- */
+/* ---------- Result ---------- */
 .score{display:flex;align-items:center;gap:16px}
 .ring{width:64px;height:64px;flex:none;position:relative}
 .ring svg{width:100%;height:100%}
@@ -480,7 +482,7 @@ details.model .en{
   font-family:var(--font);font-size:14px;line-height:1.5;text-align:left
 }
 
-/* ---------- પ્રગતિનું કોષ્ટક ---------- */
+/* ---------- Progress table ---------- */
 table{width:100%;border-collapse:collapse;font-size:13px}
 th,td{text-align:right;padding:9px 6px;border-bottom:1px solid var(--line)}
 tr:last-child td{border-bottom:0}
@@ -489,8 +491,8 @@ td.n{font-weight:750}
 .empty{color:var(--muted);font-size:13.5px;text-align:center;padding:14px 0}
 .err{background:var(--lowtint);color:#a32b1e;padding:12px 14px;border-radius:var(--rs);font-size:13.5px}
 
-/* ---------- પ્રોફાઇલ / સેટિંગ ---------- */
-/* આ સ્ક્રીનનાં કાર્ડ ડિઝાઇનમાં ઘન સફેદ છે, પારદર્શક નહીં */
+/* ---------- Profile / settings ---------- */
+/* In the design, cards on this screen are solid white, not translucent */
 .prow{
   display:flex;align-items:center;gap:14px;width:100%;text-align:left;
   background:var(--cardsolid);border:0;border-radius:20px;padding:16px;
@@ -508,8 +510,8 @@ td.n{font-weight:750}
 h2.grp{font-size:13px;font-weight:600;color:var(--grp);margin:22px 4px 8px}
 .group{background:var(--cardsolid);border-radius:20px;box-shadow:var(--shs);overflow:hidden}
 
-/* એક પટ્ટી — ચિહ્ન, નામ, કિંમત, તીર. <details> હોય તો ખૂલે.
-   ડિઝાઇનમાં ભાગલા પાડતી લીટી ચિહ્ન પછી શરૂ થાય છે, ડાબી કિનારેથી નહીં. */
+/* One row - icon, label, value, chevron. Expands when inside <details>.
+   In the design the divider starts after the icon, not at the left edge. */
 .lrow{display:block;position:relative}
 .lrow + .lrow::before{
   content:"";position:absolute;left:49px;right:0;top:0;height:1px;background:var(--line)
@@ -530,7 +532,7 @@ details[open]>.lhead .chev{transform:rotate(90deg)}
 .lbody{padding:0 16px 16px 49px}
 .lbody .sub{font-size:13px;color:var(--muted);line-height:1.5;margin:0 0 12px}
 
-/* સેટિંગનું એક ખાનું — સ્વિચ કે પટ્ટીવાળી પસંદગી */
+/* A single setting - a switch or a segmented choice */
 .opt{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
 .opt:first-child{border-top:0;padding-top:2px}
 .opt.col{display:block}
@@ -554,19 +556,19 @@ details[open]>.lhead .chev{transform:rotate(90deg)}
 .diag{font-size:13px;color:var(--muted);line-height:1.7;margin-top:4px}
 .verline{font-size:13px;color:var(--muted);margin:0 0 10px}
 
-/* ---------- વિશ્લેષણ — હોમ ડૅશબોર્ડ ---------- */
+/* ---------- Stats - the home dashboard ---------- */
 .ctitle{font-size:15px;font-weight:700;margin:0}
 .csub{font-size:12.5px;color:var(--muted);margin:3px 0 14px;line-height:1.4}
 .note{
   font-size:13px;color:var(--muted);line-height:1.55;margin:0;
   background:#fbfcfe;border:1px solid rgba(20,40,90,.1);border-radius:var(--rs);padding:14px
 }
-/* કાર્ડની ટોચે નામ, જમણે એક નાનું આંકડાનું લખાણ */
+/* Title at the top of the card, a small figure on the right */
 .chead{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
 .cdelta{font-size:12.5px;font-weight:600;flex:none}
 .cdelta.up{color:var(--good)} .cdelta.dn{color:var(--low)} .cdelta.flat{color:var(--muted)}
 
-/* દરરોજનો સમય — સાત ઊભી પટ્ટી */
+/* Time per day - seven vertical bars */
 .chart{display:flex;align-items:stretch;gap:9px;height:96px;margin:14px 0 6px}
 .cb{
   flex:1;min-width:0;height:100%;display:flex;flex-direction:column;
@@ -581,7 +583,7 @@ details[open]>.lhead .chev{transform:rotate(90deg)}
 .cb.top em{font-weight:650;color:var(--accent-d)}
 .cfoot{font-size:12.5px;color:var(--muted)}
 
-/* ગુણનું વલણ — છેલ્લા જવાબોની રેખા */
+/* Score trend - a line across the recent answers */
 .spark{width:100%;height:64px;display:block;margin-top:16px}
 .spark .ln{
   fill:none;stroke:var(--accent);stroke-width:2.2;vector-effect:non-scaling-stroke;
@@ -590,7 +592,7 @@ details[open]>.lhead .chev{transform:rotate(90deg)}
 .spark .ar{fill:rgba(63,108,230,.14);stroke:none}
 .spark .dt{fill:var(--accent);stroke:none}
 
-/* «તમારી કુશળતા» — નામ અને ગુણ ઉપર, પટ્ટી નીચે આખી પહોળી */
+/* "Your skills" - name and score above, a full-width bar below */
 .skills{display:flex;flex-direction:column;gap:14px}
 .skill .sl{display:flex;align-items:baseline;justify-content:space-between}
 .skill .sn{font-size:14.5px;font-weight:650;color:var(--ink)}
@@ -598,7 +600,7 @@ details[open]>.lhead .chev{transform:rotate(90deg)}
 .skill .st{height:7px;border-radius:4px;background:var(--line);margin-top:7px;overflow:hidden}
 .skill .st i{display:block;height:100%;border-radius:4px}
 
-/* તાજા જવાબ — ગુણનું ચોકઠું, નામ, નીચે કોર્સ અને દિવસ */
+/* Recent answers - score chip, label, then course and day below */
 .ra{display:flex;align-items:center;gap:12px;padding:14px 16px;position:relative}
 .ra + .ra::before{
   content:"";position:absolute;left:66px;right:0;top:0;height:1px;background:var(--line)
@@ -611,7 +613,7 @@ details[open]>.lhead .chev{transform:rotate(90deg)}
 .ra .rt b{display:block;font-size:14.5px;font-weight:650;line-height:1.25}
 .ra .rt i{display:block;font-style:normal;font-size:12.5px;color:var(--muted);margin-top:1px}
 
-/* કોર્સવાર હાર */
+/* Per-course rows */
 .crow{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
 .crow:first-of-type{border-top:0;padding-top:2px}
 .crow .cn{flex:1;min-width:0}
@@ -619,7 +621,7 @@ details[open]>.lhead .chev{transform:rotate(90deg)}
 .crow .cn i{display:block;font-style:normal;font-size:12px;color:var(--muted);margin-top:1px}
 .crow .sc{font-size:14.5px;font-weight:700;flex:none;min-width:32px;text-align:right}
 
-/* સૂચનો */
+/* Suggestions */
 .recs{display:flex;flex-direction:column}
 .rec{display:flex;gap:12px;padding:14px 0;border-top:1px solid var(--line)}
 .rec:first-child{border-top:0;padding-top:2px}
@@ -629,14 +631,14 @@ details[open]>.lhead .chev{transform:rotate(90deg)}
 .rec b{display:block;font-size:14.5px;font-weight:650;line-height:1.3}
 .rec p{margin:4px 0 0;font-size:12.5px;color:var(--muted);line-height:1.5}
 
-/* કંઈ પ્રેક્ટિસ કરી ન હોય ત્યારે */
+/* When nothing has been practised yet */
 .emptybox{text-align:center;padding:20px 12px 10px}
 .emptybox .li{width:54px;height:54px;border-radius:17px;margin:0 auto 15px}
 .emptybox .li .svi{width:26px;height:26px;stroke-width:2.2}
 .emptybox b{display:block;font-size:19px;font-weight:750;letter-spacing:-.4px}
 .emptybox p{color:var(--muted);font-size:14px;margin:9px 0 20px;line-height:1.5}
 
-/* ---------- તળિયેની ટૅબ પટ્ટી — તરતી અને ધૂંધળી ---------- */
+/* ---------- Bottom tab bar - floating and blurred ---------- */
 .tabbar{
   position:fixed;left:0;right:0;z-index:40;
   bottom:calc(20px + env(safe-area-inset-bottom));
@@ -659,20 +661,20 @@ details[open]>.lhead .chev{transform:rotate(90deg)}
 }
 .tab .svi{width:21px;height:21px;stroke-width:2.1}
 .tab.on{color:var(--accent-d);background:var(--soft);font-weight:650}
-/* ટૅબ પટ્ટી દેખાય ત્યારે લખાણ તેની નીચે ઢંકાઈ ન જાય */
+/* Keep content from hiding under the tab bar while it is visible */
 body.tabs .wrap{padding-bottom:calc(108px + env(safe-area-inset-bottom))}
 
-/* ---------- «AI એ તપાસ્યું» એવો બિલ્લો ----------
-   ગુણ કોણે આપ્યા તે વિદ્યાર્થીથી છુપાવવું નહીં. */
+/* ---------- The "scored by AI" badge ----------
+   Never hide from the student who gave them their marks. */
 .aibadge{
   display:inline-block;margin:12px 0 0;padding:5px 11px;
   background:#efe9fd;color:#5b3fa8;border-radius:10px;
   font-size:12px;font-weight:650
 }
 
-/* ---------- તળિયે થોડી વાર દેખાતો સંદેશો ----------
-   «પાછળ» બટન એપ બંધ કરવાનું છે તે ચેતવવા વપરાય છે. ટૅબ પટ્ટી હોય તો
-   તેની ઉપર રહે, જેથી બંને એકબીજા પર ન ચડે. */
+/* ---------- The brief message at the bottom ----------
+   Used to warn that the back button is about to exit the app. It sits above the
+   tab bar when there is one, so the two never overlap. */
 .toast{
   position:fixed;left:0;right:0;z-index:60;
   bottom:calc(34px + env(safe-area-inset-bottom));
@@ -690,7 +692,7 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
   box-shadow:0 8px 22px rgba(16,26,51,.28)
 }
 
-/* ---------- મદદની સ્ક્રીન ---------- */
+/* ---------- Help screen ---------- */
 .faq{background:var(--cardsolid);border-radius:20px;box-shadow:var(--shs);padding:4px 0;margin-top:12px}
 .faq details{border-top:1px solid var(--line)}
 .faq details:first-of-type{border-top:0}
@@ -713,14 +715,14 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
 </head>
 <body>
 
-<!-- ============ લીટીથી દોરેલાં ચિહ્ન — એક જ વાર, પછી <use> વાપરીએ ============ -->
+<!-- ============ Line-drawn icons - defined once, then referenced with <use> ============ -->
 <svg class="sprite" aria-hidden="true" focusable="false"><defs>
-  <!-- એપની ઓળખ — ડિઝાઇનમાં બે સામસામી કમાન, બે રંગમાં -->
+  <!-- The app mark - two facing arches in two colours, per the design -->
   <symbol id="i-logo" viewBox="0 0 48 48">
     <path class="a1" d="M24 6c-6 0-10 4.4-10 9.6 0 3.4 1.7 5.7 4.4 7.4-2.7 1.7-4.4 4-4.4 7.4C14 35.6 18 40 24 40"/>
     <path class="a2" d="M24 6c6 0 10 4.4 10 9.6 0 3.4-1.7 5.7-4.4 7.4 2.7 1.7 4.4 4 4.4 7.4C34 35.6 30 40 24 40"/>
   </symbol>
-  <!-- સેટિંગ — ત્રણ સરકતી પટ્ટી (ગિયર નાના માપે ચકલી જેવું દેખાય છે) -->
+  <!-- Settings - three sliders (a gear looks like a smudge at this size) -->
   <symbol id="i-gear" viewBox="0 0 24 24">
     <path d="M3.5 6.5h9M17 6.5h3.5M3.5 12h3.5M11.5 12h9M3.5 17.5h9M17 17.5h3.5"/>
     <circle cx="14.8" cy="6.5" r="2.3"/><circle cx="9.2" cy="12" r="2.3"/><circle cx="14.8" cy="17.5" r="2.3"/>
@@ -750,7 +752,7 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
     <path d="M4 9.4h3L12 5v14l-5-4.4H4z"/><path d="M16 9.2a4.4 4.4 0 0 1 0 5.6M18.7 6.6a8 8 0 0 1 0 10.8"/>
   </symbol>
   <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.7-6M20 4.4V10h-5.6"/></symbol>
-  <!-- ટાઇપ કરવું — નાના માપે વાંચી શકાય તેવું સાદું કીબોર્ડ -->
+  <!-- Typing - a simple keyboard that stays legible when small -->
   <symbol id="i-keyboard" viewBox="0 0 24 24">
     <rect x="2.4" y="6.6" width="19.2" height="10.8" rx="2.6"/>
     <path d="M6.4 10.6h11.2M8.4 14h7.2"/>
@@ -773,10 +775,10 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
   </symbol>
 </defs></svg>
 
-<!-- ============ તળિયે થોડી વાર દેખાતો સંદેશો ============ -->
+<!-- ============ The brief message at the bottom ============ -->
 <div class="toast" id="toast" role="status" aria-live="polite" hidden><span id="toastMsg"></span></div>
 
-<!-- ============ તળિયેની ટૅબ પટ્ટી ============ -->
+<!-- ============ Bottom tab bar ============ -->
 <nav class="tabbar" id="tabbar" hidden>
   <div class="tabinner">
     <button class="tab" data-tab="stats">
@@ -794,7 +796,7 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
   </div>
 </nav>
 
-<!-- ============ પરિચય સ્ક્રીન — એપ પહેલી વાર ખૂલે ત્યારે ============ -->
+<!-- ============ Intro screen - shown the first time the app opens ============ -->
 <div id="scSplash" hidden>
   <div class="wrap splashwrap">
     <div class="splash">
@@ -829,7 +831,7 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
   </div>
 </div>
 
-<!-- ============ નામ પૂછવાની સ્ક્રીન ============ -->
+<!-- ============ Name entry screen ============ -->
 <div id="scWelcome" hidden>
   <div class="wrap">
     <div class="wel">
@@ -851,7 +853,7 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
       <div id="gwrap" hidden>
         <div class="or" data-i18n="welcome.or">or</div>
         <div id="gbtn"></div>
-        <!-- Google પડી ભાંગે તો અહીં જણાવીએ — વિદ્યાર્થી અટકી ન રહે -->
+        <!-- Reported here if Google falls over, so the student is not stuck -->
         <p class="hint warn" id="gerr" hidden></p>
       </div>
 
@@ -862,7 +864,7 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
   </div>
 </div>
 
-<!-- ============ હોમ — પ્રગતિનું વિશ્લેષણ (પહેલો ટૅબ) ============ -->
+<!-- ============ Home - progress analysis (first tab) ============ -->
 <div id="scStats" hidden>
   <div class="bar">
     <div class="logo sm"><svg class="svi" aria-hidden="true"><use href="#i-logo"/></svg></div>
@@ -874,10 +876,10 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
       <p class="lead" data-i18n="stats.lead">How your practice is going</p>
     </div>
 
-    <!-- આખું ડૅશબોર્ડ stats.js બનાવે છે -->
+    <!-- The whole dashboard is built by stats.js -->
     <div id="statsBody"></div>
 
-    <!-- ભાષાની પસંદગી — પ્રોફાઇલમાં પણ છે -->
+    <!-- Language picker - also present in the profile -->
     <div class="langbar">
       <span class="cap" data-i18n="home.lang">App language</span>
       <div class="langseg" id="langSeg">
@@ -893,7 +895,7 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
   </div>
 </div>
 
-<!-- ============ પ્રેક્ટિસ — બધા મોડ (બીજો ટૅબ) ============ -->
+<!-- ============ Practice - all modes (second tab) ============ -->
 <div id="scPractice" hidden>
   <div class="bar">
     <div class="logo sm"><svg class="svi" aria-hidden="true"><use href="#i-logo"/></svg></div>
@@ -913,7 +915,7 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
   </div>
 </div>
 
-<!-- ============ સૂચના સ્ક્રીન ============ -->
+<!-- ============ Briefing screen ============ -->
 <div id="scBrief" hidden>
   <div class="bar solid">
     <button class="ib" id="btnBriefBack" data-i18n-aria="run.back" aria-label="Back">
@@ -940,7 +942,7 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
   </div>
 </div>
 
-<!-- ============ પ્રેક્ટિસ સ્ક્રીન ============ -->
+<!-- ============ Practice screen ============ -->
 <div id="scRun" hidden>
   <div class="bar solid">
     <button class="ib" id="btnBack" data-i18n-aria="run.back" aria-label="Back">
@@ -1011,7 +1013,7 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
   </div>
 </div>
 
-<!-- ============ પ્રોફાઇલ — ઓળખ અને સેટિંગ (ત્રીજો ટૅબ) ============ -->
+<!-- ============ Profile - identity and settings (third tab) ============ -->
 <div id="scProfile" hidden>
   <div class="bar">
     <h1 data-i18n="prof.title">Profile</h1>
@@ -1027,7 +1029,7 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
       <svg class="svi sm chev" aria-hidden="true"><use href="#i-next"/></svg>
     </button>
 
-    <!-- પ્રેક્ટિસનો ટૂંકો સાર — stats.js ભરે છે -->
+    <!-- A short practice summary - filled in by stats.js -->
     <div class="statpanel" id="profStats" style="margin-top:10px"></div>
 
     <h2 class="grp" data-i18n="set.grpApp">App settings</h2>
@@ -1110,8 +1112,8 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
 
     </div>
 
-    <!-- પ્રગતિનો બૅકઅપ — sync.js માં PB_URL ભરેલું હોય તો જ દેખાય -->
-    <!-- AI મૂલ્યાંકન — judge.js માં JUDGE_URL ભરેલો હોય તો જ દેખાય -->
+    <!-- Progress backup - shown only when PB_URL is set in sync.js -->
+    <!-- AI evaluation - shown only when JUDGE_URL is set in judge.js -->
     <div id="aiWrap" hidden>
       <h2 class="grp" data-i18n="ai.grp">AI evaluation</h2>
       <div class="group">
@@ -1192,7 +1194,7 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
   </div>
 </div>
 
-<!-- ============ મદદની સ્ક્રીન ============ -->
+<!-- ============ Help screen ============ -->
 <div id="scHelp" hidden>
   <div class="bar solid">
     <button class="ib" id="btnHelpBack" data-i18n-aria="run.back" aria-label="Back">

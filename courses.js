@@ -1,12 +1,12 @@
-/* કોર્સ રજિસ્ટ્રી — દરેક પ્રશ્ન-બેંક પોતાને આ રીતે નોંધાવે છે.
-   દરેક bank-*.js ફાઇલ registerCourse() બોલાવે છે.
+/* Course registry — this is how each question bank registers itself.
+   Every bank-*.js file calls registerCourse().
 
    def = {
-     id      : ટૂંકું અંગ્રેજી નામ (localStorage કી માટે)
-     name    : ગુજરાતીમાં કોર્સનું નામ
-     icon    : એક ઇમોજી
-     tagline : ગુજરાતીમાં એક લીટીની ઓળખ
-     mode    : "interview" (HR પ્રશ્નો) અથવા "technical" (તકનીકી પ્રશ્નો)
+     id      : short English name (used as the localStorage key)
+     name    : course name in Gujarati
+     icon    : a single emoji
+     tagline : one-line description in Gujarati
+     mode    : "interview" (HR questions) or "technical" (trade questions)
      questions: [ ... ]
    }
 */

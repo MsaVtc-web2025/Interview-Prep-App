@@ -1,32 +1,33 @@
-/* પ્રગતિનો બૅકઅપ — ફોનની પ્રગતિ સંસ્થાના સર્વર પર મોકલવી.
+/* Progress backup — sending the phone's progress to the organisation's server.
 
-   ત્રણ નિયમ, જે કદી તોડવા નહીં:
+   Three rules, never to be broken:
 
-   1. એપ પહેલાં ઓફલાઇન છે. સર્વર ન હોય, ઇન્ટરનેટ ન હોય, સાઇન-ઇન ન કર્યું
-      હોય કે સંમતિ ન આપી હોય — એપ પૂરેપૂરી ચાલવી જ જોઈએ. ફોનનો સંગ્રહ જ
-      સાચો સંગ્રહ છે; સર્વર તેની નકલ છે, ઉલટું નહીં.
+   1. The app is offline first. No server, no internet, not signed in, no consent
+      given — the app must still work completely. The phone's storage is the real
+      storage; the server holds a copy of it, not the other way round.
 
-   2. જવાબનું લખાણ કદી બહાર જતું નથી. ફક્ત ગુણ, માપદંડ અને સમય જાય છે.
-      નીચે recordFor() માં જે ખાનાં છે તે જ જાય છે — `answer` અને `q`
-      જાણી જોઈને છોડી દીધાં છે.
+   2. Answer text never leaves the phone. Only scores, criteria and timings go.
+      Only the fields in recordFor() below are sent — `answer` and `q` are left
+      out deliberately.
 
-   3. વિદ્યાર્થી «હા» કહે ત્યાં સુધી કંઈ મોકલાતું નથી. PB_URL ખાલી હોય
-      તો આખી સુવિધા બંધ રહે અને એપ પહેલાં જેવી જ વર્તે.
+   3. Nothing is sent until the student says yes. If PB_URL is empty the whole
+      feature stays off and the app behaves exactly as it did before.
 
-   દરેક જવાબ સાથે `cid` (client id) જાય છે અને સર્વર પર (user, cid) unique
-   છે. તેથી ઇન્ટરનેટ તૂટે અને કતાર ફરી મોકલાય તો પણ કંઈ બમણું થતું નથી.
+   Every answer carries a `cid` (client id), and (user, cid) is unique on the
+   server. So nothing is duplicated even if the connection drops and the queue
+   is sent again.
 */
 "use strict";
 
-/* ⚙ સંસ્થાના સર્વરનું સરનામું. ખાલી હોય તો બૅકઅપની સુવિધા દેખાતી જ નથી.
-   backend/README.md માં સર્વર ઊભું કરવાની રીત છે.
-   ઉદાહરણ: "https://api.interviewprep.example"  (છેલ્લે સ્લૅશ નહીં) */
+/* The organisation's server address. Leave it empty and the backup feature
+   does not appear at all. backend/README.md explains how to stand the server up.
+   Example: "https://api.interviewprep.example"  (no trailing slash) */
 const PB_URL = "";
 
 const Sync = (function () {
 
-  const MAX_PER_FLUSH = 25;    // એક વારમાં આટલા જવાબ મોકલો, પછી થોભો
-  const MAX_TRIES = 5;         // આટલી વાર નિષ્ફળ જાય તો એ જવાબ છોડી દો
+  const MAX_PER_FLUSH = 25;    // send this many answers per round, then pause
+  const MAX_TRIES = 5;         // give up on an answer after this many failures
 
   let pb = null;
   let flushing = false;
@@ -52,7 +53,7 @@ const Sync = (function () {
     return signedIn() ? c.authStore.record : null;
   }
 
-  /* સંમતિ આપી છે? સર્વર પરના record માં consent_at ભરેલું હોય તો હા. */
+  /* Has consent been given? Yes if consent_at is set on the server record. */
   function consented() {
     const u = me();
     return !!(u && u.consent_at);
@@ -61,16 +62,16 @@ const Sync = (function () {
   function onChange(fn) { listeners.push(fn); }
   function fire() { listeners.forEach(fn => { try { fn(status()); } catch (e) {} }); }
 
-  /* ---------------- કતાર ---------------- */
+  /* ---------------- The queue ---------------- */
 
-  /* હજી ન મોકલાયેલા જવાબ, જૂનાથી નવા ક્રમમાં */
+  /* Answers not yet sent, oldest first */
   function pending() {
     const out = [];
     Object.keys(state.courses).forEach(id => {
       const h = (state.courses[id] && state.courses[id].history) || [];
       h.forEach(e => {
         if (e.synced) return;
-        if (!e.cid) return;                       // જૂના જવાબ — cid નથી, છોડી દો
+        if (!e.cid) return;                       // old answers have no cid — skip them
         if ((e.syncTries || 0) >= MAX_TRIES) return;
         out.push(e);
       });
@@ -78,8 +79,8 @@ const Sync = (function () {
     return out.sort((a, b) => (a.ts || 0) - (b.ts || 0));
   }
 
-  /* જૂના જવાબોમાં cid નથી, તેથી એ કદી મોકલાતા નથી — «આજથી આગળ» એ જ
-     નક્કી કર્યું હતું. કેટલા એવા છે તે જાણવું ઉપયોગી છે. */
+  /* Older answers have no cid, so they are never sent — "from today onwards"
+     was the decision. It is still useful to know how many there are. */
   function legacyCount() {
     let n = 0;
     Object.keys(state.courses).forEach(id => {
@@ -103,12 +104,12 @@ const Sync = (function () {
     };
   }
 
-  /* ---------------- સાઇન-ઇન ---------------- */
+  /* ---------------- Sign-in ---------------- */
 
   function signIn() {
     const c = client();
     if (!c) return Promise.reject(new Error("sync-disabled"));
-    // PocketBase પૉપ-અપ ખોલે, Google પર જાય, પછી ટોકન લઈને પાછું આવે
+    // PocketBase opens a popup, goes to Google, and comes back with a token
     return c.collection("users").authWithOAuth2({ provider: "google" })
       .then(() => { lastErr = ""; fire(); return me(); })
       .catch(err => { lastErr = errText(err); fire(); throw err; });
@@ -121,14 +122,14 @@ const Sync = (function () {
     fire();
   }
 
-  /* સંમતિ નોંધો (કે પાછી ખેંચો). consent_at ખાલી હોય તો કંઈ મોકલાતું નથી. */
+  /* Record consent (or withdraw it). Nothing is sent while consent_at is empty. */
   function setConsent(yes) {
     const c = client();
     if (!signedIn()) return Promise.reject(new Error("not-signed-in"));
     return c.collection("users").update(me().id, {
       consent_at: yes ? new Date().toISOString() : null
     }).then(rec => {
-      // authStore નું record તાજું કરો, નહીં તો consented() જૂનું વાંચે
+      // Refresh the authStore record, otherwise consented() reads a stale value
       c.authStore.save(c.authStore.token, rec);
       lastErr = "";
       fire();
@@ -137,10 +138,10 @@ const Sync = (function () {
     }).catch(err => { lastErr = errText(err); fire(); throw err; });
   }
 
-  /* ---------------- મોકલવું ---------------- */
+  /* ---------------- Sending ---------------- */
 
-  /* સર્વર પર જતું ખાનું-દીઠ ચિત્ર. જવાબનું લખાણ અહીં નથી — અને હોવું પણ
-     ન જોઈએ; સર્વર પર એ માટે ખાનું જ નથી. */
+  /* The field-by-field shape sent to the server. The answer text is not here —
+     and must not be; there is no column for it on the server either. */
   function recordFor(e, userId) {
     const sc = e.scores || {};
     const course = (typeof getCourse === "function" && getCourse(e.course)) || null;
@@ -150,7 +151,7 @@ const Sync = (function () {
       cid: e.cid,
       course: e.course || "",
       category: e.cat || "",
-      // સર્વર પર આ text છે — જૂના record માં આંકડો હોય તો પણ લખાણ બનાવીએ
+      // This is text on the server — coerce it even if an old record holds a number
       question: e.qid == null ? "" : String(e.qid),
       mode: course && course.mode === "technical" ? "technical" : "interview",
       overall: num(e.overall),
@@ -168,11 +169,11 @@ const Sync = (function () {
     };
   }
 
-  /* સર્વર «આ cid તો પહેલેથી છે» કહે તો એ ભૂલ નથી — સફળતા છે. */
+  /* "That cid already exists" from the server is not a failure — it is success. */
   function isDuplicate(err) {
     const d = err && err.response && err.response.data;
     if (d && d.cid && String(d.cid.code || "").indexOf("not_unique") >= 0) return true;
-    // index સ્તરે પકડાય તો સંદેશમાં આવે છે
+    // When the index catches it, it shows up in the message instead
     return err && err.status === 400 && /unique/i.test(JSON.stringify(d || {}));
   }
 
@@ -182,7 +183,7 @@ const Sync = (function () {
     return (err.status ? err.status + " " : "") + (err.message || "error");
   }
 
-  /* કતાર ખાલી કરો. કદી throw કરતું નથી — એપ અટકવી ન જોઈએ. */
+  /* Drain the queue. Never throws — the app must not stall. */
   function flush() {
     if (flushing || !enabled() || !signedIn() || !consented()) return Promise.resolve(status());
     if (navigator.onLine === false) return Promise.resolve(status());
@@ -194,7 +195,7 @@ const Sync = (function () {
     const userId = me().id;
     let dirty = false;
 
-    // એક પછી એક — સંખ્યા નાની છે અને સર્વર પર ભાર ન આવે
+    // One at a time — the counts are small and it keeps load off the server
     return list.reduce((chain, e) => chain.then(() => {
       return client().collection("progress").create(recordFor(e, userId))
         .then(() => { e.synced = true; dirty = true; })
@@ -203,11 +204,11 @@ const Sync = (function () {
           e.syncTries = (e.syncTries || 0) + 1;
           lastErr = errText(err);
           dirty = true;
-          // ઇન્ટરનેટની ભૂલ હોય તો બાકીના પર સમય ન બગાડો
+          // On a connection error, do not waste time on the rest
           if (lastErr === "offline") throw err;
         });
     }), Promise.resolve())
-      .catch(() => {})                    // ઓફલાઇન — બાકીનું આવતી વાર
+      .catch(() => {})                    // offline — the rest goes next time
       .then(() => {
         if (dirty) { lastAt = Date.now(); save(); }
         flushing = false;
@@ -216,7 +217,7 @@ const Sync = (function () {
       });
   }
 
-  /* સર્વર પરથી પોતાની બધી પ્રગતિ ભૂંસો. ફોનનો સંગ્રહ અલગથી ભૂંસાય છે. */
+  /* Erase all of your own progress from the server. Phone storage is cleared separately. */
   function eraseRemote() {
     const c = client();
     if (!signedIn()) return Promise.reject(new Error("not-signed-in"));
@@ -226,7 +227,7 @@ const Sync = (function () {
         chain.then(() => c.collection("progress").delete(r.id)), Promise.resolve())
         .then(() => rows.length))
       .then(n => {
-        // ફોન પરની નિશાની પણ ઉતારો, જેથી ફરી «હા» કહે તો ફરી મોકલાય
+        // Clear the phone-side markers too, so saying yes again re-sends everything
         Object.keys(state.courses).forEach(id => {
           ((state.courses[id] || {}).history || []).forEach(e => {
             delete e.synced; delete e.syncTries;
@@ -240,7 +241,7 @@ const Sync = (function () {
       .catch(err => { lastErr = errText(err); fire(); throw err; });
   }
 
-  /* ઇન્ટરનેટ પાછું આવે એટલે જાતે પ્રયત્ન કરો */
+  /* Retry automatically as soon as the connection comes back */
   if (typeof window !== "undefined") {
     window.addEventListener("online", () => { lastErr = ""; flush(); });
     window.addEventListener("offline", fire);
@@ -249,7 +250,7 @@ const Sync = (function () {
   return {
     enabled, signedIn, consented, me, status, onChange,
     signIn, signOut, setConsent, flush, eraseRemote,
-    // તપાસ માટે બહાર રાખ્યાં
+    // exposed for tests
     recordFor, pending, isDuplicate, PB_URL
   };
 })();

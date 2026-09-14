@@ -1,5 +1,5 @@
-/* નર્સિંગ કોર્સ — તકનીકી પ્રશ્ન બેંક (GNM / ANM / નર્સિંગ સહાયક સ્તર)
-   must = ફરજિયાત દર્દી-સલામતીના મુદ્દા. ચૂકી જાય તો ચેતવણી અને કુલ ગુણ મર્યાદિત. */
+/* Nursing course — technical question bank (GNM / ANM / nursing assistant level)
+   must = mandatory patient-safety points. Missing one triggers a warning and caps the score. */
 registerCourse({
   id: "nursing",
   name: "નર્સિંગ",

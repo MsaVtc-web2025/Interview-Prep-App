@@ -1,5 +1,5 @@
-/* ઓટોમોબાઇલ કોર્સ — તકનીકી પ્રશ્ન બેંક
-   must = ફરજિયાત સલામતીના મુદ્દા. ચૂકી જાય તો ચેતવણી અને કુલ ગુણ મર્યાદિત. */
+/* Automobile course — technical question bank
+   must = mandatory safety points. Missing one triggers a warning and caps the score. */
 registerCourse({
   id: "automotive",
   name: "ઓટોમોબાઇલ",

@@ -1,9 +1,9 @@
-/* પ્રશ્ન બેંક — ઉમેદવારોના ડિબ્રીફ રેકોર્ડિંગમાંથી બનાવેલી.
-   q  = પ્રશ્ન (અંગ્રેજીમાં, જેમ ઇન્ટરવ્યુમાં પુછાય છે)
-   kw = અપેક્ષિત મુદ્દા (ચોકસાઈ માપવા માટે)
-   gu = ગુજરાતીમાં નમૂનારૂપ જવાબ અને સમજૂતી
-   en = અંગ્રેજીમાં આ રીતે બોલો
-   tip = આ પ્રશ્ન માટે ખાસ સૂચન
+/* Question bank — built from debrief recordings of real candidates.
+   q   = the question (in English, as it is asked in the interview)
+   kw  = expected points (used to measure accuracy)
+   gu  = model answer and explanation in Gujarati
+   en  = how to say it in English
+   tip = a specific hint for this question
 */
 registerCourse({
   id: "interview",
@@ -12,12 +12,13 @@ registerCourse({
   tagline: "દરેક ઇન્ટરવ્યુમાં પુછાતા પ્રશ્નો",
   mode: "interview",
 
-  /* ખરા ઇન્ટરવ્યુના ક્રમમાં પ્રશ્નો પુછાય — આ યાદીમાં પ્રશ્નના id છે.
-     ક્રમ: સ્વ-પરિચય → વતન → કુટુંબ → શિક્ષણ → શોખ → નોકરીની ભૂમિકા
-           → સમય/શિફ્ટ → પગાર → વ્યવહારુ કૌશલ્ય → તકનીકી (ટેલી).
-     ક્રમ બદલવો હોય તો ફક્ત આ એક લીટી બદલો. */
+  /* Questions are asked in real-interview order — this list holds question ids.
+     Order: self-introduction -> home town -> family -> education -> hobbies
+            -> job role -> timing/shift -> salary -> practical skills
+            -> technical (Tally).
+     To change the order, edit just this one line. */
   order: [21, 17, 11, 12, 9, 10, 19, 18, 13, 14, 15, 16, 22, 20, 7, 8, 1, 2, 3, 4, 5, 6],
-  greet: true,          // પહેલા પ્રશ્ન પહેલાં નામ સાથે અભિવાદન
+  greet: true,          // greet the student by name before the first question
 
   questions: [
 {

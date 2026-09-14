@@ -1,5 +1,5 @@
-/* ઇ-વ્હીકલ (ઇલેક્ટ્રિક વાહન) કોર્સ — તકનીકી પ્રશ્ન બેંક
-   must = ફરજિયાત સલામતીના મુદ્દા. ચૂકી જાય તો ચેતવણી અને કુલ ગુણ મર્યાદિત. */
+/* E-vehicle (electric vehicle) course — technical question bank
+   must = mandatory safety points. Missing one triggers a warning and caps the score. */
 registerCourse({
   id: "evehicle",
   name: "ઇ-વ્હીકલ",

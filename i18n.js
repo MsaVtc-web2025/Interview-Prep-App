@@ -1,11 +1,11 @@
-/* ભાષા (i18n) — એપના ઇન્ટરફેસની ભાષા: English (ડિફોલ્ટ) · ગુજરાતી · हिन्दी
-   Interface language layer. English is the default.
+/* Interface language layer (i18n): English (default), Gujarati, Hindi.
 
-   પ્રશ્નો હંમેશા અંગ્રેજીમાં જ રહે છે અને વિદ્યાર્થી અંગ્રેજીમાં જ જવાબ આપે છે —
-   એ તાલીમનો હેતુ છે. ભાષા બદલવાથી ફક્ત એપ જે બોલે/લખે તે બદલાય છે.
+   The questions always stay in English and the student always answers in
+   English - that is the point of the training. Changing the language only
+   changes what the app itself says and writes.
 
-   નવી લીટી ઉમેરવી હોય તો ત્રણેય ભાષામાં એક જ કી નીચે ઉમેરો.
-   કી ન મળે તો એપ English પર પડી જાય છે (કદી ખાલી નહીં દેખાય).
+   To add a new line, add the same key under all three languages below.
+   A missing key falls back to English, so nothing ever renders blank.
 */
 "use strict";
 
@@ -15,7 +15,7 @@ const LANGS = [
   { id: "hi", label: "हिन्दी",     font: '"Noto Sans Devanagari","Nirmala UI","Mangal",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif' }
 ];
 
-/* મૂલ્યાંકન બોલવા માટે કયો વોઇસ વાપરવો */
+/* Which voice to use when speaking the feedback */
 const LANG_VOICE = { en: "en", gu: "gu", hi: "hi" };
 
 const STRINGS = {
@@ -372,7 +372,7 @@ en: {
   "gram.marriedWith": "Say “married to” instead of “married with”."
 },
 
-/* ==================== ગુજરાતી ==================== */
+/* ==================== Gujarati ==================== */
 gu: {
   "app.name": "ઇન્ટરવ્યુ પ્રેપ",
   "app.tagline": "પ્રશ્ન અંગ્રેજીમાં · જવાબ અંગ્રેજીમાં બોલો · મૂલ્યાંકન ગુજરાતીમાં",
@@ -1077,7 +1077,7 @@ hi: {
 }
 };
 
-/* ---------------- ભાષા સંભાળવી ---------------- */
+/* ---------------- Language handling ---------------- */
 
 let LANG = "en";
 
@@ -1098,9 +1098,9 @@ function setLang(id) {
   return LANG;
 }
 
-/* ચોક્કસ ભાષામાં લખાણ. મોટે ભાગે t() વાપરો — આ ત્યાં જોઈએ છે જ્યાં
-   બોલવાની ભાષા ઇન્ટરફેસની ભાષાથી અલગ હોય (દા.ત. હિન્દી વોઇસ ન હોય
-   ત્યારે અંગ્રેજીમાં બોલવું પડે). */
+/* Text in a specific language. Use t() most of the time - this is for the
+   cases where the spoken language differs from the interface language (for
+   example, having to speak English because no Hindi voice is installed). */
 function tIn(lang, key, vars) {
   let s = (STRINGS[lang] && STRINGS[lang][key]);
   if (s == null) s = STRINGS.en[key];
@@ -1113,10 +1113,10 @@ function tIn(lang, key, vars) {
   return s;
 }
 
-/* t("key", {n:3}) — કી ન મળે તો English, એ પણ ન મળે તો કી પોતે */
+/* t("key", {n:3}) - falls back to English, then to the key itself */
 function t(key, vars) { return tIn(LANG, key, vars); }
 
-/* HTML માં data-i18n લખેલા બધા ભાગ ભરી દો */
+/* Fill in every element in the HTML that carries data-i18n */
 function applyI18n(root) {
   const scope = root || document;
   Array.prototype.forEach.call(scope.querySelectorAll("[data-i18n]"), el => {

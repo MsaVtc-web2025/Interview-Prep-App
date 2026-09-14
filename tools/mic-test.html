@@ -1,19 +1,19 @@
 <!doctype html>
-<html lang="gu">
+<html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>માઇકની ચકાસણી — speech.js</title>
+<title>Microphone test - speech.js</title>
 
 <!--
-  speech.js નું સાંભળવાનું ભાગ ચકાસે છે, ખરા માઇક વગર.
+  Tests the listening half of speech.js, without a real microphone.
 
-  કેમ જરૂરી: એન્ડ્રોઇડ Chrome માઇકનું સેશન દર થોડી સેકન્ડે જાતે બંધ કરે છે
-  અને speech.js એને ફરી ચાલુ કરે છે. સેશન બંધ થાય તે ઘડીએ છેલ્લો વાક્યાંશ
-  ઘણી વાર «પાકો» (final) થયો હોતો નથી — ફક્ત કામચલાઉ (interim) હોય છે.
-  એ વાક્યાંશ સચવાય છે કે નહીં તે અહીં તપાસાય છે.
+  Why it is needed: Android Chrome closes the mic session by itself every few
+  seconds and speech.js restarts it. At the moment a session closes, the last
+  phrase has often not gone final - it exists only as interim text. Whether that
+  phrase survives is what this page checks.
 
-  વાપરવાની રીત: આ ફાઇલ બ્રાઉઝરમાં ખોલો (file:// ચાલે છે). બધી લીટી લીલી
-  હોવી જોઈએ. speech.js બદલો ત્યારે ફરી ખોલીને જોઈ લેવું.
+  How to use: open this file in a browser (file:// works). Every line should be
+  green. Re-open it whenever you change speech.js.
 -->
 
 <style>
@@ -33,15 +33,15 @@
 </style>
 
 <body>
-<h1>માઇકની ચકાસણી</h1>
-<p class="sub">ખરા માઇક વગર — એન્ડ્રોઇડ જે રીતે સેશન ચાલુ/બંધ કરે છે તે નકલ કરીને</p>
-<div id="sum">ચાલે છે…</div>
+<h1>Microphone test</h1>
+<p class="sub">Without a real microphone - simulating how Android opens and closes sessions</p>
+<div id="sum">Running...</div>
 <div id="out"></div>
 
 <script>
-/* ---------- નકલી SpeechRecognition ----------
-   ખરા એન્ડ્રોઇડની જેમ: results[] આખા સેશન માટે ભેગું થતું જાય, છેલ્લું
-   કામચલાઉ પરિણામ જગ્યાએ જ બદલાય, અને સેશન onend થી પૂરું થાય. */
+/* ---------- Fake SpeechRecognition ----------
+   Behaves like the real Android one: results[] accumulates across the session,
+   the last interim result is replaced in place, and the session ends on onend. */
 let SCRIPT = [], sessionNo = 0;
 
 function FakeSR() { this.continuous = false; this.interimResults = false; this.lang = ""; }
@@ -71,7 +71,7 @@ FakeSR.prototype.abort = function () { this._dead = true; };
 
 window.SpeechRecognition = window.webkitSpeechRecognition = FakeSR;
 
-/* બોલવાનો ભાગ અહીં ચકાસવાનો નથી — «શાંત છે» એટલું કહી દઈએ */
+/* The speaking half is not under test here - just report "quiet" */
 window.speechSynthesis = { speaking: false, pending: false, cancel(){}, speak(){},
                            getVoices(){ return []; }, addEventListener(){}, removeEventListener(){} };
 </script>
@@ -79,9 +79,9 @@ window.speechSynthesis = { speaking: false, pending: false, cancel(){}, speak(){
 <script src="../speech.js"></script>
 
 <script>
-/* ---------- ચકાસણીના દાખલા ---------- */
+/* ---------- Test cases ---------- */
 const CASES = [
-  { name: "સેશન કામચલાઉ લખાણ સાથે પૂરું થાય — વાક્યાંશ ગુમ ન થવો જોઈએ",
+  { name: "Session ends holding interim text - the phrase must not be lost",
     script: [
       { chunks: ["My", "My name", "My name is Ravi"], final: "My name is Ravi" },
       { chunks: ["and I", "and I am from", "and I am from Surat"], final: null },
@@ -90,7 +90,7 @@ const CASES = [
     ],
     want: "My name is Ravi and I am from Surat I completed my ITI in electrician trade last year" },
 
-  { name: "કામચલાઉ વાક્યાંશ પછી બીજું સેશન આવે — તોય સચવાવું જોઈએ",
+  { name: "Another session follows an interim phrase - it must still survive",
     script: [
       { chunks: ["My name is Ravi"], final: "My name is Ravi" },
       { chunks: ["and I am from Surat"], final: null },
@@ -100,7 +100,7 @@ const CASES = [
     ],
     want: "My name is Ravi and I am from Surat I completed my ITI in electrician trade last year thank you sir" },
 
-  { name: "એન્ડ્રોઇડ વધતું જતું «પાકું» લખાણ ફરી ફરી મોકલે — બમણું ન થવું જોઈએ",
+  { name: "Android resends growing final text repeatedly - it must not double up",
     script: [
       { chunks: ["I work"], final: "I work" },
       { chunks: ["I work in a garage"], final: "I work in a garage" },
@@ -108,28 +108,28 @@ const CASES = [
     ],
     want: "I work in a garage near the bus stand" },
 
-  { name: "આખા જવાબમાં એકેય «પાકું» પરિણામ ન આવે",
+  { name: "Not one final result in the whole answer",
     script: [
       { chunks: ["I am hard working"], final: null },
       { chunks: ["and I learn quickly"], final: null }
     ],
     want: "I am hard working and I learn quickly" },
 
-  { name: "કામચલાઉ લખાણ «પાકા» લખાણથી સુધરે",
+  { name: "Interim text is corrected by the final text",
     script: [
       { chunks: ["I am Prakash"], final: "I am Prakash Patel" },
       { chunks: ["from Rajkot"], final: "from Rajkot" }
     ],
     want: "I am Prakash Patel from Rajkot" },
 
-  { name: "આગળનું સેશન પાછલા સેશનનું કામચલાઉ લખાણ ફરી મોકલે",
+  { name: "The next session resends the previous session's interim text",
     script: [
       { chunks: ["I have three years"], final: null },
       { chunks: ["I have three years of experience"], final: "I have three years of experience" }
     ],
     want: "I have three years of experience" },
 
-  { name: "સચવાયેલું કામચલાઉ લખાણ પછીથી «પાકું» થઈને પાછું આવે",
+  { name: "Saved interim text comes back later as final",
     script: [
       { chunks: ["my strength is"], final: null },
       { chunks: ["my strength is hard work"], final: "my strength is hard work" },
@@ -137,7 +137,7 @@ const CASES = [
     ],
     want: "my strength is hard work and honesty" },
 
-  { name: "લાંબો જવાબ, ઘણાં સેશન, એકેય «પાકું» નહીં",
+  { name: "A long answer, many sessions, nothing ever final",
     script: [
       { chunks: ["I completed my ITI"], final: null },
       { chunks: ["in electrician trade"], final: null },
@@ -167,24 +167,24 @@ function runCase(script, ms) {
     const d = document.createElement("div");
     d.className = "case";
     d.innerHTML =
-      '<div class="nm"><span class="tag ' + (ok ? "ok" : "bad") + '">' + (ok ? "બરાબર" : "ખોટું") + "</span>" +
+      '<div class="nm"><span class="tag ' + (ok ? "ok" : "bad") + '">' + (ok ? "pass" : "fail") + "</span>" +
       c.name + "</div>" +
-      (ok ? "" : '<div class="row"><b>જોઈતું:</b> <code>' + c.want + "</code></div>" +
-                 '<div class="row"><b>મળ્યું:</b> <code>' + got + "</code></div>");
+      (ok ? "" : '<div class="row"><b>expected:</b> <code>' + c.want + "</code></div>" +
+                 '<div class="row"><b>got:</b> <code>' + got + "</code></div>");
     out.appendChild(d);
   }
   const s = document.getElementById("sum");
   s.className = pass === CASES.length ? "ok" : "bad";
-  s.textContent = pass + " / " + CASES.length + " બરાબર";
+  s.textContent = pass + " / " + CASES.length + " passing";
 })();
 </script>
 
 <div class="note">
-  <b>જાણીતી મર્યાદા:</b> વિદ્યાર્થી ખરેખર એક જ શબ્દ સળંગ બે વાર બોલે
-  («very very important») અને એ શબ્દ બે સેશનની સંધિ પર પડે, તો એક «very»
-  ઓછું થાય. બે સેશનની સંધિ પર એન્ડ્રોઇડ શબ્દ ફરી મોકલે છે કે વિદ્યાર્થીએ
-  ફરી બોલ્યો છે — એ ઓળખવાનો કોઈ રસ્તો નથી. આખો વાક્યાંશ બમણો થવા કરતાં
-  એક શબ્દ ઓછો સારો, તેથી આ જાણીજોઈને રાખેલું છે.
+  <b>Known limitation:</b> if a student genuinely says the same word twice in a
+  row ("very very important") and that word falls on the seam between two
+  sessions, one "very" is dropped. At a seam there is no way to tell whether
+  Android resent the word or the student said it again. One word short beats a
+  whole phrase doubled, so this is deliberate.
 </div>
 </body>
 </html>
