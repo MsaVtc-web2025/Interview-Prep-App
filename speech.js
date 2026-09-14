@@ -6,7 +6,8 @@
    2. The first speak() needs a user tap -> prime() handles that.
    3. Long text gets cut off mid-way -> we speak it in small chunks.
    4. onend sometimes never fires -> there is a watchdog timer.
-   5. Continuous recognition stops by itself on Android -> we restart it.
+   5. Continuous recognition stops by itself on Android -> we restart it, reusing
+      one recogniser, because rebuilding one costs dead air and so costs words.
    6. The mic hears the speaker's own output -> the two are never on together.
    7. rec.start() throws while the previous session is winding down -> we back
       off and retry. (Swallowing that error leaves the mic off for good while the
@@ -366,22 +367,28 @@ const Speech = (function () {
     return true;
   }
 
-  function startRecogniser() {
-    try {
-      rec = new SR();
-    } catch (e) {
-      active = false;
-      if (handlers.onError) handlers.onError("start-failed");
-      return;
-    }
-    rec.continuous = true;
-    rec.interimResults = true;
-    rec.lang = handlers.lang || "en-IN";
-    rec.maxAlternatives = 1;
+  /* Give up on listening and tell the app why. */
+  function fail(why) {
+    active = false;
+    clearSilence();
+    clearStartTimer();
+    if (handlers.onError) handlers.onError(why);
+  }
 
-    rec.onstart = () => { if (handlers.onStart) handlers.onStart(); };
+  /* Build a recogniser with every handler attached. Called once per answer -
+     see startRecogniser for why it is not called per session. */
+  function makeRecogniser() {
+    let r;
+    try { r = new SR(); } catch (e) { return null; }
 
-    rec.onresult = ev => {
+    r.continuous = true;
+    r.interimResults = true;
+    r.lang = handlers.lang || "en-IN";
+    r.maxAlternatives = 1;
+
+    r.onstart = () => { if (handlers.onStart) handlers.onStart(); };
+
+    r.onresult = ev => {
       // Rebuild from the whole results list - appending only the pieces after
       // resultIndex doubles the text on some phones
       let fin = [], inter = [];
@@ -404,18 +411,15 @@ const Speech = (function () {
       if (handlers.onInterim) handlers.onInterim(fullText(), hadFinal);
     };
 
-    rec.onerror = ev => {
+    r.onerror = ev => {
       const m = ev && ev.error ? String(ev.error) : "unknown";
       // These two are routine - they arrive while the student thinks, not errors
       if (m === "no-speech" || m === "aborted") return;
-      active = false;
-      clearSilence();
-      clearStartTimer();
-      if (handlers.onError) handlers.onError(m);
+      fail(m);
     };
 
     // On Android the mic stops by itself despite continuous - so restart it
-    rec.onend = () => {
+    r.onend = () => {
       if (!active) return;
       commitSession();                    // so a new session does not resend old text
 
@@ -432,12 +436,8 @@ const Speech = (function () {
          chime to play. */
       if (answerDone(RESTART_MS)) return finish();
 
-      if (++restarts > MAX_RESTARTS) {
-        active = false;
-        clearSilence();
-        if (handlers.onError) handlers.onError("too-many-restarts");
-        return;
-      }
+      if (++restarts > MAX_RESTARTS) return fail("too-many-restarts");
+
       // The mic is off for the whole of this delay - every word spoken in it is
       // lost. So restart with no delay at all. If the engine is still winding
       // down the old session, start() throws, and only then do we back off.
@@ -445,20 +445,41 @@ const Speech = (function () {
       startTimer = setTimeout(() => { if (active) startRecogniser(); }, restartDelay);
     };
 
+    return r;
+  }
+
+  /* Open the mic, reusing the recogniser we already have.
+
+     Every `new SpeechRecognition()` makes Android bind to its recognition
+     service again, and that binding is the slowest part of reopening the mic.
+     Between two sentences it is dead air, and dead air is words the student
+     said and the app never heard. Calling start() on the instance we already
+     have skips it, so one recogniser is kept for the whole answer and only
+     stopListen() throws it away.
+
+     Falling back to a fresh one still matters: an instance can end up wedged,
+     and a restart loop that never rebuilds would never recover. So the first
+     retry reuses, and any retry after that starts from a new instance - which
+     is what the old code did every single time. */
+  function startRecogniser() {
+    if (!rec) {
+      rec = makeRecogniser();
+      if (!rec) return fail("start-failed");
+    }
+
     try {
       rec.start();
       restartDelay = 0;
     } catch (e) {
-      // The engine is not ready. Drop this recogniser and try again shortly,
-      // doubling the wait each time so a genuine failure does not spin.
-      rec = null;
-      restartDelay = Math.min(restartDelay ? restartDelay * 2 : 50, 400);
-      if (++restarts > MAX_RESTARTS) {
-        active = false;
-        clearSilence();
-        if (handlers.onError) handlers.onError("start-failed");
-        return;
+      // Usually the engine is still winding the previous session down. Give it
+      // a moment, doubling the wait so a genuine failure does not spin.
+      if (restartDelay) {                 // already retried once - this one is wedged
+        try { rec.onend = rec.onresult = rec.onerror = rec.onstart = null; } catch (e2) {}
+        try { rec.abort && rec.abort(); } catch (e2) {}
+        rec = null;
       }
+      restartDelay = Math.min(restartDelay ? restartDelay * 2 : 50, 400);
+      if (++restarts > MAX_RESTARTS) return fail("start-failed");
       clearStartTimer();
       startTimer = setTimeout(() => { if (active) startRecogniser(); }, restartDelay);
     }
@@ -469,8 +490,13 @@ const Speech = (function () {
     active = false;
     clearSilence();
     clearStartTimer();
+    // The recogniser is reused across sessions but not across answers, so this
+    // is where it is let go; the next listen() builds a fresh one.
     if (rec) {
-      try { rec.onend = null; rec.onresult = null; rec.onerror = null; rec.stop(); } catch (e) {}
+      try {
+        rec.onend = rec.onresult = rec.onerror = rec.onstart = null;
+        rec.stop();
+      } catch (e) {}
       try { rec.abort && rec.abort(); } catch (e) {}
       rec = null;
     }

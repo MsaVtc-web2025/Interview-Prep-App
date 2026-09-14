@@ -75,18 +75,24 @@ function runUntil(end) {
    - with nothing heard it also closes after a while (no-speech)
    - for a moment after a session closes the engine is busy, and start() throws */
 var WARMUP = 350, NO_SPEECH = 5000;
-var BUSY_MS = 0, busyUntil = -1, live = null, LOG = [];
+var BUSY_MS = 0, busyUntil = -1, live = null, LOG = [], BUILT = 0;
 
 function mark(ev, x) { LOG.push({ t: now, ev: ev, x: x || "" }); }
 
-function FakeSR() { this.continuous = false; this.interimResults = false; this.lang = ""; }
+function FakeSR() { BUILT++; this.continuous = false; this.interimResults = false; this.lang = ""; }
 
 FakeSR.prototype.start = function () {
+  // Real Chrome throws only while recognition is ALREADY running. An instance
+  // whose session has ended can be started again - speech.js relies on that.
+  if (this._open || this._pending) { mark("start() threw"); throw new Error("InvalidStateError"); }
   if (now < busyUntil) { mark("start() threw"); throw new Error("InvalidStateError"); }
   var self = this;
+  this._pending = true;
   mark("start()");
   setTimeout(function () {
     if (self._dead) return;
+    self._pending = false;
+    self._r = [];                 // each start() begins a fresh session
     self._open = true; live = self;
     mark("MIC ON");
     if (self.onstart) self.onstart({});
@@ -182,6 +188,15 @@ var CASES = [
     say: [ { at: 1200, txt: "My name is Ravi", final: true } ],
     want: { micOnCount: 2, silenceFired: true } },
 
+  { name: "One recogniser for the whole answer, not one per sentence",
+    why:  "Rebuilding it makes Android bind to its recognition service again, and that dead air is words lost",
+    busy: 0, silenceMs: 0, until: 20000,
+    say: [ { at: 1500, txt: "My name is Ravi", final: true },
+           { at: 4000, txt: "I completed my ITI", final: true },
+           { at: 6500, txt: "in electrician trade", final: true },
+           { at: 9000, txt: "thank you sir", final: true } ],
+    want: { built: 1, heard: "My name is Ravi I completed my ITI in electrician trade thank you sir" } },
+
   { name: "A student who speaks in pauses - the mic must not die on them",
     why:  "The restart tally has to reset whenever speech is actually heard",
     busy: 0, silenceMs: 0, until: 400000,
@@ -194,7 +209,7 @@ function runCase(c) {
   // engine busy and this case starts from a wrong state.
   Speech.stopListen(true);
 
-  now = 0; timers = []; nextId = 1; LOG = []; live = null; busyUntil = -1;
+  now = 0; timers = []; nextId = 1; LOG = []; live = null; busyUntil = -1; BUILT = 0;
   BUSY_MS = c.busy;
   var heard = "", err = null, silenceFired = false;
 
@@ -220,7 +235,7 @@ function runCase(c) {
 
   var onCount = LOG.filter(function (l) { return l.ev === "MIC ON"; }).length;
   return { heard: heard, err: err, silenceFired: silenceFired, maxGap: maxGap,
-           micAtEnd: !!live, micOnCount: onCount, log: LOG };
+           micAtEnd: !!live, micOnCount: onCount, built: BUILT, log: LOG };
 }
 
 var out = document.getElementById("out"), pass = 0;
@@ -240,6 +255,8 @@ CASES.forEach(function (c) {
     fails.push("the mic opened " + got.micOnCount + " times, expected " + w.micOnCount);
   if (w.silenceFired !== undefined && got.silenceFired !== w.silenceFired)
     fails.push("scoring did not start after the silence");
+  if (w.built !== undefined && got.built !== w.built)
+    fails.push("built " + got.built + " recognisers, expected " + w.built);
 
   var ok = !fails.length;
   if (ok) pass++;
