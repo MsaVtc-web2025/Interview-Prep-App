@@ -955,16 +955,18 @@ function paintSettings() {
 /* The AI button on the interview screen. It shares one setting with the button
    in settings - change either and the other follows. */
 function paintAiTog() {
-  const b = $("btnAiTog");
-  if (!b) return;
-  if (!Judge.enabled()) { b.hidden = true; return; }
-  b.hidden = false;
+  const w = $("aiTog"), b = $("btnAiTog");
+  if (!w || !b) return;
+  if (!Judge.enabled()) { w.hidden = true; return; }
+  w.hidden = false;
 
   const net = Judge.online();
   const on = Judge.consented() && net;
-  b.classList.toggle("on", on);
+  w.classList.toggle("on", on);            // colours the "AI" label too
+  w.classList.toggle("nonet", !net);
+  b.classList.toggle("on", on);            // slides the knob
   b.disabled = !net;                       // no point turning it on with no internet
-  b.setAttribute("aria-pressed", on ? "true" : "false");
+  b.setAttribute("aria-checked", on ? "true" : "false");
   const lab = t("ai.title") + " — " + t(!net ? "ai.stOffline" : (on ? "ai.stOn" : "ai.stOff"));
   b.setAttribute("aria-label", lab);
   b.title = lab;

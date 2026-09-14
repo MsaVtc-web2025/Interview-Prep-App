@@ -283,22 +283,25 @@ h2.sec{font-size:17px;margin:24px 0 10px;color:var(--ink);font-weight:700}
 /* ---------- Avatar - the interviewer's video tile ---------- */
 .stage{text-align:center;padding:6px 0 4px;position:relative}
 
-/* ---------- The AI button on the interview screen ----------
+/* ---------- The AI switch on the interview screen ----------
    Buried in settings, a student would never see it. Beside the avatar, top
-   right, so they know who is marking them before they answer. */
+   right, so they know who is marking them before they answer. It is the same
+   .sw switch the settings screen uses, only smaller, so the two read as one
+   control rather than two different things that happen to do the same job. */
 .aitog{
   position:absolute;top:0;right:0;z-index:5;
-  display:inline-flex;align-items:center;gap:6px;
-  padding:6px 12px;border:0;border-radius:999px;
-  font:inherit;font-size:12px;font-weight:700;letter-spacing:.2px;
-  background:#eef1f5;color:#67707f;cursor:pointer;
-  box-shadow:0 1px 3px rgba(28,54,120,.10),0 0 0 1px rgba(255,255,255,.9);
-  transition:background .18s ease,color .18s ease
+  display:flex;align-items:center;gap:7px
 }
-.aitog.on{background:#efe9fd;color:#5b3fa8}
-.aitogdot{width:7px;height:7px;border-radius:50%;background:#bcc3ce;transition:background .18s ease}
-.aitog.on .aitogdot{background:#7b5cd6;box-shadow:0 0 0 3px rgba(123,92,214,.18)}
-.aitog:disabled{opacity:.45;cursor:default;box-shadow:0 0 0 1px rgba(255,255,255,.9)}
+.aitog .lbl{
+  font-size:12px;font-weight:700;letter-spacing:.2px;color:#67707f;
+  transition:color .18s ease
+}
+.aitog.on .lbl{color:var(--accent)}
+/* no internet - the switch cannot be turned on, so dim the whole control */
+.aitog.nonet{opacity:.45}
+.sw.mini{width:42px;height:25px}
+.sw.mini i{width:19px;height:19px}
+.sw.mini.on i{transform:translateX(17px)}
 .avatar{width:150px;height:150px;margin:0 auto 22px;position:relative}
 .av-frame{
   position:absolute;inset:0;border-radius:26px;overflow:hidden;background:var(--soft);
@@ -954,9 +957,11 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
 
   <div class="wrap">
     <div class="stage">
-      <button class="aitog" id="btnAiTog" type="button" hidden>
-        <span class="aitogdot" aria-hidden="true"></span><span>AI</span>
-      </button>
+      <div class="aitog" id="aiTog" hidden>
+        <span class="lbl" aria-hidden="true">AI</span>
+        <button class="sw mini" id="btnAiTog" type="button" role="switch"
+                aria-checked="false"><i></i></button>
+      </div>
       <div class="avatar" id="av"></div>
       <div class="status" id="status" data-i18n="status.ready">Ready</div>
     </div>
