@@ -1,270 +1,286 @@
 # Interview Prep — Android App (PWA)
 
-વ્યાવસાયિક તાલીમના વિદ્યાર્થીઓને ઇન્ટરવ્યુ માટે તૈયાર કરવાની એપ.
-સ્ક્રીન પરનો અવતાર પ્રશ્ન **અંગ્રેજીમાં બોલીને** પૂછે છે, વિદ્યાર્થી **અંગ્રેજીમાં બોલીને** જવાબ આપે છે,
-અને મૂલ્યાંકન, સૂચનો તથા નમૂનારૂપ જવાબ **ગુજરાતીમાં** મળે છે.
+An app that prepares vocational training students for job interviews.
+An on-screen avatar **speaks the question in English**, the student **answers out
+loud in English**, and the marks, advice and model answer come back **in
+Gujarati**.
 
 ---
 
-## એપની ભાષા — English · ગુજરાતી · हिन्दी
+## App language — English · ગુજરાતી · हिन्दी
 
-હોમ સ્ક્રીન પર **એપની ભાષા** બદલવાનું બટન છે. ડિફોલ્ટ **English** છે.
-ભાષા બદલવાથી એપનું આખું ઇન્ટરફેસ, મૂલ્યાંકનની નોંધ, સલાહ, વ્યાકરણના સુધારા,
-સલામતીની ચેતવણી, કોર્સનાં નામ અને વિભાગનાં નામ — બધું બદલાય છે.
-પસંદ કરેલી ભાષા ફોનમાં સચવાય છે.
+The home screen has a button for changing the **app language**. The default is
+**English**. Changing it changes the whole interface, the marking notes, the
+advice, the grammar corrections, the safety warnings, the course names and the
+category names. The chosen language is remembered on the phone.
 
-**પ્રશ્નો હંમેશા અંગ્રેજીમાં જ રહે છે અને જવાબ પણ અંગ્રેજીમાં જ આપવાનો છે** —
-ભાષા બદલવાથી એ બદલાતું નથી, કારણ કે અંગ્રેજીમાં જવાબ આપવાની તાલીમ એ જ એપનો હેતુ છે.
+**The questions are always in English and the answer must be in English too** —
+changing the language does not change that, because training students to answer
+in English is the whole point of the app.
 
-ફોન્ટ સિસ્ટમના જ વપરાય છે (ગુજરાતી માટે Noto Sans Gujarati, હિન્દી માટે
-Noto Sans Devanagari), તેથી એપ ઓફલાઇન પણ બરાબર દેખાય છે.
+Only system fonts are used (Noto Sans Gujarati for Gujarati, Noto Sans Devanagari
+for Hindi), so the app still renders correctly offline.
 
-> **બાકી છે:** દરેક પ્રશ્નનો `gu` (નમૂનારૂપ જવાબની સમજૂતી) અને `tip` હજી ફક્ત
-> ગુજરાતીમાં છે. English કે हिन्दी પસંદ કરેલી હોય ત્યારે એ ભાગ ગુજરાતીમાં દેખાય
-> છે અને ઉપર «અનુવાદ નથી થયો» એવી નોંધ મુકાય છે. ભાષાંતર ઉમેરવાની રીત નીચે
-> «નવો પ્રશ્ન ઉમેરવો હોય તો» માં આપી છે.
+> **Still outstanding:** each question's `gu` (the model answer explanation) and
+> `tip` are Gujarati only. With English or हिन्दी selected, those two parts show
+> in Gujarati with a "not translated" note above them. How to add translations is
+> described under "Adding a question" below.
 
 ---
 
-## આઠ વિભાગ (મોડ)
+## Eight modes
 
-| વિભાગ | પ્રશ્ન | પ્રકાર |
+| Mode | Questions | Type |
 |---|---|---|
-| 💼 ઇન્ટરવ્યુ (સામાન્ય) | ૨૨ | HR / વ્યક્તિગત |
-| 💻 કમ્પ્યુટર | ૧૦ | તકનીકી |
-| ⚙️ CNC મશીનિંગ | ૧૦ | તકનીકી |
-| ⚡ ઇલેક્ટ્રિશિયન | ૧૦ | તકનીકી |
-| 🔧 ઓટોમોબાઇલ | ૧૦ | તકનીકી |
-| 🔋 ઇ-વ્હીકલ | ૧૦ | તકનીકી |
-| 🩺 નર્સિંગ | ૧૦ | તકનીકી |
-| 🔥 વેલ્ડિંગ | ૧૦ | તકનીકી |
+| 💼 Interview (general) | 22 | HR / personal |
+| 💻 Computer | 10 | technical |
+| ⚙️ CNC machining | 10 | technical |
+| ⚡ Electrician | 10 | technical |
+| 🔧 Automobile | 10 | technical |
+| 🔋 E-vehicle | 10 | technical |
+| 🩺 Nursing | 10 | technical |
+| 🔥 Welding | 10 | technical |
 
-દરેક વિભાગની પ્રગતિ અલગ સચવાય છે.
+Progress is kept separately for each mode.
 
 ---
 
-## ફોનમાં કેવી રીતે નાખવી (Install)
+## Installing it on a phone
 
-એપ ચલાવવા માટે ફાઇલો કોઈ વેબ સરનામે (HTTPS) મૂકવી પડે છે.
+To run the app the files have to be served from a web address (HTTPS).
 
-### રસ્તો ૧ — GitHub Pages (મફત, કાયમી)
+### Option 1 — GitHub Pages (free, permanent)
 
-1. github.com પર નવું repository બનાવો (Public).
-2. આ ફોલ્ડરની બધી ફાઇલો ત્યાં upload કરો.
+1. Create a new repository on github.com (Public).
+2. Upload every file in this folder to it.
 3. Settings → Pages → Source: `main` branch → Save.
-4. બે મિનિટમાં `https://<તમારું-નામ>.github.io/<repo>/` એવી લિંક મળશે.
-5. એ લિંક ફોનના **Chrome**માં ખોલો.
-6. Chrome મેનુ (⋮) → **Add to Home screen** → **Install**.
+4. Within two minutes you get a link like `https://<your-name>.github.io/<repo>/`.
+5. Open that link in **Chrome** on the phone.
+6. Chrome menu (⋮) → **Add to Home screen** → **Install**.
 
-### રસ્તો ૨ — કમ્પ્યુટર પરથી ટેસ્ટ કરવા
+### Option 2 — testing from a computer
 
-આ ફોલ્ડરમાં ટર્મિનલ ખોલીને ચલાવો:
+Open a terminal in this folder and run:
 
 ```bash
 python3 -m http.server 8000
 ```
 
-પછી બ્રાઉઝરમાં `http://localhost:8000` ખોલો.
-(`file://` થી ખોલવાથી નહીં ચાલે — સ્ક્રિપ્ટ લોડ થતી નથી.)
+Then open `http://localhost:8000` in a browser.
+(Opening it as `file://` will not work — the scripts do not load.)
 
 ---
 
-## Google સાઇન-ઇન
+## Google sign-in
 
-પહેલી વાર એપ ખૂલે ત્યારે નામ પુછાય છે. વિદ્યાર્થી નામ ટાઇપ કરી શકે,
-**Sign up with Google** દબાવી શકે, અથવા «હમણાં રહેવા દો» દબાવીને આગળ વધી શકે.
-નામ ફક્ત ઇન્ટરવ્યુમાં સંબોધવા વપરાય છે અને ફોનમાં જ સચવાય છે.
+The first time the app opens it asks for a name. The student can type one, press
+**Sign up with Google**, or press "maybe later" and carry on. The name is used
+only to address them during the interview, and is stored on the phone.
 
-Client ID `app.js` ની ઉપર `GOOGLE_CLIENT_ID` માં છે. Client ID જાહેર માહિતી છે —
-તે દરેક વેબ એપની સ્ક્રિપ્ટમાં દેખાય જ છે. **Client SECRET કદી અહીં ન મુકવું.**
+The Client ID is at the top of `app.js` in `GOOGLE_CLIENT_ID`. A Client ID is
+public information — it appears in the script of every web app.
+**Never put the Client SECRET here.**
 
-### ⚠ ચાલવા માટે જરૂરી — Authorized JavaScript origins
+### Required for this to work — Authorized JavaScript origins
 
-Google Cloud Console → APIs & Services → Credentials → આ OAuth client →
-**Authorized JavaScript origins** માં એપનું પૂરું સરનામું નોંધો:
+In Google Cloud Console → APIs & Services → Credentials → this OAuth client →
+**Authorized JavaScript origins**, register the app's full address:
 
 ```
-https://<તમારુંનામ>.github.io
+https://<your-name>.github.io
 http://localhost:8123
 ```
 
-- સરનામું નોંધ્યું ન હોય તો બટન દેખાશે પણ સાઇન-ઇન વખતે Google
-  **origin_mismatch** ભૂલ આપશે.
-- પોર્ટ સહિત આખું origin લખવું પડે; પાથ (`/interview-app/`) લખવાનો નથી.
-- GitHub Pages નું સરનામું બદલાય તો ત્યાં પણ બદલવું પડે.
+- If the address is not registered, the button appears but Google returns an
+  **origin_mismatch** error at sign-in.
+- Write the whole origin including the port; do not write a path
+  (`/interview-app/`).
+- If the GitHub Pages address changes, it has to be changed there too.
 
-Google માંથી **ફક્ત નામ** વાંચીએ છીએ — ઈમેલ કે ફોટો સાચવતા નથી, અને કોઈ
-પરવાનગી આ ટોકન પર આધારિત નથી.
+**Only the name** is read from Google — no email or photo is stored, and no
+permission depends on this token.
 
-> આર્ટિફેક્ટ (claude.ai) ની અંદર Google ની સ્ક્રિપ્ટ બ્લોક થાય છે, તેથી ત્યાં
-> બટન દેખાતું નથી — ત્યાં નામનું ખાનું વાપરો. તમારા પોતાના સરનામે જ ચાલશે.
-
----
-
-## ઇન્ટરવ્યુ લેનારનો ફોટો બદલવો હોય તો
-
-`interviewer.jpg` ને એ જ નામની બીજી **ચોરસ** ફાઇલથી બદલી દો (આશરે ૪૮૦×૪૮૦,
-૫૦ KB થી નાની રાખવી). કોડમાં કંઈ બદલવું પડતું નથી — ફક્ત `sw.js` માં `CACHE` નો
-આંકડો વધારો. ફોટો ન મળે તો એપ જાતે દોરેલો ચહેરો બતાવે છે, તેથી કદી ખાલી દેખાતું નથી.
-
-ફોટો હોઠ હલાવી શકતો નથી, તેથી અવતાર શું કરે છે તે ટાઇલની નીચેના બૅજથી દેખાય છે:
-બોલે ત્યારે અવાજની પટ્ટીઓ, સાંભળે ત્યારે લાલ ટપકું, અને તપાસે ત્યારે ત્રણ ટપકાં.
+> Google's script is blocked inside an artifact (claude.ai), so the button does
+> not appear there — use the name field instead. It works on your own address.
 
 ---
 
-## એપ વાપરવાની રીત
+## Changing the interviewer's photo
 
-1. હોમ સ્ક્રીન પર જે વિભાગ પ્રેક્ટિસ કરવો હોય તેની ટાઇલ દબાવો.
-2. અવતાર પ્રશ્ન અંગ્રેજીમાં બોલશે.
-3. **હાથ વગરના મોડમાં** (ડિફોલ્ટ) પ્રશ્ન પૂરો થતાં માઇક જાતે ચાલુ થાય છે.
-   તમે અંગ્રેજીમાં જવાબ બોલો; બોલવાનું બંધ કરો એટલે જવાબ જાતે તપાસાય છે.
-4. છ માપદંડ પર ૧ થી ૧૦ ગુણ, ગુજરાતીમાં નોંધ, વ્યાકરણના સુધારા, સલાહ
-   અને નમૂનારૂપ જવાબ મળશે. અવતાર મૂલ્યાંકન ગુજરાતીમાં વાંચી પણ સંભળાવે છે.
-5. આઠ સેકન્ડ પછી આગળનો પ્રશ્ન જાતે આવે છે (બટન દબાવીને તરત જઈ શકાય).
+Replace `interviewer.jpg` with another **square** file of the same name (around
+480×480, under 50 KB). Nothing in the code needs changing — just bump the number
+in `CACHE` in `sw.js`. If the photo is missing, the app draws a face itself, so
+it never looks empty.
 
-માઇક ન ચાલે કે ઇન્ટરનેટ ન હોય તો **⌨ ટાઇપ કરીને લખું** દબાવીને જવાબ ટાઇપ કરો —
-મૂલ્યાંકન પૂરેપૂરું ઓફલાઇન થાય છે.
+A photo cannot move its lips, so what the avatar is doing is shown by the badge
+under the tile: sound bars while speaking, a red dot while listening, and three
+dots while marking.
 
 ---
 
-## સેટિંગ (⚙)
+## Using the app
 
-| સેટિંગ | કામ |
+1. On the home screen, press the tile for the mode you want to practise.
+2. The avatar asks the question in English.
+3. Press **answer** and speak your answer in English. With **hands-free mode**
+   on, the mic opens by itself once the question finishes and the answer is
+   marked automatically when you stop speaking.
+4. You get 1 to 10 on six criteria, notes in Gujarati, grammar corrections,
+   advice and a model answer. The avatar also reads the feedback aloud in
+   Gujarati.
+5. Press **next question** when you are ready to move on.
+
+If the mic will not work or there is no internet, press **⌨ type instead** and
+type the answer — the marking is fully offline.
+
+---
+
+## Settings (⚙)
+
+| Setting | What it does |
 |---|---|
-| હાથ વગરનો મોડ | બંધ કરો તો દરેક પગલે બટન દબાવવું પડે (ઘોંઘાટવાળા વર્કશોપ માટે) |
-| પ્રશ્ન બોલીને પુછાય | અવતારનો અવાજ બંધ કરવો હોય તો |
-| મૂલ્યાંકન બોલીને સંભળાવો | ગુજરાતીમાં ગુણ અને સલાહ મોટેથી વંચાય |
-| બોલવાની ઝડપ | ધીમી / સામાન્ય / ઝડપી |
-| મૌનનો સમય | ૨ / ૩ / ૪.૫ સેકન્ડ — આટલું ચૂપ રહો તો જવાબ પૂરો ગણાય |
+| Hands-free mode | Off by default. On, the mic opens by itself and the answer is submitted after a silence. Leave it off in a noisy workshop. |
+| Speak the question | Turn off the avatar's voice |
+| Read the feedback aloud | Reads the marks and advice aloud in Gujarati |
+| Speaking speed | Slow / normal / fast |
+| Silence time | 2 / 3 / 4.5 seconds — stay quiet this long and the answer counts as finished |
 
-સેટિંગમાં નીચે એપ જણાવે છે કે ફોનમાં માઇક, અંગ્રેજી વોઇસ અને ગુજરાતી વોઇસ
-મળ્યા છે કે નહીં.
+Lower down, the settings screen reports whether the phone has a microphone, an
+English voice and a Gujarati voice.
 
 ---
 
-## છ માપદંડ
+## The six criteria
 
-| ઇન્ટરવ્યુ વિભાગમાં | તકનીકી વિભાગમાં | શું જોવાય છે |
+| On interview modes | On technical modes | What is measured |
 |---|---|---|
-| સ્પષ્ટ સંવાદ | સ્પષ્ટ સંવાદ | જવાબની લંબાઈ, વિષય સાથે સંબંધ, ભરતીના શબ્દો |
-| પૂર્ણ વાક્યો | પૂર્ણ વાક્યો | કર્તા અને ક્રિયાપદ સાથે પૂરાં વાક્યો |
-| વિચારોની સ્પષ્ટતા | **પગલાંનો ક્રમ** | મુદ્દા ક્રમમાં અને તાર્કિક રીતે ગોઠવાયા છે કે નહીં |
-| વ્યાકરણ અને શબ્દપ્રયોગ | વ્યાકરણ અને શબ્દપ્રયોગ | વ્યાકરણની ભૂલો, ભરતીના શબ્દો, ગુજરાતી/હિન્દી શબ્દોનું મિશ્રણ. (ઉચ્ચાર માપી શકાતો નથી — Chrome લખાણ જ આપે છે, અવાજ નહીં.) |
-| જવાબની ચોકસાઈ | **તકનીકી ચોકસાઈ** | અપેક્ષિત મુદ્દા આવ્યા છે કે નહીં |
-| વાણીની સુસંગતતા | વાણીની સુસંગતતા | જવાબ સળંગ વહે છે કે તૂટક લાગે છે |
+| Clear communication | Clear communication | Answer length, relevance to the question, filler words |
+| Complete sentences | Complete sentences | Full sentences with a subject and a verb |
+| Clarity of thought | **Order of steps** | Whether the points are in a sensible, logical order |
+| Grammar and word choice | Grammar and word choice | Grammar mistakes, filler words, Gujarati/Hindi words mixed in. (Pronunciation cannot be measured — Chrome returns text, not audio.) |
+| Answer accuracy | **Technical accuracy** | Whether the expected points were covered |
+| Coherence of speech | Coherence of speech | Whether the answer flows or sounds disjointed |
 
-તકનીકી વિભાગમાં **તકનીકી ચોકસાઈ**નું વજન સૌથી વધુ છે અને લંબાઈની મર્યાદા ઢીલી છે —
-ટૂંકો પણ સાચો તકનીકી જવાબ પૂરા ગુણ મેળવી શકે.
+On technical modes **technical accuracy** carries the most weight and the length
+requirement is relaxed — a short but correct technical answer can score full
+marks.
 
-### સલામતીનો દરવાજો
+### The safety gate
 
-તકનીકી પ્રશ્નોમાં કેટલાક મુદ્દા **ફરજિયાત** હોય છે — જેમ કે CNC માં «ઇમરજન્સી સ્ટોપ»,
-ઇલેક્ટ્રિશિયનમાં «સપ્લાય બંધ કરવો», વેલ્ડિંગમાં «હેલ્મેટ», નર્સિંગમાં «હાથ ધોવા».
-આ મુદ્દા ચૂકી જાય તો લાલ ચેતવણી દેખાય છે અને કુલ ગુણ **૬ થી વધુ મળતા નથી**,
-કારણ કે ઉદ્યોગમાં આવો જવાબ સ્વીકારાતો નથી.
-
----
-
-## ધ્યાનમાં રાખવા જેવું
-
-- **બોલવું (Text to Speech):** ફોનમાં વોઇસ ડાઉનલોડ કરેલો હોય તો ઓફલાઇન પણ ચાલે.
-  ગુજરાતી વોઇસ ન હોય તો એપ ગુજરાતી બોલવાનું છોડી દે છે (લખાણ તો દેખાય જ છે).
-  ગુજરાતી વોઇસ નાખવા: ફોનના **Settings → Language & input → Text-to-speech**.
-- **સાંભળવું (Speech to Text):** Chrome ની આ સુવિધા માટે **ઇન્ટરનેટ જરૂરી** છે.
-  ઇન્ટરનેટ ન હોય તો ટાઇપ કરીને પણ પૂરું મૂલ્યાંકન મળે છે.
-- **મૂલ્યાંકન આપોઆપ છે.** ડિફોલ્ટમાં કોઈ AI સર્વર કે API કી વગર, ફક્ત ફોનમાં જ
-  (`scoring.js`). તે માર્ગદર્શન માટે છે — શિક્ષકના ચુકાદાની જગ્યા લેતું નથી.
-  ખાસ કરીને «ચોકસાઈ» અપેક્ષિત મુદ્દા સાથે સરખાવીને અપાય છે, તેથી સાચો પણ
-  જુદી રીતે આપેલો જવાબ ઓછા ગુણ મેળવી શકે. વધુ નજીકનું મૂલ્યાંકન જોઈતું હોય
-  તો નીચે **AI મૂલ્યાંકન** જુઓ — એ વૈકલ્પિક છે અને ડિફોલ્ટ બંધ છે.
-- **ડેટા:** બધા જવાબ ફક્ત ફોનમાં જ સચવાય છે. ડિફોલ્ટમાં ક્યાંય મોકલાતા નથી.
-  એક જ અપવાદ છે અને તે વિદ્યાર્થીના હાથમાં છે: **AI મૂલ્યાંકન** (નીચે જુઓ)
-  ચાલુ કરે તો જ જવાબનું લખાણ તપાસવા માટે બહાર જાય છે. એ સુવિધા ડિફોલ્ટ બંધ
-  છે, અને પ્રગતિના બૅકઅપથી સાવ અલગ છે — બૅકઅપમાં ફક્ત ગુણ જાય છે, જવાબનું
-  લખાણ કદી નહીં.
-- એપ પાછળ જાય કે સ્ક્રીન બંધ થાય તો માઇક અને સ્પીકર જાતે બંધ થઈ જાય છે.
-- **ફોનનું «પાછળ» બટન** સ્ક્રીન પરના «પાછળ» બટન જેવું જ કામ કરે છે — એક
-  પગથિયું ઉપર લઈ જાય છે (ઇન્ટરવ્યુ → કોર્સની માહિતી → કોર્સની યાદી). તળિયેની
-  ત્રણ ટૅબ પર બે વાર દબાવો ત્યારે જ એપ બંધ થાય, જેથી ભૂલથી ઇન્ટરવ્યુ વચ્ચેથી
-  બહાર ન નીકળી જવાય.
+Some points on technical questions are **mandatory** — "emergency stop" on CNC,
+"switch off the supply" for an electrician, "helmet" for welding, "wash your
+hands" for nursing. Miss one and a red warning appears and the overall score is
+**capped at 6**, because an answer like that is not accepted in industry.
 
 ---
 
-## AI મૂલ્યાંકન (વૈકલ્પિક, ડિફોલ્ટ બંધ)
+## Things worth knowing
 
-ઓફલાઇન મૂલ્યાંકન ચાવીરૂપ શબ્દો ગણે છે, અર્થ સમજતું નથી. તેથી feed rate ના
-પ્રશ્નમાં «I like cricket and my favourite food is pizza with speed and feed
-tool» જેવો જવાબ પણ ૭.૩ ગુણ મેળવી જાય છે — શબ્દો ખરેખર હાજર છે, વાક્ય પણ ખરું
-છે, પણ સમજ નથી. આ ભેદ ચાવીરૂપ શબ્દોથી પારખી શકાતો નથી.
+- **Speaking (text to speech):** works offline if the voice is downloaded on the
+  phone. With no Gujarati voice the app stops speaking Gujarati (the text is
+  still shown). To install one: phone **Settings → Language & input →
+  Text-to-speech**.
+- **Listening (speech to text):** Chrome's implementation **needs internet**.
+  Without it, typing the answer still gives full marking.
+- **Android closes the mic after every sentence** and the app reopens it, so on a
+  long answer the student hears one "off... on" chime per sentence. No browser
+  API can suppress that. `tools/mic-restart-test.html` checks that the gap stays
+  as short as possible and that the mic always comes back.
+- **The marking is automatic.** The offline scorer (`scoring.js`) runs entirely
+  on the phone with no API key. It is guidance — it does not replace a teacher's
+  judgement. "Accuracy" in particular is measured against a list of expected
+  points, so a correct answer phrased differently can score low. See
+  **AI evaluation** below for closer marking.
+- **Data:** every answer is stored on the phone. The one thing that leaves it is
+  **AI evaluation** (below), which sends the answer text for marking. That is
+  separate from progress backup — backup sends only scores, never answer text.
+- The mic and speaker stop by themselves when the app goes to the background or
+  the screen turns off.
+- **The phone's back button** behaves like the on-screen back button — it goes up
+  one step (interview → course briefing → course list). On the three bottom tabs
+  it takes two presses to exit, so nobody leaves an interview by accident.
 
-AI મૂલ્યાંકન ચાલુ કરો તો એ જ જવાબ ૨.૮ ગુણ મેળવે છે.
+---
 
-**આ સુવિધા ડિફોલ્ટ બંધ છે અને ત્રણ પગથિયાં પૂરાં થાય પછી જ ચાલે છે:**
+## AI evaluation
 
-1. `backend/worker/README.md` પ્રમાણે Cloudflare Worker ચડાવો (મફત).
-2. `judge.js` માં `JUDGE_URL` ભરો. ખાલી હોય ત્યાં સુધી સેટિંગમાં આ વિભાગ
-   દેખાતો જ નથી અને એપ પહેલાં જેવી જ ઓફલાઇન એપ રહે છે.
-3. વિદ્યાર્થી પોતે **પ્રોફાઇલ → AI મૂલ્યાંકન** માં શું બહાર જાય છે તે વાંચીને
-   «ચાલુ કરો» દબાવે.
+The offline scorer counts key words; it does not understand meaning. On a
+question about feed rate, an answer like "I like cricket and my favourite food is
+pizza with speed and feed tool" scores 7.3 — the words genuinely are there in a
+genuine sentence, but the understanding is not. Key words cannot tell those
+apart.
 
-| બહાર જાય છે | બહાર જતું નથી |
+With AI evaluation on, the same answer scores 2.8.
+
+**This is currently on by default**, and the Cloudflare Worker at `JUDGE_URL` in
+`judge.js` is live. To turn the whole feature off, empty `JUDGE_URL` — the
+section then disappears from settings and the app is the offline app it was. A
+student can also turn it off for themselves under **Profile → AI evaluation**,
+and there is a switch on the interview screen itself so they can see who is
+marking them before they answer.
+
+To run it against your own Worker, follow `backend/worker/README.md` (free) and
+put its address in `JUDGE_URL`.
+
+| What is sent | What is not sent |
 |---|---|
-| પ્રશ્ન, વિદ્યાર્થીનો જવાબ, નમૂનારૂપ જવાબ, ભાષા | નામ, ઈમેલ, કોઈ ઓળખ |
-| — | પ્રગતિનો ઇતિહાસ |
-| — | અવાજ (ક્યાંય રેકોર્ડ થતો જ નથી) |
+| The question, the student's answer, the model answer, the language | Name, email, any identity |
+| — | Progress history |
+| — | Audio (nothing is ever recorded) |
 
-API કી ફોનમાં કદી આવતી નથી — તે Worker માં રહે છે. ઇન્ટરનેટ ન હોય, Worker
-બંધ હોય કે મોડેલ જવાબ ન આપે — દરેક સ્થિતિમાં ઓફલાઇન ગુણ વપરાય છે અને
-વિદ્યાર્થીને ખબર પણ પડતી નથી. સલામતીનો દરવાજો ઓફલાઇન જ રહે છે: ફરજિયાત
-મુદ્દો ચૂક્યા હોય તો AI ગમે તે કહે, કુલ ગુણ ૬ થી વધુ મળતા નથી.
+The API key never reaches the phone — it lives in the Worker. With no internet,
+a Worker that is down, or a model that does not answer, the offline score is used
+in every case and the student never notices. The safety gate stays offline: miss
+a mandatory point and the score is capped at 6 whatever the AI says.
 
-AI એ તપાસ્યું હોય ત્યારે પરિણામ પર «✦ AI એ તપાસ્યું» એવો બિલ્લો દેખાય છે —
-ગુણ કોણે આપ્યા તે વિદ્યાર્થીથી છુપાવવું નહીં.
+When the AI did the marking, a "✦ scored by AI" badge appears on the result —
+never hide from the student who gave them their marks.
 
 ---
 
-## ફાઇલોની ગોઠવણ
+## File layout
 
-| ફાઇલ | કામ |
+| File | What it does |
 |---|---|
-| `index.html` | સ્ક્રીન અને ડિઝાઇન |
-| `i18n.js` | ત્રણ ભાષાનું બધું લખાણ (ઇન્ટરફેસ + મૂલ્યાંકન + વ્યાકરણ) |
-| `i18n-content.js` | કોર્સનાં નામ, વિભાગનાં નામ અને સલામતીના મુદ્દાનું ભાષાંતર |
-| `courses.js` | કોર્સ રજિસ્ટ્રી — દરેક બેંક પોતાને અહીં નોંધાવે છે |
-| `questions.js` | ઇન્ટરવ્યુ (સામાન્ય) વિભાગના ૨૨ પ્રશ્ન |
-| `bank-*.js` | સાત તકનીકી કોર્સની પ્રશ્ન બેંક |
-| `scoring.js` | ઓફલાઇન મૂલ્યાંકન, વ્યાકરણ તપાસ, સલામતીનો દરવાજો |
-| `speech.js` | બોલવું અને સાંભળવું (Web Speech API) |
-| `judge.js` | વૈકલ્પિક AI મૂલ્યાંકન — ડિફોલ્ટ બંધ, વિદ્યાર્થીની સંમતિથી જ |
-| `avatar.js` | સ્ક્રીન પરનો ઇન્ટરવ્યુ લેનાર (ફોટો + સ્થિતિનો બૅજ) |
-| `interviewer.jpg` | ઇન્ટરવ્યુ લેનારનો ફોટો (૪૮૦×૪૮૦ ચોરસ) |
-| `app.js` | એપનું સંચાલન |
-| `sw.js` | ઓફલાઇન ચલાવવા માટે |
-| `manifest.webmanifest` | એપનું નામ અને આઇકોન |
+| `index.html` | Screens and design |
+| `i18n.js` | All text in three languages (interface + marking + grammar) |
+| `i18n-content.js` | Translations for course names, category names and safety points |
+| `courses.js` | Course registry — each bank registers itself here |
+| `questions.js` | The 22 questions of the Interview (general) mode |
+| `bank-*.js` | Question banks for the seven technical courses |
+| `scoring.js` | Offline marking, grammar checks, the safety gate |
+| `speech.js` | Speaking and listening (Web Speech API) |
+| `judge.js` | AI evaluation via the Worker |
+| `avatar.js` | The on-screen interviewer (photo + status badge) |
+| `interviewer.jpg` | The interviewer's photo (480×480 square) |
+| `app.js` | App logic |
+| `sw.js` | Offline support |
+| `manifest.webmanifest` | App name and icons |
+| `tools/*.html` | Developer test pages — open them in a browser, every line should be green |
 
-> **જરૂરી:** કોઈ પણ ફાઇલ બદલો ત્યારે `sw.js` માં `CACHE = "interview-practice-v2"`
-> નો આંકડો વધારો (v3, v4…). નહીં તો જે ફોનમાં એપ પહેલેથી નાખેલી છે તેમાં
-> જૂની આવૃત્તિ જ ચાલતી રહેશે.
+> **Required:** whenever you change any file, bump the number in
+> `CACHE = "interview-practice-v29"` in `sw.js` (v30, v31…). Otherwise phones
+> that already have the app installed keep running the old version.
 
 ---
 
-## નવો પ્રશ્ન ઉમેરવો હોય તો
+## Adding a question
 
-જે વિભાગમાં ઉમેરવો હોય તે ફાઇલ (`questions.js` કે `bank-cnc.js` વગેરે) ખોલીને
-છેલ્લા પ્રશ્ન પછી આ ઢાંચો ઉમેરો:
+Open the file for the mode you want (`questions.js`, `bank-cnc.js` and so on) and
+add this template after the last question:
 
 ```js
 {
   id: 11,
-  cat: "વિભાગનું નામ",
+  cat: "સલામતી",                    // category name, in Gujarati
   q: "Question in English?",
-  kw: [["keyword1","સમાનાર્થી"], ["keyword2"]],
-  must: [{ kw: ["emergency stop","e-stop"], gu: "ઇમરજન્સી સ્ટોપ" }],
-  gu: "ગુજરાતીમાં નમૂનારૂપ જવાબ.",
+  kw: [["keyword1", "synonym"], ["keyword2"]],
+  must: [{ kw: ["emergency stop", "e-stop"], gu: "ઇમરજન્સી સ્ટોપ" }],
+  gu: "Model answer and explanation, in Gujarati.",
   en: "Sample answer in English.",
-  tip: "ખાસ સૂચન.",
+  tip: "A specific hint, in Gujarati.",
 
-  // વૈકલ્પિક — English અને हिन्दी માટે સમજૂતી અને સૂચન
+  // Optional - explanation and tip for English and Hindi
   i18n: {
     en: { gu: "Explanation in English.", tip: "Special tip in English." },
     hi: { gu: "हिन्दी में समझ.",          tip: "हिन्दी में ख़ास सुझाव." }
@@ -272,24 +288,25 @@ AI એ તપાસ્યું હોય ત્યારે પરિણામ 
 }
 ```
 
-- `kw` માં દરેક `[...]` એટલે **એક અપેક્ષિત મુદ્દો**; અંદરના શબ્દોમાંથી કોઈ એક મળે
-  તો તે મુદ્દો ગણાય. ચોકસાઈના ગુણ આના પરથી અપાય છે.
-- `must` **વૈકલ્પિક** છે અને ફક્ત સલામતી જેવા ફરજિયાત મુદ્દા માટે વાપરો.
-  તે ચૂકી જાય તો કુલ ગુણ ૬ પર અટકે છે, તેથી સાચે જ જરૂરી હોય તે જ મુકો.
-- ઇલેક્ટ્રિશિયન કે વેલ્ડિંગ જેવા વિભાગમાં પ્રશ્ન અંગ્રેજીમાં જ લખો — વિદ્યાર્થી
-  અંગ્રેજીમાં જવાબ આપે તે તાલીમનો હેતુ છે.
-- `i18n` ન ઉમેરો તો પણ ચાલશે — એ પ્રશ્નની સમજૂતી ગુજરાતીમાં દેખાશે.
-- **નવો `cat` કે નવો `must` ઉમેરો** તો તેનું ભાષાંતર `i18n-content.js` ના
-  `CAT_I18N` / `MUST_I18N` માં ઉમેરો. ન ઉમેરો તો એ નામ ગુજરાતીમાં દેખાશે —
-  એપ તૂટશે નહીં.
-- એપમાં કોઈ નવી લીટી (બટન, ચેતવણી, સૂચના) ઉમેરો તો `i18n.js` માં ત્રણેય
-  ભાષામાં એ કી ઉમેરો.
+- In `kw`, each `[...]` is **one expected point**; matching any one of the words
+  inside counts that point. The accuracy mark comes from this.
+- `must` is **optional** and is only for mandatory points such as safety. Missing
+  one caps the overall score at 6, so only put things there that genuinely
+  warrant it.
+- Write the question in English even on modes like electrician or welding —
+  answering in English is the point of the training.
+- `i18n` can be left out — that question's explanation then shows in Gujarati.
+- **If you add a new `cat` or a new `must`**, add its translation to `CAT_I18N` /
+  `MUST_I18N` in `i18n-content.js`. Without it the label shows in Gujarati; the
+  app does not break.
+- If you add any new line to the app (a button, a warning, a note), add that key
+  in all three languages in `i18n.js`.
 
-## નવો કોર્સ ઉમેરવો હોય તો
+## Adding a course
 
-1. `bank-<નામ>.js` નવી ફાઇલ બનાવીને તેમાં `registerCourse({ ... })` લખો
-   (કોઈ પણ `bank-*.js` નકલ કરીને શરૂ કરો).
-2. `index.html` માં બીજી `bank-*.js` સ્ક્રિપ્ટ પછી તેની `<script>` લીટી ઉમેરો.
-3. `sw.js` ના `ASSETS` માં ફાઇલનું નામ ઉમેરો અને `CACHE` નો આંકડો વધારો.
+1. Create a new `bank-<name>.js` file containing `registerCourse({ ... })`
+   (start by copying any existing `bank-*.js`).
+2. Add its `<script>` line in `index.html` after the other `bank-*.js` scripts.
+3. Add the filename to `ASSETS` in `sw.js` and bump the `CACHE` number.
 
-હોમ સ્ક્રીન પર ટાઇલ જાતે દેખાવા લાગશે — બીજું કંઈ બદલવાની જરૂર નથી.
+The tile appears on the home screen by itself — nothing else needs changing.
