@@ -305,14 +305,23 @@ const Speech = (function () {
      but catches not a single word. So we wait for synth to go quiet before
      starting.
 
-     Android goes one step further: even after onend, the TTS engine holds on to
-     the audio for a moment. Open the mic before it lets go and the first session
-     dies instantly, and the onend below restarts it - the student hears three
-     chimes (on, off, on again), though the answer is captured correctly after
-     that. So we open the mic only once synth has been quiet *and stayed* quiet
-     for a moment. The student never notices the pause, but the extra chimes go
-     away. */
-  const SETTLE_MS = 600;      // pause after synth goes quiet, before opening the mic
+     Android goes one step further: even after onend, the TTS engine can hold on
+     to the audio for a moment. Open the mic before it lets go and the first
+     session dies instantly; the onend below reopens it, and the student hears an
+     extra chime pair. That is what the pause below used to guard against.
+
+     It is 0 now, deliberately. The pause sat between the end of the question and
+     the mic actually opening, and students start talking the moment the question
+     ends - so it was not a harmless wait, it was a gap that swallowed the first
+     words of the answer. An extra chime is cheaper than lost words.
+
+     Waiting for synth to go quiet at all is NOT optional and stays above: the
+     mic must never be open while the speaker is playing, or it records the app
+     talking to itself.
+
+     If a device brings the triple chime back, this is the single number to
+     raise - 300 is enough on most phones. */
+  const SETTLE_MS = 0;        // pause after synth goes quiet, before opening the mic
 
   function whenSynthQuiet(cb) {
     clearStartTimer();
