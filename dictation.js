@@ -33,9 +33,9 @@
 
 /* The Cloudflare Worker endpoint that turns audio into text. Empty means the
    whole feature is off and the app keeps using SpeechRecognition exactly as
-   before. See backend/worker/README.md.
-   Example: "https://interview-judge.<your-name>.workers.dev/transcribe" */
-const DICTATION_URL = "";
+   before - that is the one line to clear if this ever needs turning off in a
+   hurry. See backend/worker/README.md. */
+const DICTATION_URL = "https://interview-judge.msa-vtc.workers.dev/transcribe";
 
 const Dictation = (function () {
 
@@ -43,12 +43,27 @@ const Dictation = (function () {
   const MAX_SECONDS = 180;        // a hard ceiling, so nothing can record forever
   const TIMEOUT_MS = 40000;       // upload + transcription; longer than judging
 
+  /* Asked to transcribe near-silence, the model does not return nothing - it
+     invents. Four seconds of a quiet room came back as "I am from", which would
+     then be scored as if the student had said it. Prompting against it does not
+     hold, so silence is caught here instead: if the recording never carried a
+     voice, it is never sent. That is also the only case where we can be certain
+     without spending anything to find out.
+
+     The floor is deliberately well above room noise and well below speech; a
+     real answer peaks far higher. Raise it if a noisy workshop gets through,
+     lower it if quiet students are being told they said nothing. */
+  const VOICE_FLOOR = 0.035;      // amplitude, 0..1
+  const MIN_VOICED_MS = 400;      // and it has to last, so a cough does not pass
+
   let stream = null;              // the one open microphone
   let ctx = null;
   let source = null, processor = null, analyser = null;
   let chunks = [];                // captured audio, at the context's own rate
   let captured = 0;               // samples kept, for the length ceiling
   let recording = false;
+  let peak = 0;                   // loudest sample in the whole recording
+  let voicedMs = 0;               // how long it was actually above the floor
   let startedAt = 0;
   let handlers = {};
   let levelTimer = null;
@@ -74,6 +89,8 @@ const Dictation = (function () {
 
     chunks = [];
     captured = 0;
+    peak = 0;
+    voicedMs = 0;
 
     return navigator.mediaDevices.getUserMedia({
       audio: {
@@ -106,6 +123,15 @@ const Dictation = (function () {
         if (!recording) return;
         const inBuf = ev.inputBuffer.getChannelData(0);
         if (captured / ctx.sampleRate >= MAX_SECONDS) return;   // ceiling reached, ignore the rest
+
+        let blockPeak = 0;
+        for (let i = 0; i < inBuf.length; i++) {
+          const a = inBuf[i] < 0 ? -inBuf[i] : inBuf[i];
+          if (a > blockPeak) blockPeak = a;
+        }
+        if (blockPeak > peak) peak = blockPeak;
+        if (blockPeak > VOICE_FLOOR) voicedMs += (inBuf.length / ctx.sampleRate) * 1000;
+
         chunks.push(new Float32Array(inBuf));                   // copy: the buffer is reused
         captured += inBuf.length;
       };
@@ -173,7 +199,14 @@ const Dictation = (function () {
   function abort() {
     chunks = [];
     captured = 0;
+    peak = 0;
+    voicedMs = 0;
     teardown();
+  }
+
+  /* Did anyone actually speak? Kept separate and pure so it can be tested. */
+  function hasSpeech(peakSeen, msVoiced) {
+    return peakSeen >= VOICE_FLOOR && msVoiced >= MIN_VOICED_MS;
   }
 
   /* ---------------- audio -> WAV ---------------- */
@@ -250,10 +283,13 @@ const Dictation = (function () {
 
     const rate = ctx ? ctx.sampleRate : SAMPLE_RATE;
     const audio = flatten(chunks, captured);
+    const spoke = hasSpeech(peak, voicedMs);
     chunks = [];
     teardown();
 
-    if (!audio.length) return Promise.resolve("");
+    // Nothing was said: report that honestly rather than paying to be told a
+    // story about it. The app shows its "no answer" result, same as ever.
+    if (!audio.length || !spoke) return Promise.resolve("");
 
     const wav = toWav(downsample(audio, rate, SAMPLE_RATE), SAMPLE_RATE);
     const payload = {
@@ -288,7 +324,7 @@ const Dictation = (function () {
     enabled, supported, active, start, stop, abort, seconds, MAX_SECONDS, DICTATION_URL,
     // exposed for tests - a malformed WAV header is rejected by the model with
     // nothing on screen to say why, so it is worth checking byte by byte
-    _wav: { toWav, downsample, toBase64, flatten }
+    _wav: { toWav, downsample, toBase64, flatten, hasSpeech, VOICE_FLOOR, MIN_VOICED_MS }
   };
 })();
 
