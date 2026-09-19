@@ -7,6 +7,13 @@
  * the key points, and a language code. No name, no email, no user id — judge.js
  * does not send them and this Worker has nothing to do with identity.
  *
+ * It also answers on /transcribe, where the body is a recording of the student
+ * speaking instead of text, and the reply is {text}. That path exists because
+ * Android's SpeechRecognition cannot hold a microphone open across a whole
+ * answer; dictation.js records the answer in one piece and sends it here. The
+ * recording is transcribed and dropped - it is never stored, logged, or passed
+ * anywhere else.
+ *
  * Deploy: see README.md in this folder.
  */
 
@@ -155,6 +162,72 @@ async function callGemini(model, key, body, capMs) {
   }
 }
 
+/* ---- Transcription -----------------------------------------------------
+   One recording in, one transcript out. Kept apart from the judging path: it
+   has its own size ceiling (audio is far bigger than text), its own time
+   budget, and no structured-output schema, because all we want back is words.
+
+   The prompt matters more than it looks. Asked to "transcribe", the model
+   volunteers headings, speaker labels and notes about audio quality, and every
+   one of those ends up scored as if the student had said it.               */
+
+async function transcribe(model, key, body, capMs) {
+  const url = "https://generativelanguage.googleapis.com/v1beta/models/" +
+              encodeURIComponent(model) + ":generateContent";
+
+  let ctrl = null, timer = null;
+  try { ctrl = new AbortController(); } catch (e) { ctrl = null; }
+  if (ctrl) timer = setTimeout(() => { try { ctrl.abort(); } catch (e) {} }, capMs);
+
+  const prompt = [
+    "Transcribe this recording of a student at an Indian vocational training centre",
+    "answering a job-interview question in English.",
+    "Return ONLY the words they spoke, as plain text.",
+    "Do not add speaker labels, headings, timestamps, quotation marks, or any comment",
+    "about the recording or its quality. If nothing intelligible was said, return an empty string.",
+    "Indian-accented English is expected; transcribe what was said rather than correcting it."
+  ].join(" ");
+
+  try {
+    const opts = {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+      body: JSON.stringify({
+        contents: [{
+          role: "user",
+          parts: [
+            { text: prompt },
+            { inlineData: { mimeType: body.mimeType || "audio/wav", data: body.audio } }
+          ]
+        }],
+        generationConfig: { temperature: 0 }
+      })
+    };
+    if (ctrl) opts.signal = ctrl.signal;
+
+    const res = await fetch(url, opts);
+    if (!res.ok) {
+      // Never pass the upstream body through — it can echo the key back.
+      return { ok: false, error: "upstream_" + res.status,
+               retry: res.status === 429 || res.status >= 500 };
+    }
+
+    const data = await res.json();
+    const text = data &&
+      data.candidates && data.candidates[0] &&
+      data.candidates[0].content && data.candidates[0].content.parts &&
+      data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
+
+    // Nothing intelligible is a real answer, not a failure worth retrying.
+    return { ok: true, data: { text: typeof text === "string" ? text.trim() : "" } };
+
+  } catch (e) {
+    return { ok: false, error: "upstream_unreachable", retry: true };
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 export default {
   async fetch(request, env) {
     const allowed = String(env.ALLOWED_ORIGINS || "")
@@ -170,13 +243,32 @@ export default {
 
     if (!env.GEMINI_API_KEY) return json({ error: "not_configured" }, 500, head);
 
+    /* Audio is orders of magnitude bigger than an answer, so the transcription
+       path is routed and size-checked before the text one. 8MB of base64 is
+       about four minutes of the 16kHz mono WAV dictation.js sends, comfortably
+       past its own MAX_SECONDS ceiling. */
+    const isAudio = new URL(request.url).pathname.replace(/\/+$/, "").endsWith("/transcribe");
+
     let body;
     try {
       const raw = await request.text();
-      if (raw.length > 12000) return json({ error: "too_large" }, 413, head);
+      if (raw.length > (isAudio ? 8000000 : 12000)) return json({ error: "too_large" }, 413, head);
       body = JSON.parse(raw);
     } catch (e) {
       return json({ error: "bad_json" }, 400, head);
+    }
+
+    if (isAudio) {
+      if (!body || typeof body.audio !== "string" || !body.audio) {
+        return json({ error: "bad_body" }, 400, head);
+      }
+      const model = env.GEMINI_MODEL || "gemini-3.5-flash";
+      const r = await transcribe(model, env.GEMINI_API_KEY, body, 35000);
+      console.log(JSON.stringify({
+        path: "transcribe", model: model,
+        bytes: body.audio.length, result: r.ok ? "ok" : r.error
+      }));
+      return r.ok ? json(r.data, 200, head) : json({ error: r.error }, 502, head);
     }
 
     if (!body || typeof body.question !== "string" || typeof body.answer !== "string") {

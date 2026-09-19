@@ -13,12 +13,18 @@ table at the bottom of this file tells you what to create by hand.
 | Synced | Never leaves the phone |
 |---|---|
 | Score, the six criteria, category, course, question id | **The answer text** — the spoken self-introduction |
-| Words, key-point coverage, seconds spent | The audio (never recorded anywhere, not even locally) |
+| Words, key-point coverage, seconds spent | The audio — see the note below |
 | Timestamp, and the student's Google display name | Email is used for sign-in only, not stored by us |
 
 `progress` has no column for answer text. Even if a future client sent it, there
 is nowhere to put it. That is deliberate — see the header comment in the
 migration.
+
+> **Audio.** With the app in its default setup nothing records the student's
+> voice, anywhere. If continuous dictation is switched on (`DICTATION_URL` in
+> `dictation.js`) the answer *is* recorded and sent to the Worker to be
+> transcribed — never to this server, which has no column for it. See the main
+> README.
 
 > **One thing this table does not cover.** The optional AI evaluation feature
 > does send answer text — to a Cloudflare Worker, not here. It is off by default,

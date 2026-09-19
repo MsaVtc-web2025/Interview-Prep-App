@@ -364,6 +364,19 @@ h2.sec{font-size:17px;margin:24px 0 10px;color:var(--ink);font-weight:700}
 .status.rec{color:var(--rec)}
 .status.ok{color:var(--good)}
 
+/* ---------- Live microphone level ----------
+   With continuous dictation there is no interim text appearing, so this bar is
+   the only thing telling the student the mic is hearing them. */
+.micmeter{
+  height:6px;border-radius:3px;background:var(--lowtint);
+  overflow:hidden;margin:2px 0 10px
+}
+.micmeter i{
+  display:block;height:100%;border-radius:3px;background:var(--rec);
+  transform:scaleX(.04);transform-origin:left center;
+  transition:transform .09s linear
+}
+
 /* ---------- Question ---------- */
 .card.qcard{border-radius:var(--rl);padding:18px 18px 20px}
 .qbox{text-align:center}
@@ -964,6 +977,7 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
       </div>
       <div class="avatar" id="av"></div>
       <div class="status" id="status" data-i18n="status.ready">Ready</div>
+      <div class="micmeter" id="micMeter" hidden><i id="micLevel"></i></div>
     </div>
 
     <div class="card qcard">
@@ -1239,6 +1253,7 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
 <script src="./sync.js"></script>
 <script src="./judge.js"></script>
 <script src="./speech.js"></script>
+<script src="./dictation.js"></script>
 <script src="./avatar.js"></script>
 <script src="./app.js"></script>
 </body>

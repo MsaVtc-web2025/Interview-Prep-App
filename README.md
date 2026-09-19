@@ -226,7 +226,7 @@ put its address in `JUDGE_URL`.
 |---|---|
 | The question, the student's answer, the model answer, the language | Name, email, any identity |
 | — | Progress history |
-| — | Audio (nothing is ever recorded) |
+| — | Audio, unless continuous dictation is switched on (see below) |
 
 The API key never reaches the phone — it lives in the Worker. With no internet,
 a Worker that is down, or a model that does not answer, the offline score is used
@@ -237,6 +237,54 @@ When the AI did the marking, a "✦ scored by AI" badge appears on the result �
 never hide from the student who gave them their marks.
 
 ---
+
+## Continuous dictation (optional, off by default)
+
+Android does not give a web page a microphone that stays open. Its
+`SpeechRecognition` ends the session after every sentence, plays a chime, and
+hands control back a moment later. `continuous = true` is already set and
+ignored. Words spoken in that moment are lost, and no setting in the Web Speech
+API changes it.
+
+`dictation.js` sidesteps the whole API. It opens **one** audio stream with
+`getUserMedia` and holds it for the entire answer — no sessions, no restarts, no
+chimes, no gaps. The student speaks for as long as they like, with whatever
+pauses they like, and the mic is released only when they press the button.
+
+Because the browser is then only a recorder, the audio has to be transcribed
+somewhere. That is the same Worker the AI evaluation uses, on `/transcribe`.
+
+**This changes two things you should decide on deliberately:**
+
+| | SpeechRecognition (default) | Continuous dictation |
+|---|---|---|
+| Mic between sentences | Closed and reopened by Android | Stays open |
+| The student's voice | Never leaves the phone | Recorded and sent for transcription |
+| Without internet | Nothing transcribes either way; they type | Same — falls back automatically |
+| Cost | Free | Transcription is charged per minute of audio |
+
+The recording is transcribed and dropped. It is not stored, not logged, and
+never reaches the progress backup.
+
+To turn it on:
+
+1. Redeploy the Worker from `backend/worker/` — it now answers on `/transcribe`.
+2. Put that URL in `DICTATION_URL` at the top of `dictation.js`, ending in
+   `/transcribe`.
+3. Bump `CACHE` in `sw.js`.
+
+Leave `DICTATION_URL` empty and none of this runs; the app behaves exactly as it
+did before. It also falls back to `SpeechRecognition` on its own when the phone
+is offline or has no microphone access, so there is no state in which a student
+is left unable to answer.
+
+While recording, a level bar under the status line moves with the student's
+voice. That replaces the words-appearing-as-you-speak feedback of the old
+engine, which continuous capture cannot provide — the transcript only exists
+once the recording has been sent.
+
+Recording stops on its own after `MAX_SECONDS` (3 minutes), with a warning on
+screen for the last 20 seconds.
 
 ## File layout
 
@@ -250,6 +298,7 @@ never hide from the student who gave them their marks.
 | `bank-*.js` | Question banks for the seven technical courses |
 | `scoring.js` | Offline marking, grammar checks, the safety gate |
 | `speech.js` | Speaking and listening (Web Speech API) |
+| `dictation.js` | Optional continuous recording, transcribed by the Worker |
 | `judge.js` | AI evaluation via the Worker |
 | `avatar.js` | The on-screen interviewer (photo + status badge) |
 | `interviewer.jpg` | The interviewer's photo (480×480 square) |

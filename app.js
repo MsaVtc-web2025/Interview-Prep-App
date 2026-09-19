@@ -132,6 +132,7 @@ let current = null;      // the current question
 let phase = "idle";      // idle · asking · listening · scoring · feedback
 let lastResult = null;
 let micWatch = null;     // catches a mic that is on but hearing nothing
+let dictationSeed = "";  // text carried over when an answer is resumed
 
 /* ---------------- Question clock ----------------
 
@@ -332,6 +333,7 @@ function show(which) {
 /* Go to a tab - refresh whatever that tab shows */
 function goTab(tab) {
   Speech.stopAll();
+  if (Dictation.active()) Dictation.abort();
   if (tab === "stats") renderStats();
   if (tab === "practice") renderTiles();
   if (tab === "profile") paintSettings();
@@ -531,6 +533,7 @@ function startInterview() {
 function leaveCourse() {
 
   Speech.stopAll();
+  if (Dictation.active()) Dictation.abort();
   Avatar.setState("idle");
   phase = "idle";
   course = null;
@@ -602,6 +605,7 @@ function greetingLine(lang) {
 function askQuestion() {
 
   Speech.stopAll();
+  if (Dictation.active()) Dictation.abort();
 
   if (!state.settings.ask || !Speech.supported()) {
     setPhase("ready");
@@ -632,9 +636,57 @@ function spokenQuestion() {
 
 /* ---------------- The student speaks ---------------- */
 
+/* Stop listening, whichever engine is running. Dictation holds a real
+   microphone, so leaving it open is not a cosmetic bug - every call site that
+   used to stop SpeechRecognition has to release that too. */
+function stopListening() {
+  if (Dictation.active()) Dictation.abort();
+  return Speech.stopListen(true);
+}
+
+/* Record the whole answer as one unbroken stream and transcribe it at the end.
+
+   Android ends a SpeechRecognition session after every sentence and there is no
+   setting that stops it, so the path below is the only way to give a student a
+   microphone that is still open after their third sentence. It is off until
+   DICTATION_URL is set in dictation.js, and the app falls back to the old
+   engine whenever it is unavailable - including offline, where no server can
+   transcribe anything. */
+function beginDictation(seed) {
+  Speech.cancelSpeech();
+  setPhase("listening");
+  micLive(false);
+
+  dictationSeed = String(seed || "").trim();
+  $("heard").textContent = dictationSeed;
+  $("micMeter").hidden = false;
+  paintLevel(0);
+
+  Dictation.start({
+    onLive: () => micLive(true),
+    onLevel: v => paintLevel(v),
+    onTick: secs => {
+      // The ceiling is a real stop, so say so before it arrives rather than
+      // cutting the student off mid-word with no warning.
+      const left = Dictation.MAX_SECONDS - secs;
+      if (left <= 20) $("hint").textContent = t("dict.endingIn", { n: Math.max(0, left) });
+      if (left <= 0) $("btnAct").click();
+    },
+    onError: err => { $("micMeter").hidden = true; onMicError(err); }
+  });
+}
+
+/* The meter is the only sign the mic is live now that there is no interim text
+   to watch, so it has to move whenever the student speaks. */
+function paintLevel(v) {
+  const el = $("micLevel");
+  if (el) el.style.transform = "scaleX(" + Math.max(0.04, v).toFixed(3) + ")";
+}
+
 /* seed = text already heard, when an answer is being picked back up after the
    mic was taken away from us. */
 function beginListen(seed) {
+  if (Dictation.enabled() && navigator.onLine !== false) return beginDictation(seed);
   if (!Speech.micSupported()) {
     setPhase("ready");
     showTypeFallback("આ ફોનમાં બોલીને લખવાની સુવિધા નથી. જવાબ ટાઇપ કરો.");
@@ -737,7 +789,7 @@ function showTypeFallback(msg) {
 
 function submit(text) {
   const ans = String(text || "").trim();
-  Speech.stopListen(true);
+  stopListening();
 
   if (!ans) {
     setPhase("ready");
@@ -844,6 +896,10 @@ function setPhase(p) {
   if (!PHASE_UI[p]) p = "ready";
   if (p !== "listening") clearMicWatch();
   keepScreenAwake(p === "listening");
+  // Shown by beginDictation; hidden again as soon as we stop listening, so a
+  // fallback to SpeechRecognition never leaves a meter sitting there frozen.
+  const meter = $("micMeter");
+  if (meter && p !== "listening") meter.hidden = true;
   phase = p;
   const u = PHASE_UI[p];
   Avatar.setState(u.av);
@@ -1145,6 +1201,7 @@ Array.prototype.forEach.call($("segSil").children, b =>
   Array.prototype.forEach.call($(id).children, b =>
     b.addEventListener("click", () => {
       Speech.stopAll();
+      if (Dictation.active()) Dictation.abort();
       state.settings.lang = b.getAttribute("data-l");
       save();
       relocalize();
@@ -1189,7 +1246,25 @@ $("btnRepeat").addEventListener("click", () => {
 
 $("btnAct").addEventListener("click", () => {
   if (phase === "asking") { Speech.cancelSpeech(); beginListen(); return; }
-  if (phase === "listening") { const t = Speech.stopListen(true); submit(t || $("heard").textContent); return; }
+  if (phase === "listening") {
+    if (Dictation.active()) {
+      /* The recording still has to travel and be transcribed, which is seconds,
+         not milliseconds. Say so: an unexplained pause here reads as a crash. */
+      setPhase("scoring");
+      $("status").textContent = t("status.transcribing");
+      Dictation.stop().then(txt => {
+        const full = [dictationSeed, txt].filter(Boolean).join(" ").trim();
+        $("heard").textContent = full;
+        submit(full);
+      });
+      return;
+    }
+    // Not `t`: that shadows the i18n t() for this whole block, and the
+    // dictation branch above calls it.
+    const said = Speech.stopListen(true);
+    submit(said || $("heard").textContent);
+    return;
+  }
   if (phase === "feedback") {
     Speech.cancelSpeech();
     if (atLastQuestion()) leaveCourse();   // the mock interview is over
@@ -1204,7 +1279,7 @@ $("btnType").addEventListener("click", () => {
   wrap.hidden = !wrap.hidden;
   $("btnType").classList.toggle("on", !wrap.hidden);
   if (!wrap.hidden) {
-    if (phase === "listening") { Speech.stopListen(true); setPhase("ready"); }
+    if (phase === "listening") { stopListening(); setPhase("ready"); }
     Speech.cancelSpeech();
     $("ans").value = $("heard").textContent.trim();
     $("ans").focus();
@@ -1240,7 +1315,7 @@ if (navigator.serviceWorker) {
 $("btnClear").addEventListener("click", () => {
   $("heard").textContent = "";
   $("ans").value = "";
-  if (phase === "listening") { Speech.stopListen(true); setPhase("ready"); }
+  if (phase === "listening") { stopListening(); setPhase("ready"); }
 });
 
 /* Mic and speaker both stop when the app goes to the background - for battery
@@ -1257,6 +1332,15 @@ let micCutWhileHidden = false;
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) {
     qClockPause();
+
+    /* Dictation is ONE recording for the whole answer, and unlike the
+       SpeechRecognition path there is no interim text on screen to fall back
+       on - tearing it down here would throw away everything the student has
+       said so far. So leave it running: the browser suspends and resumes the
+       capture itself, and what was already recorded survives. Only the speaker
+       is stopped. */
+    if (Dictation.active()) { Speech.cancelSpeech(); return; }
+
     micCutWhileHidden = phase === "listening";
     Speech.stopAll();
     if (phase === "listening" || phase === "asking") setPhase("ready");

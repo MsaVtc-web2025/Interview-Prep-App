@@ -47,6 +47,25 @@ Model ids change. `gemini-flash-latest` is the default here; check the current
 list at [ai.google.dev/gemini-api/docs/models](https://ai.google.dev/gemini-api/docs/models)
 and set `GEMINI_MODEL` if you want to pin a specific version.
 
+## The two endpoints
+
+| Path | Body | Returns |
+|---|---|---|
+| `/` | the question and the student's answer, as text | the six scores and advice |
+| `/transcribe` | a recording of the student answering | `{text}` |
+
+`/transcribe` exists because Android will not give a web page a microphone that
+stays open across a whole answer. `dictation.js` records the answer in one piece
+and sends it here; the audio is transcribed and dropped. It is never stored,
+never logged (only its size is), and never reaches the progress database.
+
+It is only reached if `DICTATION_URL` is filled in on the client, so deploying
+this Worker does not by itself start any recording.
+
+Audio is far larger than text, so that path has its own 8 MB ceiling — roughly
+four minutes of the 16 kHz mono WAV the client sends, comfortably past the
+client's own 3-minute limit.
+
 ## 2. Deploy the Worker
 
 ```bash
