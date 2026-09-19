@@ -632,7 +632,9 @@ function spokenQuestion() {
 
 /* ---------------- The student speaks ---------------- */
 
-function beginListen() {
+/* seed = text already heard, when an answer is being picked back up after the
+   mic was taken away from us. */
+function beginListen(seed) {
   if (!Speech.micSupported()) {
     setPhase("ready");
     showTypeFallback("આ ફોનમાં બોલીને લખવાની સુવિધા નથી. જવાબ ટાઇપ કરો.");
@@ -644,6 +646,7 @@ function beginListen() {
 
   const ok = Speech.listen({
     lang: "en-IN",
+    seed: seed || "",
     // 0 = never submit on a silence; the mic stays open until the student
     // presses the button. Hands-free mode is the opt-in that changes that.
     silenceMs: state.settings.hands ? state.settings.silence : 0,
@@ -653,6 +656,32 @@ function beginListen() {
     onError: err => onMicError(err)
   });
   if (!ok) setPhase("ready");
+}
+
+/* Android's screen timeout is short - often 30 seconds - and a student speaking
+   a long answer is not touching the screen. When the screen goes off the page
+   goes hidden, the visibilitychange handler stops the mic mid-sentence, and
+   everything said from then on is gone with nothing on screen to explain why.
+
+   Holding a screen wake lock while we are listening stops that happening at
+   all. Not every browser has one and the request can be refused, so the resume
+   path in that handler stays as the safety net. */
+let wakeLock = null;
+
+function keepScreenAwake(on) {
+  try {
+    if (!navigator.wakeLock) return;
+    if (on) {
+      if (wakeLock) return;
+      navigator.wakeLock.request("screen")
+        .then(w => { wakeLock = w; w.addEventListener("release", () => { wakeLock = null; }); })
+        .catch(() => { wakeLock = null; });
+    } else if (wakeLock) {
+      const w = wakeLock;
+      wakeLock = null;
+      w.release().catch(() => {});
+    }
+  } catch (e) { wakeLock = null; }
 }
 
 /* The mic is not live the moment we ask for it. speech.js first waits for the
@@ -814,6 +843,7 @@ function setPhase(p) {
 
   if (!PHASE_UI[p]) p = "ready";
   if (p !== "listening") clearMicWatch();
+  keepScreenAwake(p === "listening");
   phase = p;
   const u = PHASE_UI[p];
   Avatar.setState(u.av);
@@ -1045,10 +1075,11 @@ function toggle(key, el) {
   state.settings[key] = !state.settings[key];
   save();
   paintSettings();
-  if (key === "hands" && !state.settings.hands && phase === "listening") {
-    // Hands-free was switched off - stop auto-scoring on silence
-    Speech.stopListen(true);
-    setPhase("ready");
+  if (key === "hands" && phase === "listening") {
+    /* Hands-free only decides whether a silence submits the answer, and that is
+       fixed when listen() is called - so restart to pick the new setting up.
+       The mic stays open either way; closing it here used to end the answer. */
+    beginListen($("heard").textContent);
   }
 }
 
@@ -1214,14 +1245,27 @@ $("btnClear").addEventListener("click", () => {
 
 /* Mic and speaker both stop when the app goes to the background - for battery
    and for privacy. The question clock pauses too, so time spent with the app put
-   away is never counted. */
+   away is never counted.
+
+   Going hidden is not always the student walking away: with the wake lock
+   unavailable or refused, Android's screen timeout lands here too, in the middle
+   of an answer. So remember that we were listening, and pick the answer back up
+   on return with everything heard so far - rather than silently dropping them on
+   "Ready" having lost the rest of what they said. */
+let micCutWhileHidden = false;
+
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) {
     qClockPause();
+    micCutWhileHidden = phase === "listening";
     Speech.stopAll();
     if (phase === "listening" || phase === "asking") setPhase("ready");
   } else if (!$("scRun").hidden) {
     qClockResume();
+    if (micCutWhileHidden) {
+      micCutWhileHidden = false;
+      beginListen($("heard").textContent);
+    }
   }
 });
 
