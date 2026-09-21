@@ -636,8 +636,32 @@ function askQuestion() {
     return;
   }
   setPhase("asking");
-  Speech.speak(spokenQuestion(), { lang: spokenQuestionLang(), rate: state.settings.rate })
-    .then(spoken => afterAsking(spoken));
+
+  /* Only the most recent ask may act on its result. Two asks can overlap - the
+     student skips, or changes language mid-question - and the older one settles
+     as "cancelled", which must not be mistaken for "this phone cannot speak". */
+  const gen = ++askGen;
+  sayQuestion().then(spoken => { if (gen === askGen) afterAsking(spoken); });
+}
+
+let askGen = 0;
+
+/* Speak the question, falling back to English if the chosen voice says nothing.
+
+   A phone can list a Gujarati or Hindi voice that produces no audio at all -
+   the voice is offered but its data was never downloaded - and the app has no
+   way to tell the two apart until it tries. Asking in silence is the worst
+   outcome, and the question exists in English natively, so that is what it
+   falls back to. The translation stays on screen to read. */
+function sayQuestion() {
+  const lang = spokenQuestionLang();
+  const rate = state.settings.rate;
+
+  return Speech.speak(spokenQuestion(), { lang: lang, rate: rate }).then(spoken => {
+    if (spoken || lang === "en" || phase !== "asking") return spoken;
+    const g = greetingLine("en");
+    return Speech.speak((g ? g + " " : "") + current.q, { lang: "en", rate: rate });
+  });
 }
 
 /* What to do once the avatar has finished asking - or failed to.

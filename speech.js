@@ -188,12 +188,21 @@ const Speech = (function () {
 
         const part = chunks[i++];
         const u = new SpeechSynthesisUtterance(part);
-        if (voice) { u.voice = voice; u.lang = voice.lang; }
+        /* Assigning the voice can throw if the browser will not accept the
+           object. Left unguarded that rejects the promise, and the caller -
+           which now waits on it to know whether the question was asked - waits
+           for ever. Speaking in the default voice is a far better outcome. */
+        try { if (voice) { u.voice = voice; u.lang = voice.lang; } } catch (e) {}
         u.rate = rate;
         u.pitch = 1;
         u.volume = 1;
-        u.onend = () => { spoke = true; next(); };
-        u.onerror = next;          // on error do not stall, and do not count it as spoken
+        /* onstart, not onend, is what proves audio began. A cancel part way
+           through still spoke the words that came before it, and on some phones
+           an interrupted utterance reports onerror rather than onend - reading
+           either of those as "nothing was said" would be wrong. */
+        u.onstart = () => { spoke = true; };
+        u.onend = next;
+        u.onerror = next;          // on error do not stall, move on
 
         if (opts.onChunk) { try { opts.onChunk(part); } catch (e) {} }
 
