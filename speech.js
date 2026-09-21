@@ -150,8 +150,17 @@ const Speech = (function () {
     try { synth.cancel(); } catch (e) {}
   }
 
-  /* Speak text. Returns a Promise that settles when speaking finishes (or is
-     cancelled).  opts = { lang:"en"|"gu", rate, onChunk }  */
+  /* Speak text. Resolves TRUE only if the words actually reached the speaker,
+     FALSE if nothing was heard - cancelled, no voice, or a device whose TTS
+     engine fails every utterance instantly.
+
+     That distinction matters to the caller. The app opens the microphone once
+     the question has been asked, and on a phone with no working voice every
+     utterance errors in milliseconds: the promise used to settle as success, so
+     the app concluded the question had been asked and went straight to
+     listening, having never said a word.
+
+     opts = { lang:"en"|"gu", rate, onChunk }  */
   function speak(text, opts) {
     opts = opts || {};
     const lang = opts.lang || "en";
@@ -169,12 +178,13 @@ const Speech = (function () {
 
     return new Promise(resolve => {
       let i = 0;
+      let spoke = false;            // did any chunk actually reach the speaker?
       const done = ok => { if (token === speakToken) { clearWatchdog(); resolve(ok); } };
 
       function next() {
         if (token !== speakToken) return resolve(false);   // cancelled mid-way
         clearWatchdog();
-        if (i >= chunks.length) return done(true);
+        if (i >= chunks.length) return done(spoke);
 
         const part = chunks[i++];
         const u = new SpeechSynthesisUtterance(part);
@@ -182,8 +192,8 @@ const Speech = (function () {
         u.rate = rate;
         u.pitch = 1;
         u.volume = 1;
-        u.onend = next;
-        u.onerror = next;          // on error do not stall, move on
+        u.onend = () => { spoke = true; next(); };
+        u.onerror = next;          // on error do not stall, and do not count it as spoken
 
         if (opts.onChunk) { try { opts.onChunk(part); } catch (e) {} }
 
@@ -191,6 +201,10 @@ const Speech = (function () {
         const budget = (part.length / (12 * rate)) * 1000 + 4000;
         watchdog = setTimeout(() => {
           if (token !== speakToken) return;
+          /* onend never came, but the budget is the time the words would have
+             taken, so they were almost certainly heard. This is the Android
+             quirk the watchdog exists for - not a failure. */
+          spoke = true;
           try { synth.cancel(); } catch (e) {}
           next();
         }, budget);

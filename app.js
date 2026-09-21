@@ -636,16 +636,39 @@ function askQuestion() {
     return;
   }
   setPhase("asking");
-  Speech.speak(spokenQuestion(), { lang: spokenQuestionLang(), rate: state.settings.rate }).then(() => {
-    if (phase !== "asking") return;                // the student did something meanwhile
-    /* The question has been asked, so open the mic and leave it open. The
-       student talks when they are ready and presses the button when they are
-       done - nothing closes it in between. Hands-free mode no longer decides
-       whether the mic opens, only whether a silence submits the answer by
-       itself (beginListen passes silenceMs for that). */
-    if (Speech.micSupported()) beginListen();
-    else setPhase("ready");
-  });
+  Speech.speak(spokenQuestion(), { lang: spokenQuestionLang(), rate: state.settings.rate })
+    .then(spoken => afterAsking(spoken));
+}
+
+/* What to do once the avatar has finished asking - or failed to.
+
+   `spoken` is false when nothing was heard: no voice installed, or a TTS engine
+   that errors instantly. Opening the mic then is the wrong move, because from
+   the student's side the app never asked anything and is suddenly recording
+   them. Wait on "Ready" instead, with the question on screen to read, and let
+   them press Answer when they are ready. */
+function afterAsking(spoken) {
+  if (phase !== "asking") return;                  // the student did something meanwhile
+
+  if (!spoken) {
+    setPhase("ready");
+    $("hint").className = "hint warn";
+    $("hint").textContent = t("err.noVoice");
+    return;
+  }
+
+  /* The question has been asked, so open the mic and leave it open. The student
+     talks when they are ready and presses the button when they are done -
+     nothing closes it in between. Hands-free mode no longer decides whether the
+     mic opens, only whether a silence submits the answer by itself. */
+  if (canListen()) beginListen();
+  else setPhase("ready");
+}
+
+/* Can this phone take a spoken answer at all? Either engine will do - dictation
+   records the audio itself and needs no SpeechRecognition. */
+function canListen() {
+  return (Dictation.enabled() && navigator.onLine !== false) || Speech.micSupported();
 }
 
 /* What the avatar says - the greeting (if any) and then the question, both in
@@ -1278,9 +1301,11 @@ $("btnSkip").addEventListener("click", () => { if (course) pickQuestion(true); }
 $("btnRepeat").addEventListener("click", () => {
   Speech.stopListen(true);
   setPhase("asking");
-  Speech.speak(spokenQuestion(), { lang: spokenQuestionLang(), rate: state.settings.rate }).then(() => {
+  Speech.speak(spokenQuestion(), { lang: spokenQuestionLang(), rate: state.settings.rate })
+    .then(spoken => {
     if (phase !== "asking") return;
-    if (Speech.micSupported()) beginListen();
+    if (!spoken) { setPhase("ready"); return; }
+    if (canListen()) beginListen();
     else setPhase("ready");
   });
 });
