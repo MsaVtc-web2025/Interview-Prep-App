@@ -111,7 +111,13 @@ const Judge = (function () {
   /* ---------------- What is sent to the model ----------------
      No identity goes with it - see rule 3. */
 
-  function payload(answer, question, mode, lang) {
+  /* Same Worker, different path: /answer takes audio and returns the transcript
+     with the marks. */
+  function audioUrl() { return JUDGE_URL.replace(/\/+$/, "") + "/answer"; }
+
+  const AUDIO_TIMEOUT_MS = 45000;   // a recording has to upload first, so longer
+
+  function payload_(answer, question, mode, lang) {
     const kw = Array.isArray(question.kw)
       ? question.kw.map(g => (Array.isArray(g) ? g[0] : String(g))).filter(Boolean)
       : [];
@@ -206,6 +212,47 @@ const Judge = (function () {
     return r;
   }
 
+  /* ---------------- Marking a recording ----------------
+     One call that both transcribes and marks. Asking separately meant two
+     round trips - about twenty-five seconds of a student watching a blank
+     screen - and reading the recording is the same work either way.
+
+     Resolves {text, ...marks} or null. Never rejects; the caller falls back to
+     a transcript-only call, so a failure costs time rather than the answer. */
+
+  function fromAudio(payload, question, mode, lang, needsEnglish) {
+    if (!active() || !payload || !payload.audio) return Promise.resolve(null);
+
+    const body = payload_(null, question, mode, lang);
+    body.audio = payload.audio;
+    body.mimeType = payload.mimeType;
+    body.needsEnglish = !!needsEnglish;
+    delete body.answer;                     // there is no text yet; that is the point
+
+    let ctrl = null, timer = null;
+    try { ctrl = new AbortController(); } catch (e) { ctrl = null; }
+    const opts = {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    };
+    if (ctrl) {
+      opts.signal = ctrl.signal;
+      timer = setTimeout(() => { try { ctrl.abort(); } catch (e) {} }, AUDIO_TIMEOUT_MS);
+    }
+
+    return fetch(audioUrl(), opts)
+      .then(res => (res && res.ok ? res.json() : null))
+      .then(raw => {
+        const r = clean(raw);
+        if (!r) return null;
+        r.text = raw && typeof raw.text === "string" ? raw.text.replace(/\s+/g, " ").trim() : "";
+        return r;
+      })
+      .catch(() => null)
+      .then(r => { if (timer) clearTimeout(timer); return r; });
+  }
+
   /* ---------------- The main job ----------------
      Always returns a Promise and never rejects. On failure, null. */
 
@@ -222,7 +269,7 @@ const Judge = (function () {
     const opts = {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload(answer, question, mode, lang))
+      body: JSON.stringify(payload_(answer, question, mode, lang))
     };
     if (ctrl) opts.signal = ctrl.signal;
     if (ctrl) timer = setTimeout(() => { try { ctrl.abort(); } catch (e) {} }, TIMEOUT_MS);
@@ -238,7 +285,7 @@ const Judge = (function () {
       .then(r => { if (timer) clearTimeout(timer); return r; });
   }
 
-  return { enabled, consented, active, online, setConsent, evaluate, merge, clearCache };
+  return { enabled, consented, active, online, setConsent, evaluate, fromAudio, merge, clearCache };
 })();
 
 if (typeof module !== "undefined" && module.exports) module.exports = { Judge };

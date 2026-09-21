@@ -274,12 +274,15 @@ const Dictation = (function () {
 
   /* ---------------- stop and transcribe ---------------- */
 
-  /* Stop recording, release the mic, and resolve with the transcript.
-     Never rejects: on any failure it resolves with "" and the caller falls back
-     to whatever it already had, the same way judge.js degrades to the offline
-     score. */
+  /* Stop recording, release the mic, and resolve with the audio ready to send -
+     {audio, mimeType} - or null if nothing was actually said.
+
+     It does not send anything itself. What the recording is for depends on
+     whether the student has AI marking on: with it on, one call both transcribes
+     and marks, which is a whole round trip less for them to sit through. The
+     caller knows which, this does not. */
   function stop() {
-    if (!recording) return Promise.resolve("");
+    if (!recording) return Promise.resolve(null);
 
     const rate = ctx ? ctx.sampleRate : SAMPLE_RATE;
     const audio = flatten(chunks, captured);
@@ -289,13 +292,21 @@ const Dictation = (function () {
 
     // Nothing was said: report that honestly rather than paying to be told a
     // story about it. The app shows its "no answer" result, same as ever.
-    if (!audio.length || !spoke) return Promise.resolve("");
+    if (!audio.length || !spoke) return Promise.resolve(null);
 
     const wav = toWav(downsample(audio, rate, SAMPLE_RATE), SAMPLE_RATE);
-    const payload = {
-      audio: toBase64(wav),
-      mimeType: "audio/wav",
-      lang: "en"                        // the student is practising English
+    return Promise.resolve({ audio: toBase64(wav), mimeType: "audio/wav" });
+  }
+
+  /* Transcript only - used when AI marking is off, so there is nothing to mark
+     with. Never rejects: on any failure it resolves with "" and the caller
+     falls back to whatever it already had. */
+  function transcribe(payload, lang) {
+    if (!payload || !payload.audio) return Promise.resolve("");
+    const body = {
+      audio: payload.audio,
+      mimeType: payload.mimeType,
+      lang: lang || "en"
     };
 
     let ctrl = null, timer = null;
@@ -303,7 +314,7 @@ const Dictation = (function () {
     const opts = {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(body)
     };
     if (ctrl) {
       opts.signal = ctrl.signal;
@@ -321,7 +332,8 @@ const Dictation = (function () {
   }
 
   return {
-    enabled, supported, active, start, stop, abort, seconds, MAX_SECONDS, DICTATION_URL,
+    enabled, supported, active, start, stop, transcribe, abort, seconds,
+    MAX_SECONDS, DICTATION_URL,
     // exposed for tests - a malformed WAV header is rejected by the model with
     // nothing on screen to say why, so it is worth checking byte by byte
     _wav: { toWav, downsample, toBase64, flatten, hasSpeech, VOICE_FLOOR, MIN_VOICED_MS }

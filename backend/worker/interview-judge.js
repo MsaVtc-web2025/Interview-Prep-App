@@ -25,6 +25,11 @@ const CRITERIA = ["communication", "sentences", "thought", "speechGrammar", "acc
 const SCHEMA = {
   type: "object",
   properties: {
+    /* Only filled in on /answer, where the input is audio. Marking a recording
+       and transcribing it are the same read, so asking for both in one call
+       costs one round trip instead of two - about ten seconds of a student
+       sitting in front of a blank screen. */
+    text: { type: "string" },
     classification: { type: "string", enum: ["answered", "partial", "off_topic", "dont_know", "word_list"] },
     scores: {
       type: "object",
@@ -39,6 +44,50 @@ const SCHEMA = {
 };
 
 const LANG_NAME = { en: "English", gu: "Gujarati", hi: "Hindi" };
+const SCRIPT_NAME = { en: "Latin", gu: "the Gujarati script", hi: "Devanagari" };
+
+/* How to write down what was said.
+
+   Transcribing Hindi into Latin letters ("mera naam Ravi hai") is what the model
+   does unasked, and it is wrong for this app: the student reads that text back
+   on screen, and romanised Hindi is harder for them to read than their own
+   script. Indian speech is also freely mixed - an English technical word inside
+   a Hindi sentence is normal speech, not a mistake - so each word is written in
+   the script it belongs to rather than forcing the whole line one way. */
+function scriptRule(lang) {
+  if (lang === "en") return "Write the transcript in Latin letters.";
+  return [
+    "Write what the student said in the script it belongs to:",
+    LANG_NAME[lang] + " words in " + SCRIPT_NAME[lang] + ", English words in Latin letters.",
+    "Do NOT romanise " + LANG_NAME[lang] + " - never write it in Latin letters.",
+    "Mixing the two inside one sentence is normal Indian speech; keep it as spoken."
+  ].join(" ");
+}
+
+/* Whether this question is one the student has to answer in English.
+
+   The app is English practice, but a student using it in Gujarati or Hindi is
+   doing so because their English is weak. Marking every answer down for not
+   being in English teaches them nothing except to stop using the app. So only
+   the questions flagged as needing English are judged on it; on the rest they
+   answer in whatever language they think in, and are marked on what they
+   actually said. */
+function languageRule(needsEnglish, lang) {
+  if (needsEnglish) {
+    return [
+      "This question MUST be answered in English - it is one an interviewer would ask in English.",
+      "If the student answered wholly or mostly in " + LANG_NAME[lang] + ",",
+      "say so kindly in the advice and keep speechGrammar at 4 or less,",
+      "but still judge accuracy on what they actually said - they understood the question."
+    ].join(" ");
+  }
+  return [
+    "The student may answer in English, in " + LANG_NAME[lang] + ", or in a mix, and ALL of those are fine.",
+    "Do NOT mark them down for not speaking English and do NOT tell them to speak English.",
+    "Judge speechGrammar on how clearly they expressed themselves in whatever language they used.",
+    "Do not mention language choice in the advice at all."
+  ].join(" ");
+}
 
 function buildPrompt(b) {
   const lang = LANG_NAME[b.lang] || "English";
@@ -46,8 +95,9 @@ function buildPrompt(b) {
 
   return [
     "You are marking a spoken answer from a student at an Indian vocational training centre (ITI).",
-    "The student is practising for a job interview. They spoke in English; the text below is a speech-to-text transcript,",
+    "The student is practising for a job interview. The text below is a speech-to-text transcript,",
     "so ignore missing punctuation and capitalisation, and do not penalise obvious transcription noise.",
+    languageRule(b.needsEnglish !== false, b.lang || "en"),
     "",
     "QUESTION: " + b.question,
     "",
@@ -179,13 +229,16 @@ async function transcribe(model, key, body, capMs) {
   try { ctrl = new AbortController(); } catch (e) { ctrl = null; }
   if (ctrl) timer = setTimeout(() => { try { ctrl.abort(); } catch (e) {} }, capMs);
 
+  const lang = body.lang || "en";
   const prompt = [
     "Transcribe this recording of a student at an Indian vocational training centre",
-    "answering a job-interview question in English.",
+    "answering a job-interview question.",
+    "They may speak English, " + (LANG_NAME[lang] || "English") + ", or a mix of both.",
+    scriptRule(lang),
     "Return ONLY the words they spoke, as plain text.",
     "Do not add speaker labels, headings, timestamps, quotation marks, or any comment",
     "about the recording or its quality. If nothing intelligible was said, return an empty string.",
-    "Indian-accented English is expected; transcribe what was said rather than correcting it."
+    "Indian-accented speech is expected; transcribe what was said rather than correcting it."
   ].join(" ");
 
   try {
@@ -228,6 +281,106 @@ async function transcribe(model, key, body, capMs) {
   }
 }
 
+/* ---- Transcribe and mark in one call -----------------------------------
+   The old flow asked for the transcript, waited, then sent the text back to be
+   marked: two round trips, and a student watching a blank screen for about
+   twenty-five seconds. Reading the recording and judging it are the same read,
+   so this asks for both at once. It also marks better - the model hears the
+   answer rather than reading a transcript of it.
+
+   If it fails, the caller still has /transcribe to fall back on, so a bad
+   response costs latency rather than the whole answer.                      */
+
+async function answerFromAudio(model, key, b, capMs) {
+  const url = "https://generativelanguage.googleapis.com/v1beta/models/" +
+              encodeURIComponent(model) + ":generateContent";
+
+  let ctrl = null, timer = null;
+  try { ctrl = new AbortController(); } catch (e) { ctrl = null; }
+  if (ctrl) timer = setTimeout(() => { try { ctrl.abort(); } catch (e) {} }, capMs);
+
+  const lang = b.lang || "en";
+  const prompt = [
+    "You are marking a spoken answer from a student at an Indian vocational training centre (ITI),",
+    "practising for a job interview. The recording is their answer.",
+    "",
+    "FIRST, transcribe it into `text`.",
+    "They may speak English, " + (LANG_NAME[lang] || "English") + ", or a mix.",
+    scriptRule(lang),
+    "`text` must be only the words they spoke - no labels, no commentary.",
+    "If nothing intelligible was said, `text` is an empty string and every score is 1.",
+    "",
+    "THEN mark what they said.",
+    languageRule(b.needsEnglish !== false, lang),
+    "",
+    "QUESTION: " + String(b.question || ""),
+    b.modelAnswer ? "A GOOD ANSWER WOULD BE: " + b.modelAnswer : "",
+    b.keyPoints && b.keyPoints.length ? "POINTS WORTH COVERING: " + b.keyPoints.join("; ") : "",
+    b.mustPoints && b.mustPoints.length ? "SAFETY POINTS THAT MUST BE MENTIONED: " + b.mustPoints.join("; ") : "",
+    "",
+    "Score each 1-10, where 5 is an average trainee and 8+ is genuinely interview-ready:",
+    "- communication: is it clear and the right length for the question?",
+    "- sentences: complete sentences rather than a list of words?",
+    "- thought: " + (b.mode === "technical" ? "is the reasoning in a sensible order?" : "is the answer structured?"),
+    "- speechGrammar: grammar and word choice. Say NOTHING about pronunciation or accent.",
+    "- accuracy: " + (b.mode === "technical" ? "is the technical content correct?" : "does it answer the question asked?"),
+    "- coherence: does it hang together, or wander and repeat?",
+    "",
+    "Judge meaning, not keywords:",
+    "- Right words but nothing sensible said about them, or an unrelated topic: accuracy 3 or less, classification off_topic.",
+    "- A bare list of words with no sentence: classification word_list, sentences 3 or less.",
+    "- They say they do not know: classification dont_know, accuracy 1, overall 2 or less.",
+    "- Correct but brief is fine" + (b.mode === "technical" ? ", especially on a technical question." : "."),
+    "",
+    "missed: short phrases naming what was left out. Empty if nothing important is missing.",
+    "advice: ONE piece of advice, 2-3 sentences, addressed to the student as 'you'.",
+    "Write advice in " + (LANG_NAME[lang] || "English") + ", in simple words a 19-year-old trainee will understand."
+  ].filter(Boolean).join("\n");
+
+  try {
+    const opts = {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+      body: JSON.stringify({
+        contents: [{
+          role: "user",
+          parts: [
+            { text: prompt },
+            { inlineData: { mimeType: b.mimeType || "audio/wav", data: b.audio } }
+          ]
+        }],
+        generationConfig: {
+          temperature: 0.2,
+          responseMimeType: "application/json",
+          responseSchema: SCHEMA
+        }
+      })
+    };
+    if (ctrl) opts.signal = ctrl.signal;
+
+    const res = await fetch(url, opts);
+    if (!res.ok) {
+      return { ok: false, error: "upstream_" + res.status,
+               retry: res.status === 429 || res.status >= 500 };
+    }
+
+    const data = await res.json();
+    const out = data &&
+      data.candidates && data.candidates[0] &&
+      data.candidates[0].content && data.candidates[0].content.parts &&
+      data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
+
+    if (!out) return { ok: false, error: "empty_response", retry: true };
+    try { return { ok: true, data: JSON.parse(out) }; }
+    catch (e) { return { ok: false, error: "unparsable", retry: true }; }
+
+  } catch (e) {
+    return { ok: false, error: "upstream_unreachable", retry: true };
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 export default {
   async fetch(request, env) {
     const allowed = String(env.ALLOWED_ORIGINS || "")
@@ -247,7 +400,9 @@ export default {
        path is routed and size-checked before the text one. 8MB of base64 is
        about four minutes of the 16kHz mono WAV dictation.js sends, comfortably
        past its own MAX_SECONDS ceiling. */
-    const isAudio = new URL(request.url).pathname.replace(/\/+$/, "").endsWith("/transcribe");
+    const path = new URL(request.url).pathname.replace(/\/+$/, "");
+    const isAnswer = path.endsWith("/answer");          // audio in, transcript AND marks out
+    const isAudio = isAnswer || path.endsWith("/transcribe");
 
     let body;
     try {
@@ -262,13 +417,45 @@ export default {
       if (!body || typeof body.audio !== "string" || !body.audio) {
         return json({ error: "bad_body" }, 400, head);
       }
-      const model = env.GEMINI_MODEL || "gemini-3.5-flash";
-      const r = await transcribe(model, env.GEMINI_API_KEY, body, 35000);
-      console.log(JSON.stringify({
-        path: "transcribe", model: model,
-        bytes: body.audio.length, result: r.ok ? "ok" : r.error
-      }));
-      return r.ok ? json(r.data, 200, head) : json({ error: r.error }, 502, head);
+
+      /* Gemini's free tier sheds load with 503 often enough that measuring this
+         endpoint hit it twice in five calls. On the text path a 503 costs a
+         retry; here it would cost the student their whole answer, because the
+         recording only exists on their phone until this returns. So the audio
+         path retries too - a different model pool, since 503 is capacity and
+         capacity is tracked per model.
+
+         The budget is the ceiling and it is enforced, not summed: the second
+         attempt only starts if there is time left for it inside the 40s the
+         client waits. */
+      const AUDIO_BUDGET_MS = 34000;
+      const AUDIO_ATTEMPT_MS = 16000;
+      const FALLBACK = "gemini-3.1-flash-lite";
+      const first = env.GEMINI_MODEL || "gemini-3.5-flash";
+      const chain = [first];
+      if (first !== FALLBACK) chain.push(FALLBACK);
+
+      const started = Date.now();
+      const left = () => AUDIO_BUDGET_MS - (Date.now() - started);
+      const run = (m, cap) => isAnswer
+        ? answerFromAudio(m, env.GEMINI_API_KEY, body, cap)
+        : transcribe(m, env.GEMINI_API_KEY, body, cap);
+
+      let r = null;
+      for (const model of chain) {
+        const cap = Math.min(AUDIO_ATTEMPT_MS, left());
+        if (cap < 4000) break;                  // not enough time left to be useful
+        r = await run(model, cap);
+        // No transcript is logged - only size, model and elapsed time.
+        console.log(JSON.stringify({
+          path: isAnswer ? "answer" : "transcribe", model: model, lang: body.lang || "en",
+          bytes: body.audio.length, ms: Date.now() - started, result: r.ok ? "ok" : r.error
+        }));
+        if (r.ok || !r.retry) break;
+      }
+
+      return r && r.ok ? json(r.data, 200, head)
+                       : json({ error: (r && r.error) || "no_time" }, 502, head);
     }
 
     if (!body || typeof body.question !== "string" || typeof body.answer !== "string") {

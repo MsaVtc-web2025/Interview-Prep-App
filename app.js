@@ -239,6 +239,15 @@ function qHasTranslation(q) {
   return lang !== "en" && !!(q && q.i18n && q.i18n[lang] && q.i18n[lang].q);
 }
 
+/* "Your answer (in English)" is an instruction, not a label, and on a question
+   that never asked for English it is the wrong instruction. */
+function paintAnswerLabels() {
+  const en = qNeedsEnglish(current);
+  const lab = $("ansLabel"), box = $("ans");
+  if (lab) lab.textContent = t(en ? "run.answerLabel" : "run.answerLabelFree");
+  if (box) box.placeholder = t(en ? "run.typePlaceholder" : "run.typePlaceholderFree");
+}
+
 /* Put the question text on screen.
    The .lat class pins the Latin font - it has to come off for a Devanagari or
    Gujarati translation, otherwise the glyphs render broken. */
@@ -264,6 +273,16 @@ function spokenQuestionLang() {
   const lang = getLang();
   if (qHasTranslation(current) && Speech.hasVoice(lang)) return lang;
   return "en";
+}
+
+/* Does this question have to be answered in English?
+
+   In English mode everything does - that is what the student chose. In Gujarati
+   or Hindi they chose that because their English is weak, so only the questions
+   explicitly flagged (the self-introduction ones) ask for it; on the rest they
+   answer in their own words and are marked on what they said. */
+function qNeedsEnglish(q) {
+  return getLang() === "en" || !!(q && q.needsEnglish);
 }
 
 /* Is this question's explanation untranslated? (then we tell the student) */
@@ -292,7 +311,11 @@ function relocalize() {
     renderBrief();
     $("runName").textContent = tCourse(course, "name");
     // A language change redraws the question in that language too
-    if (current) { $("qcat").textContent = tCat(current.cat); paintQuestionText(); }
+    if (current) {
+      $("qcat").textContent = tCat(current.cat);
+      paintQuestionText();
+      paintAnswerLabels();
+    }
     renderProgress();
     if (lastResult) showResult(lastResult);
     if (!$("scRun").hidden) setPhase(phase === "idle" ? "ready" : phase);
@@ -583,6 +606,7 @@ function pickQuestion(advance) {
   $("btnType").classList.remove("on");
   lastResult = null;
 
+  paintAnswerLabels();
   qClockReset();          // this question's timing starts here
   askQuestion();
 }
@@ -747,7 +771,8 @@ function keepScreenAwake(on) {
    until then the screen says the mic is still getting ready. */
 function micLive(on) {
   if (phase !== "listening") return;
-  $("status").textContent = t(on ? "status.listening" : "status.micOpening");
+  const live = qNeedsEnglish(current) ? "status.listening" : "status.listenFree";
+  $("status").textContent = t(on ? live : "status.micOpening");
   Avatar.setState(on ? "listening" : "thinking");
 }
 
@@ -787,7 +812,9 @@ function showTypeFallback(msg) {
 
 /* ---------------- Score the answer ---------------- */
 
-function submit(text) {
+/* judged = marks that already came back alongside the transcript, from the one
+   call that does both. When it is there, the answer is scored already. */
+function submit(text, judged) {
   const ans = String(text || "").trim();
   stopListening();
 
@@ -806,7 +833,7 @@ function submit(text) {
   setTimeout(() => {
     // The offline score is always computed first, even with AI on. It is the
     // base, and it is what shows if the AI never arrives.
-    const offline = scoreAnswer(ans, current, course.mode);
+    const offline = scoreAnswer(ans, current, course.mode, qNeedsEnglish(current));
     const q = current, c = course;      // so we can tell if the student moved on
 
     function finish(r) {
@@ -835,7 +862,21 @@ function submit(text) {
       speakFeedback(r);
     }
 
-    if (!Judge.active()) { finish(offline); return; }
+    // Already marked, in the same call that transcribed it.
+    if (judged) { finish(Judge.merge(offline, judged)); return; }
+
+    if (!Judge.active()) {
+      /* Their own language, and no AI to read it: scoring.js measures English
+         and would hand back a low number that means nothing. Say why instead. */
+      if (offline.unmarkableOffline) {
+        setPhase("ready");
+        $("result").hidden = false;
+        $("result").innerHTML = '<div class="err">' + esc(t("res.needsNet")) + "</div>";
+        return;
+      }
+      finish(offline);
+      return;
+    }
 
     // Let the student see something is happening while the AI reads
     $("hint").className = "hint";
@@ -1252,10 +1293,27 @@ $("btnAct").addEventListener("click", () => {
          not milliseconds. Say so: an unexplained pause here reads as a crash. */
       setPhase("scoring");
       $("status").textContent = t("status.transcribing");
-      Dictation.stop().then(txt => {
+
+      const q = current, lang = getLang(), needsEn = qNeedsEnglish(current);
+      const useText = txt => {
         const full = [dictationSeed, txt].filter(Boolean).join(" ").trim();
         $("heard").textContent = full;
-        submit(full);
+        return full;
+      };
+
+      Dictation.stop().then(payload => {
+        if (!payload) return submit("");          // nothing was said
+
+        /* With AI marking on, one call transcribes AND marks - a whole round
+           trip less for the student to sit through. If it comes back empty,
+           fall back to transcribing alone: that costs time, not the answer. */
+        if (Judge.active()) {
+          return Judge.fromAudio(payload, q, course.mode, lang, needsEn).then(r => {
+            if (r && r.text) return submit(useText(r.text), r);
+            return Dictation.transcribe(payload, lang).then(txt => submit(useText(txt)));
+          });
+        }
+        return Dictation.transcribe(payload, lang).then(txt => submit(useText(txt)));
       });
       return;
     }

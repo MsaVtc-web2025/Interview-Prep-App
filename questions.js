@@ -4,6 +4,16 @@
    gu  = model answer and explanation in Gujarati
    en  = how to say it in English
    tip = a specific hint for this question
+
+   needsEnglish = this question has to be answered in English (optional).
+
+   A student using the app in Gujarati or Hindi is doing so because their
+   English is weak. Marking every answer down for not being in English teaches
+   them nothing except to stop using the app, so by default, in those two
+   languages, they answer in whatever they think in and are marked on what they
+   actually said. Set this on the questions a real interviewer would insist on
+   hearing in English - the self-presentation ones - and only those are judged
+   on their English. In English mode every question needs English regardless.
 */
 registerCourse({
   id: "interview",
@@ -311,6 +321,7 @@ registerCourse({
 },
 {
   id: 19,
+  needsEnglish: true,        // 'About Me' is self-presentation - interviewers want it in English
   cat: "રેઝ્યુમે / સ્વ-માહિતી",
   q: "What did you write in the 'About Me' section of your resume?",
   i18n: {
@@ -343,6 +354,7 @@ registerCourse({
 },
 {
   id: 21,
+  needsEnglish: true,        // the self-introduction: the one question always asked in English
   cat: "સ્વ-પરિચય",
   q: "Tell me about yourself. Give me a short self-introduction.",
   i18n: {

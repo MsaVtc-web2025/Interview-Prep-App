@@ -238,6 +238,34 @@ never hide from the student who gave them their marks.
 
 ---
 
+## Answering in Gujarati or Hindi
+
+The app is English practice, but a student who has set it to Gujarati or Hindi
+has done so because their English is weak. Marking every answer down for not
+being in English teaches them nothing except to stop using the app.
+
+So in those two languages, only the questions flagged `needsEnglish: true` ask
+for English. Today that is the two self-presentation ones — the
+self-introduction (id 21) and the resume "About Me" (id 19) — because those are
+what a real interviewer insists on hearing in English. On every other question
+the student answers in whatever they think in and is marked on what they
+actually said, with no mention of language in the feedback at all.
+
+In English mode every question needs English, exactly as before.
+
+To change which questions ask for English, add or remove `needsEnglish: true` on
+the question. `q17` (hometown) is the obvious next candidate if you want the
+whole introduction sequence in English.
+
+Transcripts come back in the script the student spoke: Devanagari for Hindi,
+Gujarati for Gujarati, with English technical words left in Latin letters, which
+is how the sentences are actually spoken.
+
+> Offline marking cannot judge a Gujarati or Hindi answer — `scoring.js` measures
+> English, and the key points it matches are English words. When an answer is in
+> the student's own language and the AI could not be reached, the app says it
+> needs internet rather than showing a low score that means nothing.
+
 ## Continuous dictation (optional, off by default)
 
 Android does not give a web page a microphone that stays open. Its

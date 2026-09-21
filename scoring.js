@@ -187,8 +187,17 @@ function band(v, base) {
   return t(base + (v < 4.5 ? ".low" : v < 7.5 ? ".mid" : ".high"));
 }
 
-function scoreAnswer(text, question, mode) {
+/* Does this text contain Gujarati or Devanagari letters? If it does, the
+   student answered in their own language, and every English-specific rule below
+   - the filler list, the function-word ratio, the grammar patterns - is
+   measuring the wrong thing. */
+function hasIndicScript(s) { return /[ऀ-ॿ઀-૿]/.test(String(s || "")); }
+
+/* needsEnglish defaults to true: every existing caller is English practice, and
+   a question that has not opted out should not quietly become unmarked. */
+function scoreAnswer(text, question, mode, needsEnglish) {
   mode = mode === "technical" ? "technical" : "interview";
+  const mustBeEnglish = needsEnglish !== false;
   const prof = profileFor(mode);
   const tech = mode === "technical";
   const a = analyse(text);
@@ -202,7 +211,15 @@ function scoreAnswer(text, question, mode) {
 
   /* Reeled off the keywords but formed no sentence? Knowing the words and
      understanding them are two different things — a list does not score full marks. */
-  const wordList = a.wc >= 4 && a.funcRatio < 0.15;
+  /* Answered in their own language, on a question that did not ask for English.
+     None of the English-specific measures apply, and `kw` is a list of English
+     words that will never match, so offline marking cannot judge this answer at
+     all. Say so rather than inventing a low score - the AI marks it properly,
+     and this is only the fallback for when the AI could not be reached. */
+  const ownLanguage = !mustBeEnglish && hasIndicScript(a.clean);
+
+  // Meaningless on an answer with no English function words in it to count.
+  const wordList = !ownLanguage && a.wc >= 4 && a.funcRatio < 0.15;
 
   /* 1. Answer accuracy / technical accuracy */
   let accuracy = 1 + cov * 9;
@@ -239,7 +256,11 @@ function scoreAnswer(text, question, mode) {
   /* 5. Grammar and word choice.
      Note: this finds mistakes, it does not measure correctness — no mistakes
      found means 10. So we refuse to award 10 where there is no sentence at all. */
-  let gram = 10 - a.grammarHits.length * 1.8 - Math.min(2, (a.wc ? a.fillerCount / a.wc : 0) * 12) - a.nonEng * 1.2;
+  /* The non-English word penalty only makes sense where English was asked for.
+     Elsewhere it punishes the student for answering the way they were told they
+     could. */
+  let gram = 10 - a.grammarHits.length * 1.8 - Math.min(2, (a.wc ? a.fillerCount / a.wc : 0) * 12)
+             - (mustBeEnglish ? a.nonEng * 1.2 : 0);
   if (a.wc < 5) gram = Math.min(gram, 4);
   if (wordList) gram = Math.min(gram, 4);
   s.speechGrammar = clamp(gram);
@@ -301,6 +322,10 @@ function scoreAnswer(text, question, mode) {
   return {
     scores: s,
     notes: notes,
+    /* True when offline marking could not judge this answer - it is in the
+       student's own language and every measure here is built for English. The
+       app shows a "needs internet" note instead of these numbers. */
+    unmarkableOffline: ownLanguage,
     overall: overall,
     weakest: weakest,
     offTopic: offTopic,
