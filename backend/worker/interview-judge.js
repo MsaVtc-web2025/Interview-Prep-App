@@ -29,7 +29,7 @@ const SCHEMA = {
        and transcribing it are the same read, so asking for both in one call
        costs one round trip instead of two - about ten seconds of a student
        sitting in front of a blank screen. */
-    text: { type: "string" },
+    text: { type: "string", description: "Exactly what was spoken, each word in its own script: Gujarati in Gujarati letters, Hindi in Devanagari, English in Latin. Never romanised, never translated." },
     classification: { type: "string", enum: ["answered", "partial", "off_topic", "dont_know", "word_list"] },
     scores: {
       type: "object",
@@ -54,14 +54,115 @@ const SCRIPT_NAME = { en: "Latin", gu: "the Gujarati script", hi: "Devanagari" }
    script. Indian speech is also freely mixed - an English technical word inside
    a Hindi sentence is normal speech, not a mistake - so each word is written in
    the script it belongs to rather than forcing the whole line one way. */
+/* Gujarati needs showing, not just telling: asked in words alone, the model
+   still writes Gujarati speech as "maru naam Ravi chhe", or quietly translates
+   it into English. Hindi it gets right unprompted. An example in each script
+   is what finally moves it. */
+const SCRIPT_EXAMPLE = {
+  gu: 'Example: say "મારું નામ રવિ છે, હું CNC machine પર કામ કરું છું" - NOT "maru naam Ravi chhe, hu CNC machine par kaam karu chhu".',
+  hi: 'Example: say "मेरा नाम रवि है, मैं CNC machine पर काम करता हूँ" - NOT "mera naam Ravi hai, main CNC machine par kaam karta hoon".'
+};
+
 function scriptRule(lang) {
   if (lang === "en") return "Write the transcript in Latin letters.";
   return [
     "Write what the student said in the script it belongs to:",
     LANG_NAME[lang] + " words in " + SCRIPT_NAME[lang] + ", English words in Latin letters.",
     "Do NOT romanise " + LANG_NAME[lang] + " - never write it in Latin letters.",
-    "Mixing the two inside one sentence is normal Indian speech; keep it as spoken."
+    "Do NOT translate - write the words in the language they were spoken.",
+    "Mixing the two inside one sentence is normal Indian speech; keep it as spoken.",
+    SCRIPT_EXAMPLE[lang] || ""
   ].join(" ");
+}
+
+/* Did the model romanise anyway? Prompts lower the rate, they do not make it
+   zero, so the reply is checked. A transcript with no letters of the student's
+   script but with everyday words of their language spelt in Latin is
+   romanised; a genuinely English answer has none of those words and is left
+   alone, so it costs nothing extra. */
+const NATIVE_SCRIPT = { gu: /[઀-૿]/, hi: /[ऀ-ॿ]/ };
+const ROMAN_TELLS = {
+  gu: /\b(che|chhe|chu|chhu|hu|maru|maro|mari|mane|tame|ame|ane|nathi|shu|kem|karu|kariye|karvu|hatu|hoy|pan|etle|mate|thi|nu|ni|no|na)\b/gi,
+  hi: /\b(hai|hain|hoon|hun|mera|meri|mujhe|main|aur|nahi|nahin|kya|kaise|karta|karti|tha|thi|ke|ki|ka|ko|se|bhi)\b/gi
+};
+
+function looksRomanised(text, lang) {
+  if (!text || !NATIVE_SCRIPT[lang] || NATIVE_SCRIPT[lang].test(text)) return false;
+  const tells = text.match(ROMAN_TELLS[lang]) || [];
+  return tells.length >= 2;
+}
+
+/* Gemini 3 thinks before it answers by default, and on this job - write down
+   what was said, give six numbers - that is seconds of waiting for nothing.
+   If a model refuses the setting (400), it is dropped for the life of this
+   isolate and the same request goes again without it. */
+let thinkingOk = true;
+
+async function gemFetch(model, key, req, signal) {
+  const url = "https://generativelanguage.googleapis.com/v1beta/models/" +
+              encodeURIComponent(model) + ":generateContent";
+  const send = withThinking => {
+    const cfg = Object.assign({}, req.generationConfig);
+    if (withThinking) cfg.thinkingConfig = { thinkingLevel: "low" };
+    const opts = {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+      body: JSON.stringify(Object.assign({}, req, { generationConfig: cfg }))
+    };
+    if (signal) opts.signal = signal;
+    return fetch(url, opts);
+  };
+
+  const useThinking = thinkingOk;
+  const res = await send(useThinking);
+  if (res.status === 400 && useThinking) {
+    thinkingOk = false;
+    return send(false);
+  }
+  return res;
+}
+
+function firstText(data) {
+  return data &&
+    data.candidates && data.candidates[0] &&
+    data.candidates[0].content && data.candidates[0].content.parts &&
+    data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
+}
+
+/* Rewrite a romanised transcript in the right script. Text in, text out, so it
+   is quick - but it is still a round trip, which is why it only runs when
+   looksRomanised() says it must. Any failure returns the text unchanged: a
+   transcript in the wrong letters is still better than none. */
+async function fixScript(model, key, text, lang, capMs) {
+  if (capMs < 2500) return text;
+  let ctrl = null, timer = null;
+  try { ctrl = new AbortController(); } catch (e) { ctrl = null; }
+  if (ctrl) timer = setTimeout(() => { try { ctrl.abort(); } catch (e) {} }, capMs);
+
+  const prompt = [
+    "Below is a transcript of an Indian student speaking " + LANG_NAME[lang] + " mixed with English,",
+    "wrongly written in Latin letters. Rewrite it in " + SCRIPT_NAME[lang] + ".",
+    "Keep English words (technical terms, names of machines and tools) in Latin letters.",
+    "Do not translate, correct, add or remove anything - only change the script.",
+    SCRIPT_EXAMPLE[lang] || "",
+    "Return ONLY the rewritten transcript.",
+    "",
+    "TRANSCRIPT: " + text
+  ].join("\n");
+
+  try {
+    const res = await gemFetch(model, key, {
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0 }
+    }, ctrl && ctrl.signal);
+    if (!res.ok) return text;
+    const out = firstText(await res.json());
+    return typeof out === "string" && NATIVE_SCRIPT[lang].test(out) ? out.trim() : text;
+  } catch (e) {
+    return text;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 }
 
 /* Whether this question is one the student has to answer in English.
@@ -161,29 +262,19 @@ function json(body, status, headers) {
    repeating a wrong request just spends the budget.                     */
 
 async function callGemini(model, key, body, capMs) {
-  const url = "https://generativelanguage.googleapis.com/v1beta/models/" +
-              encodeURIComponent(model) + ":generateContent";
-
   let ctrl = null, timer = null;
   try { ctrl = new AbortController(); } catch (e) { ctrl = null; }
   if (ctrl) timer = setTimeout(() => { try { ctrl.abort(); } catch (e) {} }, capMs);
 
   try {
-    const opts = {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-goog-api-key": key },
-      body: JSON.stringify({
-        contents: [{ role: "user", parts: [{ text: buildPrompt(body) }] }],
-        generationConfig: {
-          temperature: 0.2,
-          responseMimeType: "application/json",
-          responseSchema: SCHEMA
-        }
-      })
-    };
-    if (ctrl) opts.signal = ctrl.signal;
-
-    const res = await fetch(url, opts);
+    const res = await gemFetch(model, key, {
+      contents: [{ role: "user", parts: [{ text: buildPrompt(body) }] }],
+      generationConfig: {
+        temperature: 0.2,
+        responseMimeType: "application/json",
+        responseSchema: SCHEMA
+      }
+    }, ctrl && ctrl.signal);
 
     if (!res.ok) {
       // Never pass the upstream body through — it can echo the key back.
@@ -222,9 +313,6 @@ async function callGemini(model, key, body, capMs) {
    one of those ends up scored as if the student had said it.               */
 
 async function transcribe(model, key, body, capMs) {
-  const url = "https://generativelanguage.googleapis.com/v1beta/models/" +
-              encodeURIComponent(model) + ":generateContent";
-
   let ctrl = null, timer = null;
   try { ctrl = new AbortController(); } catch (e) { ctrl = null; }
   if (ctrl) timer = setTimeout(() => { try { ctrl.abort(); } catch (e) {} }, capMs);
@@ -242,23 +330,16 @@ async function transcribe(model, key, body, capMs) {
   ].join(" ");
 
   try {
-    const opts = {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-goog-api-key": key },
-      body: JSON.stringify({
-        contents: [{
-          role: "user",
-          parts: [
-            { text: prompt },
-            { inlineData: { mimeType: body.mimeType || "audio/wav", data: body.audio } }
-          ]
-        }],
-        generationConfig: { temperature: 0 }
-      })
-    };
-    if (ctrl) opts.signal = ctrl.signal;
-
-    const res = await fetch(url, opts);
+    const res = await gemFetch(model, key, {
+      contents: [{
+        role: "user",
+        parts: [
+          { text: prompt },
+          { inlineData: { mimeType: body.mimeType || "audio/wav", data: body.audio } }
+        ]
+      }],
+      generationConfig: { temperature: 0 }
+    }, ctrl && ctrl.signal);
     if (!res.ok) {
       // Never pass the upstream body through — it can echo the key back.
       return { ok: false, error: "upstream_" + res.status,
@@ -292,9 +373,6 @@ async function transcribe(model, key, body, capMs) {
    response costs latency rather than the whole answer.                      */
 
 async function answerFromAudio(model, key, b, capMs) {
-  const url = "https://generativelanguage.googleapis.com/v1beta/models/" +
-              encodeURIComponent(model) + ":generateContent";
-
   let ctrl = null, timer = null;
   try { ctrl = new AbortController(); } catch (e) { ctrl = null; }
   if (ctrl) timer = setTimeout(() => { try { ctrl.abort(); } catch (e) {} }, capMs);
@@ -338,27 +416,20 @@ async function answerFromAudio(model, key, b, capMs) {
   ].filter(Boolean).join("\n");
 
   try {
-    const opts = {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-goog-api-key": key },
-      body: JSON.stringify({
-        contents: [{
-          role: "user",
-          parts: [
-            { text: prompt },
-            { inlineData: { mimeType: b.mimeType || "audio/wav", data: b.audio } }
-          ]
-        }],
-        generationConfig: {
-          temperature: 0.2,
-          responseMimeType: "application/json",
-          responseSchema: SCHEMA
-        }
-      })
-    };
-    if (ctrl) opts.signal = ctrl.signal;
-
-    const res = await fetch(url, opts);
+    const res = await gemFetch(model, key, {
+      contents: [{
+        role: "user",
+        parts: [
+          { text: prompt },
+          { inlineData: { mimeType: b.mimeType || "audio/wav", data: b.audio } }
+        ]
+      }],
+      generationConfig: {
+        temperature: 0.2,
+        responseMimeType: "application/json",
+        responseSchema: SCHEMA
+      }
+    }, ctrl && ctrl.signal);
     if (!res.ok) {
       return { ok: false, error: "upstream_" + res.status,
                retry: res.status === 429 || res.status >= 500 };
@@ -452,6 +523,15 @@ export default {
           bytes: body.audio.length, ms: Date.now() - started, result: r.ok ? "ok" : r.error
         }));
         if (r.ok || !r.retry) break;
+      }
+
+      // Romanised in spite of the prompt: fix the letters, keep the marks.
+      const lg = body.lang;
+      if (r && r.ok && r.data && looksRomanised(r.data.text, lg)) {
+        r.data.text = await fixScript(FALLBACK, env.GEMINI_API_KEY, r.data.text, lg,
+                                      Math.min(6000, left()));
+        console.log(JSON.stringify({ path: "fixScript", lang: lg,
+          fixed: NATIVE_SCRIPT[lg].test(r.data.text), ms: Date.now() - started }));
       }
 
       return r && r.ok ? json(r.data, 200, head)
