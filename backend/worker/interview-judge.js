@@ -501,10 +501,13 @@ export default {
          client waits. */
       const AUDIO_BUDGET_MS = 34000;
       const AUDIO_ATTEMPT_MS = 16000;
+      /* Lite first: measured 2026-09-28, the bigger model answered 503 on
+         nearly every call and each answer waited out two failures on it before
+         lite replied in ~2s. The bigger model is now the backup. */
       const FALLBACK = "gemini-3.1-flash-lite";
-      const first = env.GEMINI_MODEL || "gemini-3.5-flash";
-      const chain = [first];
-      if (first !== FALLBACK) chain.push(FALLBACK);
+      const backup = env.GEMINI_MODEL || "gemini-3.5-flash";
+      const chain = [FALLBACK];
+      if (backup !== FALLBACK) chain.push(backup);
 
       const started = Date.now();
       const left = () => AUDIO_BUDGET_MS - (Date.now() - started);
@@ -577,10 +580,11 @@ export default {
     const BACKOFF_MAX    = 1000;    // capped: doubling forever outruns the budget
     const MIN_USEFUL_MS  = 1500;    // too little left to be worth starting
 
+    // Lite first, for the same reason as the audio path above.
     const FALLBACK_MODEL = "gemini-3.1-flash-lite";
-    const first = env.GEMINI_MODEL || "gemini-3.5-flash";
-    const chain = [first];
-    if (first !== FALLBACK_MODEL) chain.push(FALLBACK_MODEL);
+    const backup = env.GEMINI_MODEL || "gemini-3.5-flash";
+    const chain = [FALLBACK_MODEL];
+    if (backup !== FALLBACK_MODEL) chain.push(backup);
 
     const t0 = Date.now();
     const left = () => BUDGET_MS - (Date.now() - t0);
