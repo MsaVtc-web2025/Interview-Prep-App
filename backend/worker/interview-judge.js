@@ -103,7 +103,7 @@ async function gemFetch(model, key, req, signal) {
               encodeURIComponent(model) + ":generateContent";
   const send = withThinking => {
     const cfg = Object.assign({}, req.generationConfig);
-    if (withThinking) cfg.thinkingConfig = { thinkingLevel: "low" };
+    if (withThinking) cfg.thinkingConfig = { thinkingLevel: "minimal" };
     const opts = {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-goog-api-key": key },
