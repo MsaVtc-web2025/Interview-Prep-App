@@ -183,11 +183,16 @@ h2.sec{font-size:17px;margin:24px 0 10px;color:var(--ink);font-weight:700}
 .wel h1{font-size:34px;font-weight:800;margin:24px 0 0;line-height:1.08;letter-spacing:-.8px}
 .wel .lead{font-size:17px;color:var(--lead);margin:10px 0 0;line-height:1.4;font-weight:500}
 .wel .fld{margin-top:28px}
-.wel input{
+.wel input,.wel select{
   width:100%;font-size:16px;padding:15px 14px;border:1px solid rgba(20,40,90,.12);
   border-radius:var(--rs);background:#fbfcfe;color:var(--ink);font-family:var(--font)
 }
-.wel input:focus{outline:2px solid rgba(47,95,224,.35);outline-offset:1px;border-color:var(--accent)}
+.wel select{
+  appearance:none;-webkit-appearance:none;padding-right:40px;
+  background:#fbfcfe url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%236b7590' stroke-width='2'/%3E%3C/svg%3E") no-repeat right 15px center
+}
+.wel .fld + .fld{margin-top:18px}
+.wel input:focus,.wel select:focus{outline:2px solid rgba(47,95,224,.35);outline-offset:1px;border-color:var(--accent)}
 .wel .why{font-size:12.5px;color:var(--muted);margin:11px 2px 0;line-height:1.5}
 .wel .or{
   display:flex;align-items:center;gap:12px;margin:20px 0;
@@ -854,6 +859,11 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
       <div class="logo"><svg class="svi" aria-hidden="true"><use href="#i-logo"/></svg></div>
       <h1 data-i18n="welcome.title">Welcome</h1>
       <p class="lead" data-i18n="welcome.lead"></p>
+
+      <div class="fld">
+        <label class="lab" for="utrack" data-i18n="welcome.trackLabel">Which course are you in?</label>
+        <select id="utrack"></select>
+      </div>
 
       <div class="fld">
         <label class="lab" for="uname" data-i18n="welcome.nameLabel">What is your name?</label>

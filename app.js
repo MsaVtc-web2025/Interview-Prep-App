@@ -52,7 +52,7 @@ const GOOGLE_CLIENT_ID = "604155826405-15oddjk71jr042kbe4bk3j02kdgt547e.apps.goo
 /* hands defaults to off: a mic that opens by itself picks up the student
    sitting next to you in a classroom. ai defaults to on: the offline score only
    counts words, and most students never open the settings at all. */
-const DEFAULTS = { hands: false, ask: true, speakFb: true, rate: 0.92, silence: 3000, lang: "en", ai: true, dflt2: true };
+const DEFAULTS = { hands: false, ask: true, speakFb: true, rate: 0.92, silence: 3000, lang: "en", ai: true, dflt2: true, track: "" };
 
 let state = { settings: Object.assign({}, DEFAULTS), courses: {}, user: null };
 
@@ -169,8 +169,21 @@ function renderStats() {
   Stats.render($("statsBody"), () => show("practice"));
 }
 
+/* The student's own course, picked on the welcome screen. Practice then shows
+   only the general interview and that course. Empty means every course. */
+function trackCourse() {
+  const c = getCourse(state.settings.track);
+  return c && c.mode === "technical" ? c : null;
+}
+
+function visibleCourses() {
+  const tc = trackCourse();
+  return tc ? COURSES.filter(c => c.mode === "interview" || c === tc) : COURSES;
+}
+
 function renderTiles() {
-  $("tiles").innerHTML = COURSES.map((c, i) => {
+  $("tiles").innerHTML = visibleCourses().map(c => {
+    const i = COURSES.indexOf(c);    // keeps each course's colour fixed
     const b = bucket(c.id);
     const n = b.history.length;
     const avg = n ? (b.history.reduce((a, e) => a + e.overall, 0) / n) : 0;
@@ -321,6 +334,7 @@ function relocalize() {
     if (!$("scRun").hidden) setPhase(phase === "idle" ? "ready" : phase);
   }
   if (!$("scProfile").hidden) paintSettings();
+  if (!$("scWelcome").hidden) paintTrackSelect();
 }
 
 /* ---------------- Switching screens ---------------- */
@@ -421,13 +435,32 @@ function toast(msg) {
 
 /* ---------------- First-run screen (name) ---------------- */
 
+/* The course dropdown - "All courses" first, then every trade course */
+function paintTrackSelect() {
+  const sel = $("utrack");
+  const keep = sel.options.length ? sel.value : state.settings.track;
+  sel.innerHTML = '<option value="">' + esc(t("welcome.trackAll")) + "</option>" +
+    COURSES.filter(c => c.mode === "technical").map(c =>
+      '<option value="' + esc(c.id) + '">' + esc(c.icon + " " + tCourse(c, "name")) + "</option>").join("");
+  sel.value = getCourse(keep) ? keep : "";
+}
+
+function saveTrack() {
+  state.settings.track = $("utrack").value;
+  save();
+  renderTiles();
+}
+
 function openWelcome() {
   $("uname").value = userName();
+  $("utrack").innerHTML = "";        // reread the saved choice
+  paintTrackSelect();
   show("welcome");
   initGoogle();
 }
 
 function finishWelcome(name, via) {
+  saveTrack();
   setUser(name, via || "typed");
   relocalize();          // redraws "Hello, Ravi" and the rest
   show("practice");
@@ -1307,7 +1340,7 @@ $("btnReset").addEventListener("click", () => {
 });
 
 $("btnSaveName").addEventListener("click", () => finishWelcome($("uname").value));
-$("btnSkipName").addEventListener("click", () => { show("practice"); });
+$("btnSkipName").addEventListener("click", () => { saveTrack(); show("practice"); });
 $("uname").addEventListener("keydown", ev => {
   if (ev.key === "Enter") { ev.preventDefault(); finishWelcome($("uname").value); }
 });
