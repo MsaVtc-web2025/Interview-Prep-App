@@ -505,7 +505,7 @@ export default {
          nearly every call and each answer waited out two failures on it before
          lite replied in ~2s. The bigger model is now the backup. */
       const FALLBACK = "gemini-3.1-flash-lite";
-      const backup = env.GEMINI_MODEL || "gemini-3.5-flash";
+      const backup = env.GEMINI_MODEL || "gemini-3.6-flash";
       const chain = [FALLBACK];
       if (backup !== FALLBACK) chain.push(backup);
 
@@ -582,7 +582,7 @@ export default {
 
     // Lite first, for the same reason as the audio path above.
     const FALLBACK_MODEL = "gemini-3.1-flash-lite";
-    const backup = env.GEMINI_MODEL || "gemini-3.5-flash";
+    const backup = env.GEMINI_MODEL || "gemini-3.6-flash";
     const chain = [FALLBACK_MODEL];
     if (backup !== FALLBACK_MODEL) chain.push(backup);
 
