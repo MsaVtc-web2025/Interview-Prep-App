@@ -674,7 +674,7 @@ function askQuestion() {
      student skips, or changes language mid-question - and the older one settles
      as "cancelled", which must not be mistaken for "this phone cannot speak". */
   const gen = ++askGen;
-  sayQuestion().then(spoken => { if (gen === askGen) afterAsking(spoken); });
+  sayQuestion(gen).then(spoken => { if (gen === askGen) afterAsking(spoken); });
 }
 
 let askGen = 0;
@@ -685,12 +685,20 @@ let askGen = 0;
    the voice is offered but its data was never downloaded - and the app has no
    way to tell the two apart until it tries. Asking in silence is the worst
    outcome, and the question exists in English natively, so that is what it
-   falls back to. The translation stays on screen to read. */
-function sayQuestion() {
+   falls back to. The translation stays on screen to read.
+
+   `gen` is this ask's generation. Speech.speak() resolves false for "nothing was
+   heard", and a cancel counts as nothing heard - so an ask that was interrupted
+   by the next question looks exactly like a phone with no Gujarati voice. Acting
+   on it would cancel the question now being asked and read it out in English,
+   which is what skipping mid-sentence used to do. A stale generation therefore
+   falls back to nothing: the ask that replaced it is already speaking. */
+function sayQuestion(gen) {
   const lang = spokenQuestionLang();
   const rate = state.settings.rate;
 
   return Speech.speak(spokenQuestion(), { lang: lang, rate: rate }).then(spoken => {
+    if (gen !== askGen) return spoken;        // a newer ask owns the speaker now
     if (spoken || lang === "en" || phase !== "asking") return spoken;
     const g = greetingLine("en");
     return Speech.speak((g ? g + " " : "") + current.q, { lang: "en", rate: rate });
@@ -1358,9 +1366,13 @@ $("btnSkip").addEventListener("click", () => { if (course) pickQuestion(true); }
 $("btnRepeat").addEventListener("click", () => {
   Speech.stopListen(true);
   setPhase("asking");
-  Speech.speak(spokenQuestion(), { lang: spokenQuestionLang(), rate: state.settings.rate })
-    .then(spoken => {
-    if (phase !== "asking") return;
+  /* Through sayQuestion, on the same generation counter as askQuestion. Repeating
+     while the question is still being asked cancels that ask, and a cancelled ask
+     that still held the current generation would fall back to English on top of
+     this one - the same fault as skipping mid-sentence. */
+  const gen = ++askGen;
+  sayQuestion(gen).then(spoken => {
+    if (gen !== askGen || phase !== "asking") return;
     if (!spoken) { setPhase("ready"); return; }
     if (canListen()) beginListen();
     else setPhase("ready");
