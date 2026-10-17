@@ -570,6 +570,10 @@ function renderBrief() {
   $("briefName").textContent = tCourse(course, "name");
   // Roughly a minute and a half per question - being asked, answering, reading feedback
   $("briefMeta").textContent = t("brief.meta", { n: n, m: Math.round(n * 1.5) });
+  /* "Answer in English" is the wrong instruction in Gujarati or Hindi. There the
+     student answers in whatever they think in on every question but the flagged
+     self-presentation ones, and those say so themselves when they come up. */
+  $("briefI2").textContent = t(getLang() === "en" ? "brief.i2" : "brief.i2Free");
   $("briefI3").textContent = t("brief.i3", { n: n });
 }
 
@@ -976,7 +980,7 @@ function submit(text, judged) {
       if (phase === "scoring") $("hint").textContent = t("ai.stillReading");
     }, 7000);
 
-    Judge.evaluate(ans, q, c.mode, getLang()).then(j => {
+    Judge.evaluate(ans, q, c.mode, getLang(), qNeedsEnglish(q)).then(j => {
       clearTimeout(patience);
       finish(Judge.merge(offline, j));
     });

@@ -36,7 +36,9 @@ const Judge = (function () {
 
   const TIMEOUT_MS = 25000;              // no reply within this time -> use the offline score
   const MAX_ANSWER = 4000;               // do not send text longer than this
-  const CACHE_KEY = "interview_judge_cache_v1";
+  /* v2: v1 was filled while every question was sent as needing English, so its
+     advice tells Gujarati and Hindi students to speak English. Start it again. */
+  const CACHE_KEY = "interview_judge_cache_v2";
   const CACHE_MAX = 150;                 // keep this many results, then drop the oldest
 
   const CRIT_KEYS = ["communication", "sentences", "thought", "speechGrammar", "accuracy", "coherence"];
@@ -117,7 +119,7 @@ const Judge = (function () {
 
   const AUDIO_TIMEOUT_MS = 45000;   // a recording has to upload first, so longer
 
-  function payload_(answer, question, mode, lang) {
+  function payload_(answer, question, mode, lang, needsEnglish) {
     const kw = Array.isArray(question.kw)
       ? question.kw.map(g => (Array.isArray(g) ? g[0] : String(g))).filter(Boolean)
       : [];
@@ -131,7 +133,11 @@ const Judge = (function () {
       keyPoints: kw,
       mustPoints: must,
       mode: mode === "technical" ? "technical" : "interview",
-      lang: lang === "gu" || lang === "hi" ? lang : "en"
+      lang: lang === "gu" || lang === "hi" ? lang : "en",
+      /* Whether this question has to be answered in English. The Worker treats a
+         missing value as true, so leaving it out tells the model to demand English -
+         which is exactly what a Gujarati or Hindi student must never be told. */
+      needsEnglish: !!needsEnglish
     };
   }
 
@@ -223,10 +229,9 @@ const Judge = (function () {
   function fromAudio(payload, question, mode, lang, needsEnglish) {
     if (!active() || !payload || !payload.audio) return Promise.resolve(null);
 
-    const body = payload_(null, question, mode, lang);
+    const body = payload_(null, question, mode, lang, needsEnglish);
     body.audio = payload.audio;
     body.mimeType = payload.mimeType;
-    body.needsEnglish = !!needsEnglish;
     delete body.answer;                     // there is no text yet; that is the point
 
     let ctrl = null, timer = null;
@@ -256,7 +261,7 @@ const Judge = (function () {
   /* ---------------- The main job ----------------
      Always returns a Promise and never rejects. On failure, null. */
 
-  function evaluate(answer, question, mode, lang) {
+  function evaluate(answer, question, mode, lang, needsEnglish) {
     if (!active() || !answer || !question) return Promise.resolve(null);
 
     const key = cacheKey(question, answer, lang);
@@ -269,7 +274,7 @@ const Judge = (function () {
     const opts = {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload_(answer, question, mode, lang))
+      body: JSON.stringify(payload_(answer, question, mode, lang, needsEnglish))
     };
     if (ctrl) opts.signal = ctrl.signal;
     if (ctrl) timer = setTimeout(() => { try { ctrl.abort(); } catch (e) {} }, TIMEOUT_MS);
