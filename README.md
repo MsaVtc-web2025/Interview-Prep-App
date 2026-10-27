@@ -324,6 +324,8 @@ screen for the last 20 seconds.
 | `courses.js` | Course registry — each bank registers itself here |
 | `questions.js` | The 22 questions of the Interview (general) mode |
 | `bank-*.js` | Question banks for the seven technical courses |
+| `chapters-*.js` | Chapter Quiz banks — the trade's course book, chapter by chapter (CNC, Nursing) |
+| `quiz.js` | Chapter Quiz — chapter list, marking against the book answer, report card |
 | `scoring.js` | Offline marking, grammar checks, the safety gate |
 | `speech.js` | Speaking and listening (Web Speech API) |
 | `dictation.js` | Optional continuous recording, transcribed by the Worker |
@@ -387,3 +389,18 @@ add this template after the last question:
 3. Add the filename to `ASSETS` in `sw.js` and bump the `CACHE` number.
 
 The tile appears on the home screen by itself — nothing else needs changing.
+
+## Adding a trade's book to Chapter Quiz
+
+Practice opens on **Chapter Quiz**; trades with no book show "Coming soon".
+
+1. Create `chapters-<course id>.js` containing `registerChapters("<course id>", [ ... ])`
+   — one `{ id, no, title, qs: [{ q, a, t }] }` per chapter, where `q` is the
+   question, `a` the book answer and `t` an optional topic (copy `chapters-nursing.js`).
+2. Add its `<script>` line in `index.html` after the other `chapters-*.js` scripts.
+3. Add the filename to `ASSETS` in `sw.js` and bump the `CACHE` number.
+
+Answers are marked against `a`: with AI on the judge compares meaning (any
+language); offline the words are matched, so only an answer in the book's own
+words is recognised. Quiz results are kept in `state.quiz`, apart from the
+interview history and its averages.

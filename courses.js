@@ -24,6 +24,26 @@ function registerCourse(def) {
 
 function getCourse(id) { return COURSE_BY_ID[id] || null; }
 
+/* Chapter Quiz banks - the trade's own course book, one entry per chapter.
+   Every chapters-*.js file calls registerChapters() with the id of the course
+   it belongs to. A trade with no chapters file shows "Coming soon".
+
+   chapter = {
+     id    : short id, unique inside the course (used as the localStorage key)
+     no    : chapter number as printed in the book ("1.0", "7.11", "3")
+     title : chapter name, as in the book
+     qs    : [ { q: question, a: book answer, t: topic (optional) } ]
+   }
+*/
+const CHAPTERS = Object.create(null);
+
+function registerChapters(courseId, list) {
+  if (!courseId || !Array.isArray(list)) return;
+  CHAPTERS[courseId] = list.filter(c => c && c.id && Array.isArray(c.qs) && c.qs.length);
+}
+
+function getChapters(courseId) { return CHAPTERS[courseId] || []; }
+
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { COURSES, COURSE_BY_ID, registerCourse, getCourse };
+  module.exports = { COURSES, COURSE_BY_ID, registerCourse, getCourse, CHAPTERS, registerChapters, getChapters };
 }

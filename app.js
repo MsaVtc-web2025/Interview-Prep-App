@@ -52,9 +52,10 @@ const GOOGLE_CLIENT_ID = "604155826405-15oddjk71jr042kbe4bk3j02kdgt547e.apps.goo
 /* hands defaults to off: a mic that opens by itself picks up the student
    sitting next to you in a classroom. ai defaults to on: the offline score only
    counts words, and most students never open the settings at all. */
-const DEFAULTS = { hands: false, ask: true, speakFb: true, rate: 0.92, silence: 3000, lang: "en", ai: true, dflt2: true, track: "" };
+const DEFAULTS = { hands: false, ask: true, speakFb: true, rate: 0.92, silence: 3000, lang: "en", ai: true, dflt2: true, track: "", pmode: "chapter" };
 
-let state = { settings: Object.assign({}, DEFAULTS), courses: {}, user: null };
+/* quiz = Chapter Quiz results, apart from the interview history (see quiz.js) */
+let state = { settings: Object.assign({}, DEFAULTS), courses: {}, quiz: {}, user: null };
 
 function loadState() {
   try {
@@ -72,6 +73,7 @@ function loadState() {
           state.settings.dflt2 = true;
         }
         state.courses = p.courses && typeof p.courses === "object" ? p.courses : {};
+        state.quiz = p.quiz && typeof p.quiz === "object" ? p.quiz : {};
         state.user = (p.user && typeof p.user === "object") ? p.user : null;
         return;
       }
@@ -181,7 +183,21 @@ function visibleCourses() {
   return tc ? COURSES.filter(c => c.mode === "interview" || c === tc) : COURSES;
 }
 
+/* The two modes at the top of the practice tab - the book's chapters, or the
+   mock interview. Chapter Quiz comes first and is the default. */
+function practiceMode() { return state.settings.pmode === "interview" ? "interview" : "chapter"; }
+
+function paintPracticeMode() {
+  const m = practiceMode();
+  Array.prototype.forEach.call($("pmodeSeg").children, b =>
+    b.classList.toggle("on", b.getAttribute("data-m") === m));
+  $("pracLead").textContent = t(m === "chapter" ? "quiz.lead" : "prac.lead");
+}
+
 function renderTiles() {
+  paintPracticeMode();
+  if (practiceMode() === "chapter") { Quiz.renderTrades($("tiles")); return; }
+
   $("tiles").innerHTML = visibleCourses().map(c => {
     const i = COURSES.indexOf(c);    // keeps each course's colour fixed
     const b = bucket(c.id);
@@ -241,6 +257,7 @@ function qField(q, field) {
 
 /* This question in the current language - English when there is no translation */
 function qText(q) {
+  if (q && q.quiz) return q.q;            // a book question - always as the book has it
   const lang = getLang();
   if (lang !== "en" && q && q.i18n && q.i18n[lang] && q.i18n[lang].q) return q.i18n[lang].q;
   return q ? q.q : "";
@@ -268,7 +285,9 @@ function paintQuestionText() {
   if (!current) return;
   const el = $("qtext");
   el.textContent = qText(current);
-  el.classList.toggle("lat", !qHasTranslation(current));
+  // The book questions are Gujarati whatever the app's language
+  el.classList.toggle("lat", !current.quiz && !qHasTranslation(current));
+  el.classList.toggle("guscript", !!current.quiz);
 
   /* The greeting before the first question - now in the current language */
   const g = greetingLine();
@@ -283,6 +302,7 @@ function paintQuestionText() {
    voice for it. With no voice we speak English - better than silence, and the
    translation stays visible on screen either way. */
 function spokenQuestionLang() {
+  if (current && current.quiz) return "gu";     // the book is Gujarati - see sayQuestion()
   const lang = getLang();
   if (qHasTranslation(current) && Speech.hasVoice(lang)) return lang;
   return "en";
@@ -295,6 +315,7 @@ function spokenQuestionLang() {
    explicitly flagged (the self-introduction ones) ask for it; on the rest they
    answer in their own words and are marked on what they said. */
 function qNeedsEnglish(q) {
+  if (q && q.quiz) return false;           // a book quiz checks knowledge, not English
   return getLang() === "en" || !!(q && q.needsEnglish);
 }
 
@@ -322,26 +343,34 @@ function relocalize() {
   renderDash();
   if (course) {
     renderBrief();
-    $("runName").textContent = tCourse(course, "name");
+    paintRunHead();
     // A language change redraws the question in that language too
     if (current) {
-      $("qcat").textContent = tCat(current.cat);
+      $("qcat").textContent = catLabel(current);
       paintQuestionText();
       paintAnswerLabels();
     }
     renderProgress();
     if (lastResult) showResult(lastResult);
+    Quiz.relocalize();
     if (!$("scRun").hidden) setPhase(phase === "idle" ? "ready" : phase);
   }
   if (!$("scProfile").hidden) paintSettings();
   if (!$("scWelcome").hidden) paintTrackSelect();
+  if (!$("scChapters").hidden) Quiz.renderChapters();
+  if (!$("scQuizReport").hidden) Quiz.renderReport();
 }
+
+/* The category line above the question. A book question's topic is already
+   the book's own words - there is no translation table for it. */
+function catLabel(q) { return q.quiz ? q.cat : tCat(q.cat); }
 
 /* ---------------- Switching screens ---------------- */
 
 const SC_ID = {
   splash: "scSplash", welcome: "scWelcome", stats: "scStats", practice: "scPractice",
-  brief: "scBrief", run: "scRun", profile: "scProfile", help: "scHelp"
+  brief: "scBrief", run: "scRun", profile: "scProfile", help: "scHelp",
+  chapters: "scChapters", qreport: "scQuizReport"
 };
 /* The three tabs with the bottom bar - the bar hides on every other screen */
 const TABS = ["stats", "practice", "profile"];
@@ -398,7 +427,9 @@ const BACK_TO = {
   welcome: () => { show(state.user ? "practice" : "splash"); },
   brief:   () => leaveCourse(),      // same as $("btnBriefBack")
   run:     () => leaveCourse(),      // same as $("btnBack")
-  help:    () => show("profile")     // same as $("btnHelpBack")
+  help:    () => show("profile"),    // same as $("btnHelpBack")
+  chapters: () => goTab("practice"), // same as $("btnChapBack")
+  qreport: () => Quiz.backToChapters()   // same as $("btnRepBack")
 };
 
 /* Push our entry if history does not already hold one. Never push a second -
@@ -555,6 +586,7 @@ function openCourse(id) {
   const c = getCourse(id);
   if (!c) return;
   Speech.prime();                 // a user tap - TTS has to be woken right here
+  Quiz.drop();
   course = c;
   renderBrief();
   show("brief");
@@ -583,19 +615,53 @@ function startInterview() {
   Speech.prime();                 // the tap that must precede the first speak()
   // A mock interview always starts at the first question
   if (isSequential()) { bucket(course.id).pos = 0; save(); }
-  $("runName").textContent = tCourse(course, "name");
+  openRun();
+}
+
+/* A chapter of the book, from the chapter list or "Try again" on the report
+   card. It opens straight on the first question - the student picked the
+   chapter themselves, so there is nothing to brief. */
+function startChapterQuiz(cid, chId) {
+  const c = getCourse(cid);
+  if (!c || !Quiz.begin(cid, chId)) return;
+  Speech.prime();                 // a user tap - TTS has to be woken right here
+  course = c;
+  openRun();
+}
+
+function openRun() {
+  paintRunHead();
   show("run");
   Avatar.mount($("av"));
   renderProgress();
   pickQuestion(false);
 }
 
+/* The run screen's title, and the parts that differ in a chapter quiz: the
+   skip button really skips, and the interview's own progress panel is not
+   about this quiz at all. */
+function paintRunHead() {
+  const quiz = Quiz.on();
+  $("runName").textContent = tCourse(course, "name") + (quiz ? " · " + Quiz.title() : "");
+  $("skipLbl").textContent = t(quiz ? "quiz.skip" : "btn.skip");
+  $("runStats").hidden = quiz;
+}
+
+/* Leaving a chapter quiz part way still gives the report card for what was
+   answered - nothing the student did is thrown away. */
 function leaveCourse() {
 
   Speech.stopAll();
   if (Dictation.active()) Dictation.abort();
   Avatar.setState("idle");
   phase = "idle";
+  if (Quiz.on()) {
+    const done = Quiz.finish();
+    course = null;
+    if (done) Quiz.openReport(done.cid, done.chId);
+    else Quiz.openChapters();
+    return;
+  }
   course = null;
   show("practice");
   renderDash();
@@ -608,12 +674,37 @@ function isSequential() { return !!(course && Array.isArray(course.order) && cou
 
 /* Have we reached the last question? */
 function atLastQuestion() {
+  if (Quiz.on()) return Quiz.atLast();
   if (!isSequential()) return false;
   return bucket(course.id).pos >= course.order.length - 1;
 }
 
 /* advance = true moves forward in the order; false stays where we are */
 function pickQuestion(advance) {
+  if (Quiz.on()) {
+    // A chapter goes through the book in order, once
+    current = Quiz.next(advance);
+    $("runProg").textContent = Quiz.progress();
+  } else {
+    pickCourseQuestion(advance);
+  }
+
+  $("qcat").textContent = catLabel(current);
+  paintQuestionText();
+  $("heard").textContent = "";
+  $("ans").value = "";
+  $("result").hidden = true;
+  $("result").innerHTML = "";
+  $("typeWrap").hidden = true;
+  $("btnType").classList.remove("on");
+  lastResult = null;
+
+  paintAnswerLabels();
+  qClockReset();          // this question's timing starts here
+  askQuestion();
+}
+
+function pickCourseQuestion(advance) {
   const b = bucket(course.id);
   const qs = course.questions;
 
@@ -632,20 +723,6 @@ function pickQuestion(advance) {
     $("runProg").textContent = b.asked.length + "/" + qs.length;
   }
   save();
-
-  $("qcat").textContent = tCat(current.cat);
-  paintQuestionText();
-  $("heard").textContent = "";
-  $("ans").value = "";
-  $("result").hidden = true;
-  $("result").innerHTML = "";
-  $("typeWrap").hidden = true;
-  $("btnType").classList.remove("on");
-  lastResult = null;
-
-  paintAnswerLabels();
-  qClockReset();          // this question's timing starts here
-  askQuestion();
 }
 
 /* The greeting - only on the first question of a sequential course, and only
@@ -701,9 +778,13 @@ function sayQuestion(gen) {
   const lang = spokenQuestionLang();
   const rate = state.settings.rate;
 
+  /* A book question is Gujarati only. Read by an English voice it comes out as
+     noise, so with no Gujarati voice it is not read at all - it is on screen. */
+  if (current.quiz && !Speech.hasVoice("gu")) return Promise.resolve(false);
+
   return Speech.speak(spokenQuestion(), { lang: lang, rate: rate }).then(spoken => {
     if (gen !== askGen) return spoken;        // a newer ask owns the speaker now
-    if (spoken || lang === "en" || phase !== "asking") return spoken;
+    if (spoken || lang === "en" || current.quiz || phase !== "asking") return spoken;
     const g = greetingLine("en");
     return Speech.speak((g ? g + " " : "") + current.q, { lang: "en", rate: rate });
   });
@@ -722,7 +803,7 @@ function afterAsking(spoken) {
   if (!spoken) {
     setPhase("ready");
     $("hint").className = "hint warn";
-    $("hint").textContent = t("err.noVoice");
+    $("hint").textContent = t(current.quiz && !Speech.hasVoice("gu") ? "quiz.noGuVoice" : "err.noVoice");
     return;
   }
 
@@ -923,6 +1004,8 @@ function submit(text, judged) {
 
   // Scoring is instant; a short pause so the avatar is seen to think
   setTimeout(() => {
+    if (Quiz.on()) { markQuiz(ans, judged); return; }
+
     // The offline score is always computed first, even with AI on. It is the
     // base, and it is what shows if the AI never arrives.
     const offline = scoreAnswer(ans, current, course.mode, qNeedsEnglish(current));
@@ -987,6 +1070,30 @@ function submit(text, judged) {
   }, 420);
 }
 
+/* A chapter quiz answer - marked against the book answer, and kept out of the
+   interview history. With the AI on the student waits for its verdict, the
+   same as in the interview. */
+function markQuiz(ans, judged) {
+  const q = current;
+  let patience = null;
+  if (!judged && Judge.active()) {
+    $("hint").className = "hint";
+    $("hint").textContent = t("ai.reading");
+    patience = setTimeout(() => {
+      if (phase === "scoring") $("hint").textContent = t("ai.stillReading");
+    }, 7000);
+  }
+
+  Quiz.mark(ans, q, judged).then(r => {
+    if (patience) clearTimeout(patience);
+    if (!Quiz.on() || current !== q) return;   // skipped or left meanwhile
+    Quiz.record(q, ans, r);
+    Quiz.showResult(r);
+    setPhase("feedback");
+    Quiz.speak(r);
+  });
+}
+
 /* Speak a short summary in the current language - not everything, only what is
    useful. */
 /* The number as it is spoken. toFixed(1) always gives "4.0", which a voice reads
@@ -1040,7 +1147,8 @@ function setPhase(p) {
   $("status").className = "status " + u.cls;
   const b = $("btnAct");
   // After the last question of a sequential course: "Finish", not "Next question"
-  b.textContent = (p === "feedback" && atLastQuestion()) ? t("btn.finish") : t(u.btn);
+  b.textContent = (p === "feedback" && atLastQuestion())
+    ? t(Quiz.on() ? "quiz.seeReport" : "btn.finish") : t(u.btn);
   b.className = "act" + (u.rec ? " rec" : "");
   b.disabled = p === "scoring";
   if (p === "ready" || p === "asking") { $("hint").className = "hint"; $("hint").textContent = ""; }
@@ -1122,6 +1230,7 @@ function showResult(r) {
 /* ---------------- Progress ---------------- */
 
 function renderProgress() {
+  if (Quiz.on()) return;          // that panel is hidden in a chapter quiz
   const h = bucket(course.id).history;
   $("cCount").textContent = h.length;
 
@@ -1343,6 +1452,7 @@ Array.prototype.forEach.call($("segSil").children, b =>
 $("btnReset").addEventListener("click", () => {
   if (!confirm(t("set.resetAsk"))) return;
   state.courses = {};
+  state.quiz = {};
   save();
   // Only pull a new question if practice is running - not on the briefing screen
   if (course && !$("scRun").hidden) { renderProgress(); pickQuestion(false); }
@@ -1366,7 +1476,29 @@ $("btnMaybeLater").addEventListener("click", () => { Speech.prime(); show("pract
 $("btnStart").addEventListener("click", startInterview);
 $("btnBriefBack").addEventListener("click", leaveCourse);
 $("btnBack").addEventListener("click", leaveCourse);
-$("btnSkip").addEventListener("click", () => { if (course) pickQuestion(true); });
+$("btnSkip").addEventListener("click", () => {
+  if (!course) return;
+  if (Quiz.on()) {
+    // Skipping on the last question ends the chapter
+    Quiz.skip(current);
+    if (Quiz.atLast()) leaveCourse();
+    else pickQuestion(true);
+    return;
+  }
+  pickQuestion(true);
+});
+
+/* The two practice modes, and the chapter quiz's own screens */
+Array.prototype.forEach.call($("pmodeSeg").children, b =>
+  b.addEventListener("click", () => {
+    state.settings.pmode = b.getAttribute("data-m");
+    save();
+    renderTiles();
+  }));
+$("btnChapBack").addEventListener("click", () => goTab("practice"));
+$("btnRepBack").addEventListener("click", () => Quiz.backToChapters());
+$("btnRepAgain").addEventListener("click", () => Quiz.again());
+$("btnRepDone").addEventListener("click", () => Quiz.backToChapters());
 $("btnRepeat").addEventListener("click", () => {
   Speech.stopListen(true);
   setPhase("asking");
