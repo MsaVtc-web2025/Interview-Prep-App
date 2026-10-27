@@ -395,10 +395,20 @@ The tile appears on the home screen by itself — nothing else needs changing.
 Practice opens on **Chapter Quiz**; trades with no book show "Coming soon".
 
 1. Create `chapters-<course id>.js` containing `registerChapters("<course id>", [ ... ])`
-   — one `{ id, no, title, qs: [{ q, a, t }] }` per chapter, where `q` is the
-   question, `a` the book answer and `t` an optional topic (copy `chapters-nursing.js`).
+   — one `{ id, no, title, titles: { en, hi }, qs: [{ q, a, t, en: { q, a }, hi: { q, a } }] }`
+   per chapter, where `q` is the question, `a` the book answer (Gujarati, as in the
+   book), `t` an optional topic, and `en` / `hi` the translations (copy
+   `chapters-nursing.js`). The quiz is asked in the app's language; a question
+   with no `en` / `hi` is asked in Gujarati. Translations keep the answer's
+   lines and numbers exactly, and Hindi keeps trade words in English too.
 2. Add its `<script>` line in `index.html` after the other `chapters-*.js` scripts.
 3. Add the filename to `ASSETS` in `sw.js` and bump the `CACHE` number.
+
+Write technical words the way students say them — in English (`Safety`,
+`Patient`, `Pressure`), not the formal Gujarati (`સલામતી`, `દર્દી`, `દબાણ`).
+The same goes for every Gujarati text in the `bank-*.js` files. The `SAME`
+table in `quiz.js` keeps the formal word and the English spelt in Gujarati
+letters (`સેફ્ટી`) matching the English one, so add a row when you add a term.
 
 Answers are marked against `a`: with AI on the judge compares meaning (any
 language); offline the words are matched, so only an answer in the book's own

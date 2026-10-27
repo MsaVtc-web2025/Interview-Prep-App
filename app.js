@@ -257,7 +257,7 @@ function qField(q, field) {
 
 /* This question in the current language - English when there is no translation */
 function qText(q) {
-  if (q && q.quiz) return q.q;            // a book question - always as the book has it
+  if (q && q.quiz) return q.q;            // a book question - quiz.js already picked its language
   const lang = getLang();
   if (lang !== "en" && q && q.i18n && q.i18n[lang] && q.i18n[lang].q) return q.i18n[lang].q;
   return q ? q.q : "";
@@ -286,8 +286,10 @@ function paintQuestionText() {
   const el = $("qtext");
   el.textContent = qText(current);
   // The book questions are Gujarati whatever the app's language
-  el.classList.toggle("lat", !current.quiz && !qHasTranslation(current));
-  el.classList.toggle("guscript", !!current.quiz);
+  // A book question carries its own language (Gujarati where untranslated)
+  const ql = current.quiz ? current.qlang : (qHasTranslation(current) ? getLang() : "en");
+  el.classList.toggle("lat", ql === "en");
+  el.classList.toggle("guscript", ql === "gu");
 
   /* The greeting before the first question - now in the current language */
   const g = greetingLine();
@@ -302,7 +304,7 @@ function paintQuestionText() {
    voice for it. With no voice we speak English - better than silence, and the
    translation stays visible on screen either way. */
 function spokenQuestionLang() {
-  if (current && current.quiz) return "gu";     // the book is Gujarati - see sayQuestion()
+  if (current && current.quiz) return current.qlang;    // see sayQuestion()
   const lang = getLang();
   if (qHasTranslation(current) && Speech.hasVoice(lang)) return lang;
   return "en";
@@ -344,7 +346,10 @@ function relocalize() {
   if (course) {
     renderBrief();
     paintRunHead();
-    // A language change redraws the question in that language too
+    /* A language change redraws the question in that language too. A book
+       question is fetched again in the new language - but not while its
+       answer is being marked, which is waiting on this very question. */
+    if (Quiz.on() && current && phase !== "scoring") current = Quiz.current();
     if (current) {
       $("qcat").textContent = catLabel(current);
       paintQuestionText();
@@ -778,9 +783,10 @@ function sayQuestion(gen) {
   const lang = spokenQuestionLang();
   const rate = state.settings.rate;
 
-  /* A book question is Gujarati only. Read by an English voice it comes out as
-     noise, so with no Gujarati voice it is not read at all - it is on screen. */
-  if (current.quiz && !Speech.hasVoice("gu")) return Promise.resolve(false);
+  /* A Gujarati or Hindi book question read by an English voice comes out as
+     noise, so with no voice for its language it is not read at all - it is
+     on screen. */
+  if (current.quiz && current.qlang !== "en" && !Speech.hasVoice(current.qlang)) return Promise.resolve(false);
 
   return Speech.speak(spokenQuestion(), { lang: lang, rate: rate }).then(spoken => {
     if (gen !== askGen) return spoken;        // a newer ask owns the speaker now
@@ -803,7 +809,8 @@ function afterAsking(spoken) {
   if (!spoken) {
     setPhase("ready");
     $("hint").className = "hint warn";
-    $("hint").textContent = t(current.quiz && !Speech.hasVoice("gu") ? "quiz.noGuVoice" : "err.noVoice");
+    $("hint").textContent = t(current.quiz && current.qlang === "gu" && !Speech.hasVoice("gu")
+      ? "quiz.noGuVoice" : "err.noVoice");
     return;
   }
 
@@ -832,6 +839,16 @@ function spokenQuestion() {
 }
 
 /* ---------------- The student speaks ---------------- */
+
+/* The language the answer is written down in. The interview is answered in
+   English. A book-quiz answer comes in the language the question was asked
+   in - Gujarati or Hindi with English words in it, which heard as English
+   comes back as nonsense. Taken down as Gujarati or Hindi, the English words
+   stay in English letters. */
+function answerLang() {
+  if (!current || !current.quiz) return "en";
+  return current.qlang;
+}
 
 /* Stop listening, whichever engine is running. Dictation holds a real
    microphone, so leaving it open is not a cosmetic bug - every call site that
@@ -894,7 +911,7 @@ function beginListen(seed) {
   micLive(false);
 
   const ok = Speech.listen({
-    lang: "en-IN",
+    lang: answerLang() + "-IN",
     seed: seed || "",
     // 0 = never submit on a silence; the mic stays open until the student
     // presses the button. Hands-free mode is the opt-in that changes that.
@@ -1525,6 +1542,11 @@ $("btnAct").addEventListener("click", () => {
       $("status").textContent = t("status.transcribing");
 
       const q = current, lang = getLang(), needsEn = qNeedsEnglish(current);
+      /* Transcript only, for the word match: a book-quiz answer is taken
+         down in the question's language (see answerLang). With AI marking
+         the app's own language stays, because that call also writes the
+         feedback in it. */
+      const sttLang = q.quiz ? answerLang() : lang;
       const useText = txt => {
         const full = [dictationSeed, txt].filter(Boolean).join(" ").trim();
         $("heard").textContent = full;
@@ -1540,10 +1562,10 @@ $("btnAct").addEventListener("click", () => {
         if (Judge.active()) {
           return Judge.fromAudio(payload, q, course.mode, lang, needsEn).then(r => {
             if (r && r.text) return submit(useText(r.text), r);
-            return Dictation.transcribe(payload, lang).then(txt => submit(useText(txt)));
+            return Dictation.transcribe(payload, sttLang).then(txt => submit(useText(txt)));
           });
         }
-        return Dictation.transcribe(payload, lang).then(txt => submit(useText(txt)));
+        return Dictation.transcribe(payload, sttLang).then(txt => submit(useText(txt)));
       });
       return;
     }

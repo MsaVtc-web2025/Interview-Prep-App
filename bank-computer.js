@@ -14,7 +14,7 @@ registerCourse({
   i18n: {
     gu: { q: "RAM અને hard disk વચ્ચે શું ફરક છે?" },
     hi: { q: "RAM और hard disk में क्या फ़र्क़ है?",
-          gu: "RAM एक temporary memory है। Computer चालू रहने पर जो programs चल रहे होते हैं वे RAM में रहते हैं, और power बंद होते ही वह सब मिट जाता है। Hard disk permanent storage है — files, photos और software उसमें सुरक्षित रहते हैं और power बंद होने पर भी बने रहते हैं। RAM तेज़ पर छोटी होती है, hard disk धीमी पर बहुत बड़ी।",
+          gu: "RAM एक temporary memory है। Computer चालू रहने पर जो programs चल रहे होते हैं वे RAM में रहते हैं, और power बंद होते ही वह सब मिट जाता है। Hard disk permanent storage है — files, photos और software उसमें Safe रहते हैं और power बंद होने पर भी बने रहते हैं। RAM तेज़ पर छोटी होती है, hard disk धीमी पर बहुत बड़ी।",
           tip: "«Temporary» और «permanent» ये दो शब्द ज़रूर बोलिए। Interview लेने वाला मुख्य रूप से यही सुनना चाहता है।" },
     en: { tip: "Be sure to say the words 'temporary' and 'permanent'. That is mainly what the interviewer is listening for." }
   },
@@ -165,8 +165,8 @@ registerCourse({
     en: { tip: "Do not claim a falsely high speed. Giving the real figure and saying 'accuracy first' sounds much better." }
   },
   kw: [["speed", "words per minute", "wpm", "word", "minute"], ["accuracy", "accurate", "correct", "mistake", "error"], ["check", "checking", "verify", "recheck", "proofread", "read again"], ["slow", "careful", "carefully", "practice", "practise"], ["source", "document", "compare", "match", "original"]],
-  gu: "તમારી ખરી ઝડપ આપો — જેમ કે મિનિટે ત્રીસ શબ્દ — અને પછી ચોકસાઈની વાત કરો. કહો કે ટાઇપ કર્યા પછી મૂળ કાગળ સાથે સરખાવીને ફરી વાંચી લો છો, ખાસ કરીને નામ, તારીખ અને આંકડા. ઉમેરો કે ઝડપ કરતાં ચોકસાઈ વધુ મહત્ત્વની છે અને રોજ પ્રેક્ટિસ કરીને ઝડપ વધારો છો.",
+  gu: "તમારી ખરી Speed આપો — જેમ કે મિનિટે ત્રીસ શબ્દ — અને પછી Accuracy ની વાત કરો. કહો કે ટાઇપ કર્યા પછી મૂળ કાગળ સાથે સરખાવીને ફરી વાંચી લો છો, ખાસ કરીને નામ, તારીખ અને આંકડા. ઉમેરો કે Speed કરતાં Accuracy વધુ મહત્ત્વની છે અને રોજ પ્રેક્ટિસ કરીને Speed વધારો છો.",
   en: "My typing speed is about thirty words per minute with good accuracy. After typing I always compare my work with the original document and read it again, especially the names, dates and numbers. I believe accuracy is more important than speed, and I practise daily to increase my speed.",
-  tip: "ખોટી ઊંચી ઝડપ ન બોલો. સાચો આંકડો આપીને «ચોકસાઈ પહેલી» એમ કહેવું વધુ સારું લાગે છે."
+  tip: "ખોટી ઊંચી Speed ન બોલો. સાચો આંકડો આપીને «Accuracy પહેલી» એમ કહેવું વધુ સારું લાગે છે."
 }
 ]});

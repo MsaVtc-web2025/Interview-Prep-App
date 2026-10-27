@@ -235,7 +235,7 @@ registerCourse({
     en: { tip: "Explaining the difference between domestic and international makes the answer complete." }
   },
   kw: [["domestic", "india", "indian", "country"], ["voice", "call", "calls", "phone"], ["customer", "client"], ["language", "hindi", "english"], ["process", "support", "query"]],
-  gu: "ડોમેસ્ટિક વોઈસ એટલે એવી પ્રક્રિયા જેમાં ફોન પર ભારતના જ ગ્રાહકો સાથે વાત કરવાની હોય છે. ગ્રાહકના પ્રશ્નો સાંભળીને હિન્દી, અંગ્રેજી કે સ્થાનિક ભાષામાં જવાબ આપવાનો હોય છે. તેની સામે ઇન્ટરનેશનલ પ્રોસેસમાં વિદેશના ગ્રાહકો સાથે વાત કરવાની હોય છે.",
+  gu: "ડોમેસ્ટિક વોઈસ એટલે એવી Process જેમાં ફોન પર ભારતના જ ગ્રાહકો સાથે વાત કરવાની હોય છે. ગ્રાહકના પ્રશ્નો સાંભળીને હિન્દી, અંગ્રેજી કે સ્થાનિક ભાષામાં જવાબ આપવાનો હોય છે. તેની સામે ઇન્ટરનેશનલ પ્રોસેસમાં વિદેશના ગ્રાહકો સાથે વાત કરવાની હોય છે.",
   en: "Domestic voice means a process where we speak with customers who are within India, over the phone. We listen to their questions or complaints and solve them in Hindi or English. It is different from an international process, where we handle customers from other countries.",
   tip: "ડોમેસ્ટિક અને ઇન્ટરનેશનલ વચ્ચેનો ફરક જણાવશો તો જવાબ પૂરો ગણાશે."
 },

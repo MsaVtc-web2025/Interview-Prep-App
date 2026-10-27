@@ -4,7 +4,7 @@ registerCourse({
   id: "electrician",
   name: "ઇલેક્ટ્રિશિયન",
   icon: "⚡",
-  tagline: "વાયરિંગ, સલામતી અને સમસ્યા નિવારણ",
+  tagline: "વાયરિંગ, Safety અને સમસ્યા નિવારણ",
   mode: "technical",
   questions: [
 {
@@ -34,12 +34,12 @@ registerCourse({
   i18n: {
     gu: { q: "Earthing અને neutral વચ્ચે શું ફરક છે?" },
     hi: { q: "Earthing और neutral में क्या फ़र्क़ है?",
-          gu: "Neutral काम करने वाला तार है — सामान्य हालत में उसी से current वापस लौटता है और circuit पूरा होता है। Earthing सुरक्षा के लिए है — सामान्य हालत में उसमें current नहीं बहता। कोई ख़राबी होने पर machine की body में current आ जाए तो earthing उस current को सीधे ज़मीन में ले जाती है, जिससे आदमी को shock नहीं लगता। Earthing के लिए ज़मीन में plate या rod गाड़ा जाता है।",
+          gu: "Neutral काम करने वाला तार है — सामान्य हालत में उसी से current वापस लौटता है और circuit पूरा होता है। Earthing Safety के लिए है — सामान्य हालत में उसमें current नहीं बहता। कोई Defect होने पर machine की body में current आ जाए तो earthing उस current को सीधे ज़मीन में ले जाती है, जिससे आदमी को shock नहीं लगता। Earthing के लिए ज़मीन में plate या rod गाड़ा जाता है।",
           tip: "«Neutral में current बहता है, earthing में आम तौर पर नहीं» — यह फ़र्क़ साफ़ बोलिए।" },
     en: { tip: "'Current flows in the neutral, but normally not in the earth' — state that difference clearly." }
   },
   kw: [["neutral", "return"], ["earth", "earthing", "ground", "grounding"], ["current", "return path", "circuit", "carries", "normal"], ["safety", "safe", "protect", "protection", "shock", "leak", "leakage", "fault"], ["ground", "soil", "pit", "electrode", "rod", "plate"]],
-  gu: "ન્યુટ્રલ એ કામકાજનો વાયર છે — સામાન્ય સ્થિતિમાં તેમાંથી કરંટ પાછો ફરે છે અને સર્કિટ પૂરી થાય છે. અર્થિંગ સલામતી માટે છે — સામાન્ય સ્થિતિમાં તેમાં કરંટ વહેતો નથી. કોઈ ખરાબી થાય અને મશીનની બોડીમાં કરંટ આવી જાય તો અર્થિંગ એ કરંટને સીધો જમીનમાં લઈ જાય છે, જેથી માણસને શોક લાગતો નથી. અર્થિંગ માટે જમીનમાં પ્લેટ કે રોડ નાખેલો હોય છે.",
+  gu: "ન્યુટ્રલ એ કામકાજનો વાયર છે — સામાન્ય સ્થિતિમાં તેમાંથી કરંટ પાછો ફરે છે અને સર્કિટ પૂરી થાય છે. અર્થિંગ Safety માટે છે — સામાન્ય સ્થિતિમાં તેમાં કરંટ વહેતો નથી. કોઈ ખરાબી થાય અને મશીનની બોડીમાં કરંટ આવી જાય તો અર્થિંગ એ કરંટને સીધો જમીનમાં લઈ જાય છે, જેથી માણસને શોક લાગતો નથી. અર્થિંગ માટે જમીનમાં પ્લેટ કે રોડ નાખેલો હોય છે.",
   en: "Neutral is a working wire. In normal condition the current returns through it and the circuit is completed. Earthing is only for safety, and in normal condition no current flows through it. If there is a fault and current comes into the body of a machine, the earthing takes that current straight into the ground so that a person does not get a shock. For earthing, a plate or a rod is buried in the ground.",
   tip: "«ન્યુટ્રલમાં કરંટ વહે છે, અર્થિંગમાં સામાન્ય રીતે નહીં» — આ ભેદ સ્પષ્ટ બોલો."
 },
@@ -67,7 +67,7 @@ registerCourse({
     gu: { q: "ઘરનો પંખો ચાલતો નથી. તમે fault કેવી રીતે શોધશો?" },
     hi: { q: "घर का पंखा नहीं चल रहा। आप fault कैसे ढूँढेंगे?",
           gu: "पहले supply बंद करके काम शुरू करता हूँ। फिर tester से देखता हूँ कि board पर voltage आ रहा है या नहीं — MCB या fuse उड़ा हो सकता है। फिर switch और regulator जाँचता हूँ। फिर देखता हूँ कि connection ढीले तो नहीं हैं। उसके बाद capacitor जाँचता हूँ, क्योंकि पंखा न चलने की सबसे आम वजह capacitor का ख़राब होना है। आख़िर में motor की winding की continuity जाँचता हूँ और bearing जाम तो नहीं है यह देखता हूँ।",
-          tip: "Capacitor का नाम ज़रूर बोलिए — पंखे की यह सबसे आम ख़राबी है, और interview लेने वाला यही सुनना चाहता है।" },
+          tip: "Capacitor का नाम ज़रूर बोलिए — पंखे की यह सबसे आम Defect है, और interview लेने वाला यही सुनना चाहता है।" },
     en: { tip: "Be sure to mention the capacitor — it is the commonest fan fault, and it is what the interviewer wants to hear." }
   },
   kw: [["switch", "supply", "power", "mcb", "fuse", "board"], ["tester", "test", "multimeter", "check", "voltage", "continuity"], ["capacitor", "condenser"], ["winding", "coil", "motor", "burnt", "burn", "short"], ["connection", "wire", "loose", "regulator", "bearing", "tight"]],
@@ -126,7 +126,7 @@ registerCourse({
   ],
   gu: "સૌથી પહેલાં દોડીને મુખ્ય સ્વિચ કે MCB બંધ કરું છું અથવા પ્લગ કાઢી નાખું છું. હું વ્યક્તિને ખુલ્લા હાથે અડતો નથી, કારણ કે તો કરંટ મારા શરીરમાં પણ આવે. જો સપ્લાય તરત બંધ ન થઈ શકે તો સૂકા લાકડા, રબર કે પ્લાસ્ટિકની વસ્તુ વડે વ્યક્તિને વાયરથી અલગ કરું છું. પછી તરત ૧૦૮ પર ફોન કરીને એમ્બ્યુલન્સ બોલાવું છું અને સુપરવાઇઝરને જાણ કરું છું. વ્યક્તિનો શ્વાસ ચાલે છે કે નહીં તે તપાસું છું, અને જરૂર પડે તો તાલીમ પ્રમાણે ફર્સ્ટ એઇડ કે CPR આપું છું.",
   en: "The first thing I do is run and switch off the main switch or the MCB, or pull out the plug. I do not touch the person with my bare hands, because then the current will pass into my body also. If the supply cannot be switched off immediately, I use a dry wooden stick, rubber or plastic object to separate the person from the wire. Then I immediately call an ambulance on 108 and inform my supervisor. I check whether the person is breathing, and if needed I give first aid or CPR as per my training.",
-  tip: "આ પ્રશ્ન સલામતીની સૌથી મોટી કસોટી છે. ક્રમ આ જ રાખો: સપ્લાય બંધ → ખુલ્લા હાથે ન અડવું → સૂકા લાકડાથી અલગ કરવું → ૧૦૮."
+  tip: "આ પ્રશ્ન Safety ની સૌથી મોટી કસોટી છે. ક્રમ આ જ રાખો: સપ્લાય બંધ → ખુલ્લા હાથે ન અડવું → સૂકા લાકડાથી અલગ કરવું → ૧૦૮."
 },
 {
   id: 8,

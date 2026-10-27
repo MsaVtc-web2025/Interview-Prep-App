@@ -4,7 +4,7 @@ registerCourse({
   id: "evehicle",
   name: "ઇ-વ્હીકલ",
   icon: "🔋",
-  tagline: "બેટરી, મોટર, ચાર્જિંગ અને હાઇ-વોલ્ટેજ સલામતી",
+  tagline: "બેટરી, મોટર, ચાર્જિંગ અને હાઇ-વોલ્ટેજ Safety",
   mode: "technical",
   questions: [
 {
@@ -14,12 +14,12 @@ registerCourse({
   i18n: {
     gu: { q: "Electric vehicle ના મુખ્ય parts કયા કયા છે?" },
     hi: { q: "Electric vehicle के मुख्य parts कौन कौन से हैं?",
-          gu: "Electric vehicle के मुख्य भाग ये हैं। पहला, battery pack — जो बिजली संग्रह करता है। दूसरा, electric motor — जो बिजली को गति में बदलता है। तीसरा, controller या inverter — जो battery से motor तक जाने वाली बिजली नियंत्रित करता है और accelerator के अनुसार गति तय करता है। चौथा, BMS यानी Battery Management System — जो battery का voltage, current और तापमान संभालता है। पाँचवाँ, on-board charger और charging port। इनके साथ DC-DC converter light और horn जैसे 12 volt के उपकरण चलाता है।",
+          gu: "Electric vehicle के मुख्य भाग ये हैं। पहला, battery pack — जो बिजली संग्रह करता है। दूसरा, electric motor — जो बिजली को गति में बदलता है। तीसरा, controller या inverter — जो battery से motor तक जाने वाली बिजली नियंत्रित करता है और accelerator के अनुसार गति तय करता है। चौथा, BMS यानी Battery Management System — जो battery का voltage, current और Temperature संभालता है। पाँचवाँ, on-board charger और charging port। इनके साथ DC-DC converter light और horn जैसे 12 volt के उपकरण चलाता है।",
           tip: "BMS का पूरा नाम बोलिए। EV के interview में यह शब्द सबसे ज़्यादा पूछा जाता है।" },
     en: { tip: "Say what BMS stands for in full. It is the most commonly asked term in EV interviews." }
   },
   kw: [["battery", "battery pack", "cell"], ["motor", "electric motor", "traction motor"], ["controller", "control unit", "inverter", "converter", "mcu"], ["charger", "charging", "port", "socket"], ["bms", "battery management", "dc dc", "wiring", "harness", "throttle", "accelerator"]],
-  gu: "ઇલેક્ટ્રિક વાહનના મુખ્ય ભાગો આ છે. પહેલો, બેટરી પૅક — જે વીજળી સંગ્રહે છે. બીજો, ઇલેક્ટ્રિક મોટર — જે વીજળીને ગતિમાં બદલે છે. ત્રીજો, કંટ્રોલર કે ઇન્વર્ટર — જે બેટરીથી મોટર સુધી જતી વીજળી નિયંત્રિત કરે છે અને ઍક્સેલરેટર પ્રમાણે ઝડપ નક્કી કરે છે. ચોથો, BMS એટલે બેટરી મેનેજમેન્ટ સિસ્ટમ — જે બેટરીનું વોલ્ટેજ, કરંટ અને તાપમાન સંભાળે છે. પાંચમો, ઓન-બોર્ડ ચાર્જર અને ચાર્જિંગ પોર્ટ. તેની સાથે DC-DC કન્વર્ટર લાઇટ અને હોર્ન જેવાં ૧૨ વોલ્ટનાં સાધનો ચલાવે છે.",
+  gu: "ઇલેક્ટ્રિક વાહનના મુખ્ય Parts આ છે. પહેલો, બેટરી પૅક — જે વીજળી સંગ્રહે છે. બીજો, ઇલેક્ટ્રિક મોટર — જે વીજળીને ગતિમાં બદલે છે. ત્રીજો, કંટ્રોલર કે ઇન્વર્ટર — જે બેટરીથી મોટર સુધી જતી વીજળી નિયંત્રિત કરે છે અને ઍક્સેલરેટર પ્રમાણે Speed નક્કી કરે છે. ચોથો, BMS એટલે બેટરી મેનેજમેન્ટ સિસ્ટમ — જે બેટરીનું વોલ્ટેજ, કરંટ અને Temperature સંભાળે છે. પાંચમો, ઓન-બોર્ડ ચાર્જર અને ચાર્જિંગ પોર્ટ. તેની સાથે DC-DC કન્વર્ટર લાઇટ અને હોર્ન જેવાં ૧૨ વોલ્ટનાં સાધનો ચલાવે છે.",
   en: "The main parts of an electric vehicle are these. First, the battery pack, which stores the electricity. Second, the electric motor, which converts electricity into motion. Third, the controller or inverter, which controls the electricity going from the battery to the motor and decides the speed according to the accelerator. Fourth, the BMS, which means Battery Management System, and it looks after the battery voltage, current and temperature. Fifth, the on-board charger and the charging port. Along with these, a DC to DC converter runs the twelve volt parts like the lights and the horn.",
   tip: "BMS નું પૂરું નામ બોલો. ઇ-વ્હીકલના ઇન્ટરવ્યુમાં આ શબ્દ સૌથી વધુ પુછાય છે."
 },
@@ -50,12 +50,12 @@ registerCourse({
   i18n: {
     gu: { q: "BMS શું છે અને તે શા માટે જરૂરી છે?" },
     hi: { q: "BMS क्या है और यह क्यों ज़रूरी है?",
-          gu: "BMS यानी Battery Management System। Battery pack में सैकड़ों cell होते हैं और BMS हर cell का voltage, current और तापमान लगातार जाँचता है। उसका काम battery को overcharge और over-discharge से बचाना, ज़्यादा गर्म होने पर current घटाना या काट देना, और सभी cells का voltage बराबर रखना — यानी cell balancing — है। BMS battery की charging स्थिति भी बताता है। BMS के बिना battery जल्दी ख़राब होती है और आग लगने का ख़तरा भी रहता है।",
+          gu: "BMS यानी Battery Management System। Battery pack में सैकड़ों cell होते हैं और BMS हर cell का voltage, current और Temperature लगातार जाँचता है। उसका काम battery को overcharge और over-discharge से बचाना, ज़्यादा गर्म होने पर current घटाना या काट देना, और सभी cells का voltage बराबर रखना — यानी cell balancing — है। BMS battery की charging स्थिति भी बताता है। BMS के बिना battery जल्दी ख़राब होती है और आग लगने का ख़तरा भी रहता है।",
           tip: "«Cell balancing» और «overcharge से बचाता है» ये दो बातें ज़रूर बोलिए।" },
     en: { tip: "Be sure to say 'cell balancing' and 'it protects against overcharging'." }
   },
   kw: [["battery management system", "bms"], ["voltage", "current", "cell", "monitor", "monitoring", "watch"], ["temperature", "temp", "heat", "overheat", "thermal"], ["overcharge", "over charge", "deep discharge", "over discharge", "protect", "protection", "cut off"], ["balance", "balancing", "life", "safe", "safety", "fire"]],
-  gu: "BMS એટલે બેટરી મેનેજમેન્ટ સિસ્ટમ. બેટરી પૅકમાં સેંકડો સેલ હોય છે અને BMS દરેક સેલનું વોલ્ટેજ, કરંટ અને તાપમાન સતત તપાસે છે. તેનું કામ બેટરીને ઓવરચાર્જ અને ઓવર-ડિસ્ચાર્જથી બચાવવાનું, વધુ ગરમ થાય તો કરંટ ઘટાડવાનું કે કાપી નાખવાનું, અને બધા સેલનું વોલ્ટેજ સરખું રાખવાનું — એટલે સેલ બેલેન્સિંગ — છે. BMS બેટરીની ચાર્જિંગ સ્થિતિ પણ બતાવે છે. BMS વગર બેટરી જલદી બગડે અને આગ લાગવાનું જોખમ પણ રહે.",
+  gu: "BMS એટલે બેટરી મેનેજમેન્ટ સિસ્ટમ. બેટરી પૅકમાં સેંકડો સેલ હોય છે અને BMS દરેક સેલનું વોલ્ટેજ, કરંટ અને Temperature સતત તપાસે છે. તેનું કામ બેટરીને ઓવરચાર્જ અને ઓવર-ડિસ્ચાર્જથી બચાવવાનું, વધુ ગરમ થાય તો કરંટ ઘટાડવાનું કે કાપી નાખવાનું, અને બધા સેલનું વોલ્ટેજ સરખું રાખવાનું — એટલે સેલ બેલેન્સિંગ — છે. BMS બેટરીની ચાર્જિંગ સ્થિતિ પણ બતાવે છે. BMS વગર બેટરી જલદી બગડે અને આગ લાગવાનું જોખમ પણ રહે.",
   en: "BMS means Battery Management System. A battery pack has hundreds of cells, and the BMS continuously checks the voltage, current and temperature of every cell. Its job is to protect the battery from overcharging and deep discharging, to reduce or cut the current if it gets too hot, and to keep all the cell voltages equal, which is called cell balancing. The BMS also shows the state of charge of the battery. Without a BMS the battery would fail quickly and there would also be a risk of fire.",
   tip: "«સેલ બેલેન્સિંગ» અને «ઓવરચાર્જથી બચાવે» એ બે મુદ્દા જરૂર બોલો."
 },
@@ -98,13 +98,13 @@ registerCourse({
   i18n: {
     gu: { q: "Battery full charge બતાવે છે છતાં electric scooter ચાલતું નથી. તમે શું તપાસશો?" },
     hi: { q: "Battery full charge दिखा रही है फिर भी electric scooter नहीं चल रहा। आप क्या जाँचेंगे?",
-          gu: "पहले power बंद करके सुरक्षा के साथ काम शुरू करता हूँ। फिर display पर कोई error code दिख रहा है या नहीं यह देखता हूँ, क्योंकि उससे सीधा संकेत मिल जाता है। फिर आसान बातें जाँचता हूँ — side stand ऊपर है या नहीं, brake cut-off switch दबी तो नहीं है, और ride mode सही है या नहीं। फिर throttle या accelerator का sensor जाँचता हूँ, क्योंकि वह आम ख़राबी है। फिर controller तक के connector ढीले नहीं हैं और fuse उड़ा नहीं है यह देखता हूँ। आख़िर में motor की winding और BMS का output multimeter से जाँचता हूँ।",
+          gu: "पहले power बंद करके Safety के साथ काम शुरू करता हूँ। फिर display पर कोई error code दिख रहा है या नहीं यह देखता हूँ, क्योंकि उससे सीधा संकेत मिल जाता है। फिर आसान बातें जाँचता हूँ — side stand ऊपर है या नहीं, brake cut-off switch दबी तो नहीं है, और ride mode सही है या नहीं। फिर throttle या accelerator का sensor जाँचता हूँ, क्योंकि वह आम Defect है। फिर controller तक के connector ढीले नहीं हैं और fuse उड़ा नहीं है यह देखता हूँ। आख़िर में motor की winding और BMS का output multimeter से जाँचता हूँ।",
           tip: "«Side stand» और «brake cut-off switch» — ये आसान कारण पहले बोलने से व्यावहारिक समझ दिखती है।" },
     en: { tip: "Naming the side stand and brake cut-off switch first shows practical sense — check the simple things before the expensive ones." }
   },
   kw: [["key", "switch", "on", "ignition", "power"], ["throttle", "accelerator", "sensor", "hall", "grip"], ["controller", "connector", "connection", "loose", "wire", "wiring", "harness", "fuse"], ["brake", "brake switch", "cut off", "cutoff", "side stand", "stand", "lock", "mode"], ["motor", "error", "code", "display", "bms", "test", "check", "multimeter"]],
   must: [{ kw: ["switch off", "off", "isolate", "disconnect", "safety", "gloves", "before"], gu: "તપાસ પહેલાં પાવર બંધ કરવો" }],
-  gu: "પહેલાં પાવર બંધ કરીને સલામતી સાથે કામ શરૂ કરું છું. પછી ડિસ્પ્લે પર કોઈ એરર કોડ દેખાય છે કે નહીં તે જોઉં છું, કારણ કે તેમાંથી સીધો સંકેત મળે. પછી સહેલી બાબતો તપાસું છું — સાઇડ સ્ટૅન્ડ ઉપર છે કે નહીં, બ્રેક કટ-ઓફ સ્વિચ દબાયેલી નથી ને, અને રાઇડ મોડ સાચો છે કે નહીં. પછી થ્રોટલ કે ઍક્સેલરેટરનો સેન્સર ચકાસું છું, કારણ કે એ સામાન્ય ખરાબી છે. પછી કંટ્રોલર સુધીના કનેક્ટર ઢીલા નથી અને ફ્યુઝ ઉડ્યો નથી તે જોઉં છું. છેલ્લે મોટરની વાઇન્ડિંગ અને BMS નું આઉટપુટ મલ્ટિમીટરથી તપાસું છું.",
+  gu: "પહેલાં પાવર બંધ કરીને Safety સાથે કામ શરૂ કરું છું. પછી ડિસ્પ્લે પર કોઈ એરર કોડ દેખાય છે કે નહીં તે જોઉં છું, કારણ કે તેમાંથી સીધો સંકેત મળે. પછી સહેલી બાબતો તપાસું છું — સાઇડ સ્ટૅન્ડ ઉપર છે કે નહીં, બ્રેક કટ-ઓફ સ્વિચ દબાયેલી નથી ને, અને રાઇડ મોડ સાચો છે કે નહીં. પછી થ્રોટલ કે ઍક્સેલરેટરનો સેન્સર ચકાસું છું, કારણ કે એ સામાન્ય ખરાબી છે. પછી કંટ્રોલર સુધીના કનેક્ટર ઢીલા નથી અને ફ્યુઝ ઉડ્યો નથી તે જોઉં છું. છેલ્લે મોટરની વાઇન્ડિંગ અને BMS નું આઉટપુટ મલ્ટિમીટરથી તપાસું છું.",
   en: "First I switch off the power and start the work safely. Then I check whether any error code is showing on the display, because that gives a direct clue. Next I check the easy things, whether the side stand is up, whether the brake cut-off switch is stuck pressed, and whether the correct ride mode is selected. Then I check the throttle or accelerator sensor, because that is a common fault. After that I check that the connectors up to the controller are not loose and the fuse is not blown. Finally I check the motor winding and the BMS output with a multimeter.",
   tip: "«સાઇડ સ્ટૅન્ડ» અને «બ્રેક કટ-ઓફ સ્વિચ» — આ સહેલાં કારણો પહેલાં બોલવાથી વ્યવહારુ સમજ દેખાય છે."
 },
@@ -131,7 +131,7 @@ registerCourse({
   i18n: {
     gu: { q: "EV battery માંથી ધુમાડો નીકળે કે આગ લાગે તો તમે શું કરશો?" },
     hi: { q: "EV battery से धुआँ निकलने लगे या आग लग जाए तो आप क्या करेंगे?",
-          gu: "Lithium battery की आग सामान्य आग से अलग और बहुत ख़तरनाक होती है — उसमें ज़हरीला धुआँ निकलता है और आग अपने आप फैलती रहती है, जिसे thermal runaway कहते हैं। पहले सब लोगों को दूर करता हूँ और ख़ुद भी सुरक्षित दूरी पर चला जाता हूँ। धुआँ साँस में नहीं लेता। तुरंत fire brigade को 101 या 112 पर बुलाता हूँ और बताता हूँ कि यह lithium battery की आग है। छोटे extinguisher से बुझाने की कोशिश नहीं करता, क्योंकि वह काफ़ी नहीं होता। बहुत ज़्यादा पानी हो तो battery ठंडी करने के लिए इस्तेमाल होता है, पर वह काम training पाए लोगों का है। आग बुझने के बाद भी battery घंटों तक दोबारा जल सकती है, इसलिए उसे निगरानी में खुली जगह पर रखना पड़ता है।",
+          gu: "Lithium battery की आग सामान्य आग से अलग और बहुत ख़तरनाक होती है — उसमें ज़हरीला धुआँ निकलता है और आग अपने आप फैलती रहती है, जिसे thermal runaway कहते हैं। पहले सब लोगों को दूर करता हूँ और ख़ुद भी Safe दूरी पर चला जाता हूँ। धुआँ साँस में नहीं लेता। तुरंत fire brigade को 101 या 112 पर बुलाता हूँ और बताता हूँ कि यह lithium battery की आग है। छोटे extinguisher से बुझाने की कोशिश नहीं करता, क्योंकि वह काफ़ी नहीं होता। बहुत ज़्यादा पानी हो तो battery ठंडी करने के लिए इस्तेमाल होता है, पर वह काम training पाए लोगों का है। आग बुझने के बाद भी battery घंटों तक दोबारा जल सकती है, इसलिए उसे निगरानी में खुली जगह पर रखना पड़ता है।",
           tip: "«Thermal runaway» और «आग दोबारा लग सकती है» ये दो बातें बोलने से असली training दिखती है। «ख़ुद बुझा दूँगा» कभी मत कहिए।" },
     en: { tip: "Saying 'thermal runaway' and 'it can reignite' shows real training. Never say you would put it out yourself." }
   },

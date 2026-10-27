@@ -46,15 +46,15 @@ registerCourse({
   i18n: {
     gu: { q: "Hydraulic brake system કેવી રીતે કામ કરે છે?" },
     hi: { q: "Hydraulic brake system कैसे काम करता है?",
-          gu: "जब driver brake pedal दबाता है तो वह master cylinder के piston को धकेलता है। इससे brake fluid में दबाव पैदा होता है। Fluid दब नहीं सकता, इसलिए वह दबाव pipe के ज़रिए चारों पहियों तक बराबर पहुँचता है। वहाँ wheel cylinder या caliper के piston बाहर धकेले जाते हैं और brake shoe या pad को drum या disc से दबाते हैं। Friction से पहिया धीमा पड़ता है और गाड़ी रुक जाती है। Brake fluid का level और leakage नियमित जाँचना ज़रूरी है, और line में हवा आ जाए तो brake नरम पड़ जाते हैं, तब bleeding करनी पड़ती है।",
-          tip: "«Fluid दब नहीं सकता» यही मुख्य सिद्धांत है — यह बोलने से समझ दिखती है।" },
+          gu: "जब driver brake pedal दबाता है तो वह master cylinder के piston को धकेलता है। इससे brake fluid में Pressure पैदा होता है। Fluid दब नहीं सकता, इसलिए वह Pressure pipe के ज़रिए चारों पहियों तक बराबर पहुँचता है। वहाँ wheel cylinder या caliper के piston बाहर धकेले जाते हैं और brake shoe या pad को drum या disc से दबाते हैं। Friction से पहिया धीमा पड़ता है और गाड़ी रुक जाती है। Brake fluid का level और leakage नियमित जाँचना ज़रूरी है, और line में हवा आ जाए तो brake नरम पड़ जाते हैं, तब bleeding करनी पड़ती है।",
+          tip: "«Fluid दब नहीं सकता» यही मुख्य Principle है — यह बोलने से समझ दिखती है।" },
     en: { tip: "'Fluid cannot be compressed' is the key principle — saying it shows you understand the system." }
   },
   kw: [["pedal", "press", "push", "foot"], ["master cylinder", "master"], ["brake fluid", "fluid", "oil", "liquid", "pressure"], ["wheel cylinder", "caliper", "piston", "wheel"], ["shoe", "pad", "drum", "disc", "friction", "stop", "slow"]],
   must: [{ kw: ["fluid level", "level", "leak", "leakage", "check", "air", "bleed"], gu: "બ્રેક ફ્લુઇડનું લેવલ કે લીકેજ તપાસવું" }],
-  gu: "જ્યારે ડ્રાઇવર બ્રેક પેડલ દબાવે ત્યારે તે માસ્ટર સિલિન્ડરના પિસ્ટનને ધકેલે છે. તેનાથી બ્રેક ફ્લુઇડમાં દબાણ પેદા થાય છે. ફ્લુઇડ દબાઈ શકતું નથી, તેથી એ દબાણ પાઇપ મારફતે ચારેય પહિયાં સુધી સરખું પહોંચે છે. ત્યાં વ્હીલ સિલિન્ડર કે કેલિપરના પિસ્ટન બહાર ધકેલાય છે અને બ્રેક શૂ કે પેડને ડ્રમ કે ડિસ્ક સાથે દબાવે છે. ઘર્ષણથી પહિયું ધીમું પડે અને ગાડી ઊભી રહે. બ્રેક ફ્લુઇડનું લેવલ અને લીકેજ નિયમિત તપાસવું જરૂરી છે, અને લાઇનમાં હવા આવે તો બ્રેક નરમ પડે એટલે બ્લીડિંગ કરવું પડે.",
+  gu: "જ્યારે ડ્રાઇવર બ્રેક પેડલ દબાવે ત્યારે તે માસ્ટર સિલિન્ડરના પિસ્ટનને ધકેલે છે. તેનાથી બ્રેક ફ્લુઇડમાં Pressure પેદા થાય છે. ફ્લુઇડ દબાઈ શકતું નથી, તેથી એ Pressure પાઇપ મારફતે ચારેય પહિયાં સુધી સરખું પહોંચે છે. ત્યાં વ્હીલ સિલિન્ડર કે કેલિપરના પિસ્ટન બહાર ધકેલાય છે અને બ્રેક શૂ કે પેડને ડ્રમ કે ડિસ્ક સાથે દબાવે છે. Friction થી પહિયું ધીમું પડે અને ગાડી ઊભી રહે. બ્રેક ફ્લુઇડનું લેવલ અને લીકેજ નિયમિત તપાસવું જરૂરી છે, અને લાઇનમાં હવા આવે તો બ્રેક નરમ પડે એટલે બ્લીડિંગ કરવું પડે.",
   en: "When the driver presses the brake pedal, it pushes the piston of the master cylinder. This creates pressure in the brake fluid. Fluid cannot be compressed, so that pressure travels equally through the pipes to all four wheels. There the pistons of the wheel cylinder or caliper are pushed out and press the brake shoe or pad against the drum or disc. The friction slows the wheel and stops the vehicle. It is important to check the brake fluid level and any leakage regularly, and if air enters the line the brakes become soft, so bleeding has to be done.",
-  tip: "«ફ્લુઇડ દબાઈ શકતું નથી» એ મુખ્ય સિદ્ધાંત છે — તે બોલવાથી સમજ દેખાય છે."
+  tip: "«ફ્લુઇડ દબાઈ શકતું નથી» એ મુખ્ય Principle છે — તે બોલવાથી સમજ દેખાય છે."
 },
 {
   id: 4,
@@ -101,12 +101,12 @@ registerCourse({
   },
   kw: [["gloves", "goggles", "shoes", "safety shoes", "ppe", "helmet", "uniform", "apron"], ["jack", "jack stand", "stand", "support", "lift", "wheel chock", "chock"], ["fire", "extinguisher", "smoking", "spark", "petrol", "inflammable", "flammable"], ["ventilation", "air", "fume", "smoke", "exhaust", "open"], ["tool", "proper", "correct", "clean", "tidy", "spill", "oil"]],
   must: [
-    { kw: ["gloves", "goggles", "shoes", "ppe", "safety shoes", "helmet", "apron"], gu: "સલામતી સાધનો (PPE) પહેરવાં" },
+    { kw: ["gloves", "goggles", "shoes", "ppe", "safety shoes", "helmet", "apron"], gu: "Safety સાધનો (PPE) પહેરવાં" },
     { kw: ["jack stand", "stand", "support", "chock", "block", "brake", "handbrake", "gear", "secure"], gu: "ગાડીને જૅક સ્ટૅન્ડ કે ચૉકથી સ્થિર કરવી" }
   ],
   gu: "વર્કશોપમાં હંમેશા સેફ્ટી શૂઝ, ગ્લવ્ઝ, ગોગલ્સ અને યુનિફોર્મ પહેરું છું. ગાડી ઊંચી કરવી હોય તો ફક્ત જૅક પર ભરોસો કરતો નથી — જૅક સ્ટૅન્ડ મૂકું છું, હેન્ડબ્રેક લગાવું છું અને પહિયાં નીચે ચૉક મૂકું છું. પેટ્રોલ કે ડીઝલ પાસે ધૂમ્રપાન કે સ્પાર્કવાળું કામ કરતો નથી, અને ફાયર એક્સ્ટિંગ્વિશર ક્યાં છે તે જાણું છું. એન્જિન ચાલુ રાખવું પડે તો હવાની આવ-જા હોય એવી ખુલ્લી જગ્યામાં કામ કરું છું, કારણ કે ધુમાડો ઝેરી હોય છે. જમીન પર ઓઇલ પડ્યું હોય તો તરત સાફ કરું છું અને દરેક કામ માટે સાચું ટૂલ વાપરું છું.",
   en: "In the workshop I always wear safety shoes, gloves, goggles and my uniform. If I have to lift a vehicle I never trust the jack alone, I put jack stands, apply the handbrake and put chocks under the wheels. I do not smoke or do spark work near petrol or diesel, and I know where the fire extinguisher is kept. If the engine has to be kept running I work in an open, well ventilated area, because the exhaust fumes are poisonous. If oil is spilled on the floor I clean it immediately, and I always use the correct tool for each job.",
-  tip: "«જૅક પર ભરોસો ન કરવો, જૅક સ્ટૅન્ડ મૂકવો» — આ મુદ્દો ચૂકી ગયા તો સલામતીની સમજ અધૂરી ગણાય છે."
+  tip: "«જૅક પર ભરોસો ન કરવો, જૅક સ્ટૅન્ડ મૂકવો» — આ મુદ્દો ચૂકી ગયા તો Safety ની સમજ અધૂરી ગણાય છે."
 },
 {
   id: 7,
@@ -139,7 +139,7 @@ registerCourse({
   must: [{ kw: ["wait", "cool", "cool down", "not open", "do not open", "never open", "hot", "burn", "after"], gu: "એન્જિન ગરમ હોય ત્યારે રેડિયેટર કૅપ ન ખોલવી" }],
   gu: "એન્જિન ગરમ થવાનાં કારણો — કૂલન્ટ ઓછું હોય કે લીક થતું હોય, રેડિયેટર ધૂળથી ચોકઅપ થયું હોય, કૂલિંગ ફેન કે તેનો બેલ્ટ કામ ન કરતો હોય, થર્મોસ્ટેટ બગડ્યું હોય, અથવા એન્જિન ઓઇલ ઓછું હોય. પહેલાં ગાડી બાજુમાં ઊભી રાખીને એન્જિન બંધ કરું છું. એન્જિન ગરમ હોય ત્યારે રેડિયેટરની કૅપ ખોલતો નથી, કારણ કે ગરમ પાણી અને વરાળ ઉડીને દાઝી જવાય. એન્જિન ઠંડું પડે પછી કૂલન્ટનું લેવલ, લીકેજ, રેડિયેટર, ફેન અને બેલ્ટ તપાસું છું.",
   en: "An engine can overheat because the coolant is low or leaking, the radiator is choked with dust, the cooling fan or its belt is not working, the thermostat is faulty, or the engine oil is low. First I stop the vehicle at the side and switch off the engine. I never open the radiator cap while the engine is hot, because the hot water and steam can come out and burn me. After the engine has cooled down, I check the coolant level, look for leakage, and check the radiator, the fan and the belt.",
-  tip: "«ગરમ એન્જિનમાં રેડિયેટર કૅપ ન ખોલવી» — આ સલામતીનો મુદ્દો ફરજિયાત છે."
+  tip: "«ગરમ એન્જિનમાં રેડિયેટર કૅપ ન ખોલવી» — આ Safety નો મુદ્દો ફરજિયાત છે."
 },
 {
   id: 9,
@@ -164,7 +164,7 @@ registerCourse({
   i18n: {
     gu: { q: "Repair પછી એ જ problem પાછો આવ્યો હોવાથી ગ્રાહક ગુસ્સે છે. તમે કેવી રીતે સંભાળશો?" },
     hi: { q: "Repair के बाद वही problem दोबारा आने से ग्राहक ग़ुस्से में है। आप कैसे संभालेंगे?",
-          gu: "पहले ग्राहक को शांति से पूरा सुनता हूँ और बीच में बहस नहीं करता। तकलीफ़ हुई इसके लिए माफ़ी माँगता हूँ। फिर विस्तार से पूछता हूँ कि समस्या कब और किस हालत में दोबारा आई। उसके बाद गाड़ी ख़ुद जाँचता हूँ और ज़रूरत हो तो ग्राहक को साथ लेकर test drive लेता हूँ, ताकि असली समस्या समझ में आए। फिर senior या supervisor को बताता हूँ। ग्राहक को साफ़ बताता हूँ कि क्या ख़राबी है, कितना समय लगेगा, और काम पूरा होने तक update देता रहता हूँ। मेरी ग़लती हो तो स्वीकार करके सुधार देता हूँ।",
+          gu: "पहले ग्राहक को शांति से पूरा सुनता हूँ और बीच में बहस नहीं करता। तकलीफ़ हुई इसके लिए माफ़ी माँगता हूँ। फिर विस्तार से पूछता हूँ कि समस्या कब और किस हालत में दोबारा आई। उसके बाद गाड़ी ख़ुद जाँचता हूँ और ज़रूरत हो तो ग्राहक को साथ लेकर test drive लेता हूँ, ताकि असली समस्या समझ में आए। फिर senior या supervisor को बताता हूँ। ग्राहक को साफ़ बताता हूँ कि क्या Defect है, कितना समय लगेगा, और काम पूरा होने तक update देता रहता हूँ। मेरी ग़लती हो तो स्वीकार करके सुधार देता हूँ।",
           tip: "इस सवाल में तकनीकी ज्ञान नहीं, व्यवहार देखा जाता है। «शांति से सुनता हूँ» से शुरू कीजिए और बहस की बात मत कीजिए।" },
     en: { tip: "This question tests behaviour, not technical knowledge. Start with 'I listen calmly' and never mention arguing back." }
   },

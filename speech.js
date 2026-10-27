@@ -12,6 +12,8 @@
    7. rec.start() throws while the previous session is winding down -> we back
       off and retry. (Swallowing that error leaves the mic off for good while the
       screen still says "listening".)
+   8. A Gujarati voice goes silent on English words ("PPE", "Safety") -> the
+      English runs are read by the English voice, see byScript().
 */
 "use strict";
 
@@ -118,13 +120,29 @@ const Speech = (function () {
     } catch (e) {}
   }
 
+  /* Sentences end at . ! ? । followed by a space or the end. A full stop with
+     no space after it is part of the word - "S.I.", "25.4", "F.P.S." - and
+     cutting there made the voice say "25" and then "4" as separate sentences.
+     (Old Android WebView has no lookbehind, hence the loop.) */
+  function sentences(src) {
+    const out = [];
+    let start = 0;
+    for (let i = 0; i < src.length; i++) {
+      if (".!?।".indexOf(src[i]) >= 0 && (i + 1 === src.length || src[i + 1] === " ")) {
+        out.push(src.slice(start, i + 1).trim());
+        start = i + 1;
+      }
+    }
+    if (start < src.length) out.push(src.slice(start).trim());
+    return out.filter(Boolean);
+  }
+
   /* Split long text into small chunks at sentence boundaries (Android truncates long text) */
   function toChunks(text, max) {
     max = max || 170;
     const out = [];
-    // Split into sentences (old Android WebView has no lookbehind, hence match)
     const src = String(text).replace(/\s+/g, " ").trim();
-    const parts = (src.match(/[^.!?।]+[.!?।]*/g) || [src]).map(s => s.trim()).filter(Boolean);
+    const parts = sentences(src);
     let buf = "";
     parts.forEach(p => {
       while (p.length > max) {                 // a very long sentence - break it at a comma
@@ -139,6 +157,33 @@ const Speech = (function () {
     });
     if (buf) out.push(buf);
     return out.filter(Boolean);
+  }
+
+  /* Gujarati and Hindi text carries English words - "PPE નું સંપૂર્ણ નામ",
+     "Safety ના મુદ્દા". Many Gujarati voices go silent on Latin letters, and the
+     question came out with holes in it. So the English runs are read by the
+     English voice and the rest by the language's own: [{ text, lang }].
+
+     A run of English keeps its spaces, commas and numbers - "M03 S100",
+     "X, Y" - so it is read as one phrase, not one word at a time. Pieces with
+     no letter or digit (a lone "?") are dropped: a voice handed only
+     punctuation says nothing and can stall. */
+  const LATIN_RUN = /[A-Za-z][A-Za-z0-9.'’₂/&+-]*(?:[\s,/&+-]+[A-Za-z0-9][A-Za-z0-9.'’₂/&+-]*)*/g;
+  const HAS_WORD = /[0-9A-Za-zऀ-ॿ઀-૿]/;
+
+  function byScript(text, lang) {
+    if (lang === "en" || !voiceFor("en")) return [{ text: text, lang: lang }];
+    const out = [];
+    const push = (t, l) => { t = t.trim(); if (HAS_WORD.test(t)) out.push({ text: t, lang: l }); };
+    let at = 0, m;
+    LATIN_RUN.lastIndex = 0;
+    while ((m = LATIN_RUN.exec(text))) {
+      push(text.slice(at, m.index), lang);
+      push(m[0], "en");
+      at = m.index + m[0].length;
+    }
+    push(text.slice(at), lang);
+    return out;
   }
 
   function clearWatchdog() { if (watchdog) { clearTimeout(watchdog); watchdog = null; } }
@@ -173,7 +218,11 @@ const Speech = (function () {
 
     cancelSpeech();
     const token = speakToken;
-    const chunks = toChunks(text);
+    const chunks = [];
+    byScript(String(text), lang).forEach(p => {
+      const v = p.lang === lang ? voice : voiceFor(p.lang);
+      toChunks(p.text).forEach(c => chunks.push({ text: c, voice: v, lang: p.lang }));
+    });
     const rate = opts.rate || (lang === "gu" ? 1 : 0.92);
 
     return new Promise(resolve => {
@@ -186,29 +235,30 @@ const Speech = (function () {
         clearWatchdog();
         if (i >= chunks.length) return done(spoke);
 
-        const part = chunks[i++];
+        const item = chunks[i++];
+        const part = item.text;
         const u = new SpeechSynthesisUtterance(part);
         /* Assigning the voice can throw if the browser will not accept the
            object. Left unguarded that rejects the promise, and the caller -
            which now waits on it to know whether the question was asked - waits
            for ever. Speaking in the default voice is a far better outcome. */
-        try { if (voice) { u.voice = voice; u.lang = voice.lang; } } catch (e) {}
+        try { if (item.voice) { u.voice = item.voice; u.lang = item.voice.lang; } } catch (e) {}
         u.rate = rate;
         u.pitch = 1;
         u.volume = 1;
-        /* onstart, not onend, is what proves audio began. A cancel part way
-           through still spoke the words that came before it, and on some phones
-           an interrupted utterance reports onerror rather than onend - reading
-           either of those as "nothing was said" would be wrong. */
-        u.onstart = () => { spoke = true; };
-        u.onend = next;
-        u.onerror = next;          // on error do not stall, move on
 
-        if (opts.onChunk) { try { opts.onChunk(part); } catch (e) {} }
+        /* Move on even if onend never comes. The budget is how long the words
+           take to say: about 12 letters a second in English, 8 in Gujarati
+           and Hindi (vowel signs count as letters but take no time).
 
-        // Move on even if onend never comes: roughly 12 chars a second, plus 4s slack
-        const budget = (part.length / (12 * rate)) * 1000 + 4000;
-        watchdog = setTimeout(() => {
+           It is counted from when the voice starts, not from when it was
+           asked. Google's Gujarati voice runs over the network and can take
+           a few seconds to begin; counting from the request cut a long
+           question off part way through. Until it starts, the wait allows
+           for that delay as well. */
+        const cps = item.lang === "en" ? 12 : 8;
+        const budget = (part.length / (cps * rate)) * 1000 + 3000;
+        const stall = () => {
           if (token !== speakToken) return;
           /* onend never came, but the budget is the time the words would have
              taken, so they were almost certainly heard. This is the Android
@@ -216,7 +266,24 @@ const Speech = (function () {
           spoke = true;
           try { synth.cancel(); } catch (e) {}
           next();
-        }, budget);
+        };
+
+        /* onstart, not onend, is what proves audio began. A cancel part way
+           through still spoke the words that came before it, and on some phones
+           an interrupted utterance reports onerror rather than onend - reading
+           either of those as "nothing was said" would be wrong. */
+        u.onstart = () => {
+          spoke = true;
+          if (token !== speakToken) return;
+          clearWatchdog();
+          watchdog = setTimeout(stall, budget);
+        };
+        u.onend = next;
+        u.onerror = next;          // on error do not stall, move on
+
+        if (opts.onChunk) { try { opts.onChunk(part); } catch (e) {} }
+
+        watchdog = setTimeout(stall, budget + 6000);
 
         try { synth.speak(u); } catch (e) { next(); }
       }

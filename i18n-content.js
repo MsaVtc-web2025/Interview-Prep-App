@@ -14,17 +14,17 @@ const COURSE_I18N = {
   computer:    { en: { name: "Computer",            tagline: "Office, Excel, internet and hardware" },
                  hi: { name: "कंप्यूटर",             tagline: "ऑफ़िस, एक्सेल, इंटरनेट और हार्डवेयर" } },
   cnc:         { en: { name: "CNC machining",       tagline: "Machine setting, programs and safety" },
-                 hi: { name: "CNC मशीनिंग",         tagline: "मशीन सेटिंग, प्रोग्राम और सुरक्षा" } },
+                 hi: { name: "CNC मशीनिंग",         tagline: "मशीन सेटिंग, प्रोग्राम और Safety" } },
   electrician: { en: { name: "Electrician",         tagline: "Wiring, safety and fault finding" },
-                 hi: { name: "इलेक्ट्रिशियन",        tagline: "वायरिंग, सुरक्षा और ख़राबी ढूँढना" } },
+                 hi: { name: "इलेक्ट्रिशियन",        tagline: "वायरिंग, Safety और Defect ढूँढना" } },
   automotive:  { en: { name: "Automobile",          tagline: "Engine, brakes, service and diagnosis" },
                  hi: { name: "ऑटोमोबाइल",          tagline: "इंजन, ब्रेक, सर्विस और डायग्नोसिस" } },
   evehicle:    { en: { name: "E-vehicle",           tagline: "Battery, motor, charging and HV safety" },
-                 hi: { name: "ई-वाहन",              tagline: "बैटरी, मोटर, चार्जिंग और हाई-वोल्टेज सुरक्षा" } },
+                 hi: { name: "ई-वाहन",              tagline: "बैटरी, मोटर, चार्जिंग और हाई-वोल्टेज Safety" } },
   nursing:     { en: { name: "Nursing",             tagline: "Patient care, hygiene and first aid" },
-                 hi: { name: "नर्सिंग",              tagline: "मरीज़ की देखभाल, स्वच्छता और प्राथमिक उपचार" } },
+                 hi: { name: "नर्सिंग",              tagline: "Patient की देखभाल, Hygiene और First Aid" } },
   welding:     { en: { name: "Welding",             tagline: "Arc, MIG, TIG and welding safety" },
-                 hi: { name: "वेल्डिंग",             tagline: "आर्क, MIG, TIG और वेल्डिंग सुरक्षा" } }
+                 hi: { name: "वेल्डिंग",             tagline: "आर्क, MIG, TIG और वेल्डिंग Safety" } }
 };
 
 /* Question category (cat) */
@@ -46,7 +46,7 @@ const CAT_I18N = {
   "કૂલન્ટ અને દેખરેખ":                 { en: "Coolant and maintenance",     hi: "कूलैंट और देखरेख" },
   "કૂલિંગ સિસ્ટમ":                     { en: "Cooling system",              hi: "कूलिंग सिस्टम" },
   "કૌટુંબિક પૃષ્ઠભૂમિ":                { en: "Family background",           hi: "पारिवारिक पृष्ठभूमि" },
-  "ખામી":                             { en: "Defects",                     hi: "ख़राबी" },
+  "ખામી":                             { en: "Defects",                     hi: "Defect",       gu: "Defects" },
   "ગુણવત્તા":                          { en: "Quality",                     hi: "गुणवत्ता" },
   "ગ્રાહક સેવા":                       { en: "Customer service",            hi: "ग्राहक सेवा" },
   "ચાર્જિંગ":                          { en: "Charging",                    hi: "चार्जिंग" },
@@ -59,13 +59,13 @@ const CAT_I18N = {
   "ડેટા સંભાળ":                        { en: "Data care",                   hi: "डेटा की देखभाल" },
   "તકનીકી સમજ":                       { en: "Technical understanding",     hi: "तकनीकी समझ" },
   "તૈયારી":                            { en: "Preparation",                 hi: "तैयारी" },
-  "દર્દી સંભાળ":                       { en: "Patient care",                hi: "मरीज़ की देखभाल" },
+  "દર્દી સંભાળ":                       { en: "Patient care",                hi: "Patient की देखभाल", gu: "Patient સંભાળ" },
   "દવા આપવી":                         { en: "Giving medication",           hi: "दवा देना" },
   "નૈતિકતા":                          { en: "Ethics",                      hi: "नैतिकता" },
   "નોંધ અને રેકોર્ડ":                   { en: "Notes and records",           hi: "नोट और रिकॉर्ड" },
   "નોકરીની ભૂમિકા અને શિફ્ટ":          { en: "Job role and shifts",         hi: "नौकरी की भूमिका और शिफ़्ट" },
   "પગારની અપેક્ષા":                    { en: "Salary expectation",          hi: "वेतन की अपेक्षा" },
-  "પ્રાથમિક સારવાર":                   { en: "First aid",                   hi: "प्राथमिक उपचार" },
+  "પ્રાથમિક સારવાર":                   { en: "First aid",                   hi: "First Aid", gu: "First Aid" },
   "પ્રોગ્રામિંગ":                       { en: "Programming",                 hi: "प्रोग्रामिंग" },
   "બેટરી સંભાળ":                       { en: "Battery care",                hi: "बैटरी की देखभाल" },
   "બેટરી":                             { en: "Battery",                     hi: "बैटरी" },
@@ -74,7 +74,7 @@ const CAT_I18N = {
   "માપણી":                            { en: "Measurement",                 hi: "मापन" },
   "મૂળભૂત":                           { en: "Fundamentals",                hi: "मूल बातें" },
   "મોટર":                             { en: "Motor",                       hi: "मोटर" },
-  "રક્ષણ ઉપકરણ":                      { en: "Protection devices",          hi: "सुरक्षा उपकरण" },
+  "રક્ષણ ઉપકરણ":                      { en: "Protection devices",          hi: "Safety उपकरण" },
   "રેઝ્યુમે / સ્વ-માહિતી":              { en: "Resume / about you",          hi: "रिज़्यूमे / स्व-जानकारी" },
   "વાયરિંગ":                           { en: "Wiring",                      hi: "वायरिंग" },
   "વેલ્ડિંગ પ્રકાર":                    { en: "Types of welding",            hi: "वेल्डिंग के प्रकार" },
@@ -82,12 +82,12 @@ const CAT_I18N = {
   "શિક્ષણ અને લાયકાત":                 { en: "Education and qualifications", hi: "शिक्षा और योग्यता" },
   "શિફ્ટ અને ટીમ":                     { en: "Shifts and teamwork",         hi: "शिफ़्ट और टीम" },
   "શોખ":                              { en: "Hobbies",                     hi: "शौक़" },
-  "સંક્રમણ નિયંત્રણ":                   { en: "Infection control",           hi: "संक्रमण नियंत्रण" },
+  "સંક્રમણ નિયંત્રણ":                   { en: "Infection control",           hi: "Infection नियंत्रण" },
   "સંવાદ":                            { en: "Communication",               hi: "संवाद" },
   "સમસ્યા નિવારણ":                    { en: "Troubleshooting",             hi: "समस्या निवारण" },
   "સર્કિટ":                            { en: "Circuits",                    hi: "सर्किट" },
   "સર્વિસ":                            { en: "Service",                     hi: "सर्विस" },
-  "સલામતી":                           { en: "Safety",                      hi: "सुरक्षा" },
+  "સલામતી":                           { en: "Safety",                      hi: "Safety",       gu: "Safety" },
   "સિલિન્ડર સંભાળ":                    { en: "Cylinder handling",           hi: "सिलेंडर की देखभाल" },
   "સ્વ-પરિચય":                         { en: "Self-introduction",           hi: "स्व-परिचय" },
   "હાર્ડવેર":                          { en: "Hardware",                    hi: "हार्डवेयर" }
@@ -146,10 +146,10 @@ const MUST_I18N = {
     { en: "Welding helmet / face shield", hi: "वेल्डिंग हेल्मेट / फ़ेस शील्ड" },
   "શ્વાસ અને પ્રતિક્રિયા તપાસવી":
     { en: "Check breathing and responsiveness", hi: "साँस और प्रतिक्रिया जाँचना" },
-  "સલામતી સાધનો (PPE) પહેરવાં":
-    { en: "Wear safety equipment (PPE)", hi: "सुरक्षा उपकरण (PPE) पहनना" },
-  "સાચો દર્દી ઓળખવો":
-    { en: "Identify the right patient", hi: "सही मरीज़ की पहचान करना" },
+  "Safety સાધનો (PPE) પહેરવાં":
+    { en: "Wear safety equipment (PPE)", hi: "Safety उपकरण (PPE) पहनना" },
+  "સાચો Patient ઓળખવો":
+    { en: "Identify the right patient", hi: "सही Patient की पहचान करना" },
   "સિલિન્ડર ઊભા રાખીને ચેઇનથી બાંધવા":
     { en: "Keep cylinders upright and chained", hi: "सिलेंडर खड़े रखकर चेन से बाँधना" },
   "હાઇ-વોલ્ટેજ ઇન્સ્યુલેટેડ ગ્લવ્ઝ પહેરવાં":
@@ -163,10 +163,12 @@ const MUST_I18N = {
 
 /* ---------------- Lookup ---------------- */
 
+/* A gu entry is the word Gujarati students actually say, where that is English
+   ("Safety", not "સલામતી"). The key stays as it was: it is what the banks and
+   every saved answer carry. */
 function pick(map, key, lang) {
   const row = map[key];
   if (!row) return key;                       // not in the map -> the original Gujarati
-  if (lang === "gu") return key;
   return (row[lang] != null) ? row[lang] : key;
 }
 
