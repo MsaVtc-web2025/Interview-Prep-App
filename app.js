@@ -994,6 +994,17 @@ function onMicError(err) {
   showTypeFallback(null);
 }
 
+/* The recorder heard a voice, but no words came back from transcribing it -
+   no internet, the server busy, or speech it could not make out. "Speak or
+   type your answer first" would tell a student who just spoke that they did
+   not, so say what really happened and open the box to type it. */
+function notCaught() {
+  setPhase("ready");
+  $("result").hidden = false;
+  $("result").innerHTML = '<div class="err">' + esc(t("res.notCaught")) + "</div>";
+  showTypeFallback(null);
+}
+
 function showTypeFallback(msg) {
   $("typeWrap").hidden = false;
   $("btnType").classList.add("on");
@@ -1553,6 +1564,19 @@ $("btnAct").addEventListener("click", () => {
         return full;
       };
 
+      /* A voice was recorded but no words came back. Transcribed as English,
+         an answer given in Gujarati can come back empty (and the other way
+         round), so try the student's other language once before giving up -
+         that costs seconds, not the answer. */
+      const otherLang = sttLang === "en" ? (lang === "hi" ? "hi" : "gu") : "en";
+      const transcribeOnly = payload => Dictation.transcribe(payload, sttLang)
+        .then(txt => txt || Dictation.transcribe(payload, otherLang))
+        .then(txt => {
+          const full = useText(txt);
+          if (full) return submit(full);
+          notCaught();
+        });
+
       Dictation.stop().then(payload => {
         if (!payload) return submit("");          // nothing was said
 
@@ -1562,10 +1586,10 @@ $("btnAct").addEventListener("click", () => {
         if (Judge.active()) {
           return Judge.fromAudio(payload, q, course.mode, lang, needsEn).then(r => {
             if (r && r.text) return submit(useText(r.text), r);
-            return Dictation.transcribe(payload, sttLang).then(txt => submit(useText(txt)));
+            return transcribeOnly(payload);
           });
         }
-        return Dictation.transcribe(payload, sttLang).then(txt => submit(useText(txt)));
+        return transcribeOnly(payload);
       });
       return;
     }

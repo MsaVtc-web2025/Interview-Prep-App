@@ -265,6 +265,7 @@ en: {
   "res.thCat": "Section",
   "res.thScore": "Score",
   "res.noAnswer": "Speak or type your answer first.",
+  "res.notCaught": "Your voice was recorded, but the words could not be read — the internet may be slow or the answer unclear. Tap “Answer” to say it again, or type it below.",
 
   "crit.communication": "Clear communication",
   "crit.sentences": "Complete sentences",
@@ -667,6 +668,7 @@ gu: {
   "res.thCat": "વિભાગ",
   "res.thScore": "ગુણ",
   "res.noAnswer": "પહેલાં જવાબ બોલો અથવા ટાઇપ કરો.",
+  "res.notCaught": "તમારો અવાજ રેકોર્ડ થયો, પણ શબ્દો વંચાયા નહીં — ઇન્ટરનેટ ધીમું હોઈ શકે અથવા જવાબ અસ્પષ્ટ. ફરી બોલવા «જવાબ આપો» દબાવો, અથવા નીચે ટાઇપ કરો.",
 
   "crit.communication": "સ્પષ્ટ સંવાદ",
   "crit.sentences": "પૂર્ણ વાક્યો",
@@ -1069,6 +1071,7 @@ hi: {
   "res.thCat": "विभाग",
   "res.thScore": "अंक",
   "res.noAnswer": "पहले जवाब बोलें या टाइप करें।",
+  "res.notCaught": "आपकी आवाज़ रिकॉर्ड हुई, पर शब्द पढ़े नहीं जा सके — इंटरनेट धीमा हो सकता है या जवाब साफ़ नहीं था। फिर से बोलने के लिए «जवाब दें» दबाएँ, या नीचे टाइप करें।",
 
   "crit.communication": "स्पष्ट संवाद",
   "crit.sentences": "पूरे वाक्य",

@@ -171,6 +171,31 @@ const Speech = (function () {
   const LATIN_RUN = /[A-Za-z][A-Za-z0-9.'’₂/&+-]*(?:[\s,/&+-]+[A-Za-z0-9][A-Za-z0-9.'’₂/&+-]*)*/g;
   const HAS_WORD = /[0-9A-Za-zऀ-ॿ઀-૿]/;
 
+  /* "PPE", "CNC", "ECG" are said letter by letter, but a voice reads them as
+     a word - "PPE" came out as one mumbled syllable. So short all-capital
+     words are spaced into letters ("P P E"), which every voice reads one by
+     one. Capitals that ARE words in this app's banks (the CNC keys and modes,
+     ON/OFF, MIG/TIG, AMBU, DOTS...) are left alone, and so is anything of five
+     letters or more (RESET, RAPID, INPUT, NSAID); ABCDE and DRSABCD are letters.
+     Letters mixed with digits are spelled when there are two letters or more
+     (SPO2, PP2BS); a code like G01 or M03 reads fine as it is. */
+  const AS_WORDS = new Set(("GO NO OK ON UP IN OUT OFF NOT SET KEY JOG CAT RAM RAY SUM PET DIN " +
+    "SCAN AUTO DOWN EDIT HOME MODE PAGE SEND ZERO OMIT DOTS AMBU LASA DAMA MIG TIG GERD").split(" "));
+  const SAY_AS = { RECV: "receive" };
+  const SPELL_LONG = new Set(["ABCDE", "DRSABCD"]);
+
+  function spellOut(text) {
+    return String(text).replace(/\b[A-Z0-9]*[A-Z][A-Z0-9]*\b/g, w => {
+      if (SAY_AS[w]) return SAY_AS[w];
+      const letters = w.replace(/[0-9]/g, "").length;
+      if (letters < 2) return w;                                   // G01, M03, X40, A1
+      if (/[0-9]/.test(w)) return w.split("").join(" ");          // SPO2 -> S P O 2
+      if (SPELL_LONG.has(w)) return w.split("").join(" ");
+      if (w.length > 4 || AS_WORDS.has(w)) return w;
+      return w.split("").join(" ");                               // PPE -> P P E
+    });
+  }
+
   function byScript(text, lang) {
     if (lang === "en" || !voiceFor("en")) return [{ text: text, lang: lang }];
     const out = [];
@@ -234,7 +259,7 @@ const Speech = (function () {
     const chunks = [];
     byScript(String(text), lang).forEach(p => {
       const v = p.lang === lang ? voice : voiceFor(p.lang);
-      toChunks(p.text).forEach(c => chunks.push({ text: c, voice: v, lang: p.lang }));
+      toChunks(spellOut(p.text)).forEach(c => chunks.push({ text: c, voice: v, lang: p.lang }));
     });
     const rate = opts.rate || (lang === "gu" ? 1 : 0.92);
 
