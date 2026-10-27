@@ -188,11 +188,24 @@ const Speech = (function () {
 
   function clearWatchdog() { if (watchdog) { clearTimeout(watchdog); watchdog = null; } }
 
+  /* Android hands cancel() to the speech engine a moment late. Speak again
+     straight away - "Skip question" does exactly that - and the late cancel
+     lands on the NEW utterance, so the next question lost its first words and
+     only its second half was heard. After stopping something that was really
+     playing, the next utterance waits this long for the cancel to settle. */
+  const CANCEL_SETTLE_MS = 350;
+  let settleUntil = 0;
+
+  function hush() {
+    if (!synth) return;
+    if (isSpeaking()) settleUntil = Math.max(settleUntil, Date.now() + CANCEL_SETTLE_MS);
+    try { synth.cancel(); } catch (e) {}
+  }
+
   function cancelSpeech() {
     speakToken++;
     clearWatchdog();
-    if (!synth) return;
-    try { synth.cancel(); } catch (e) {}
+    hush();
   }
 
   /* Speak text. Resolves TRUE only if the words actually reached the speaker,
@@ -258,13 +271,24 @@ const Speech = (function () {
            for that delay as well. */
         const cps = item.lang === "en" ? 12 : 8;
         const budget = (part.length / (cps * rate)) * 1000 + 3000;
+
+        /* Each utterance moves the queue on once. Without this, the watchdog
+           moving on and then the same utterance's late onend/onerror moving
+           on again skipped the piece after it. */
+        let settled = false;
+        const advance = () => {
+          if (settled) return;
+          settled = true;
+          next();
+        };
         const stall = () => {
-          if (token !== speakToken) return;
+          if (settled || token !== speakToken) return;
           /* onend never came, but the budget is the time the words would have
              taken, so they were almost certainly heard. This is the Android
              quirk the watchdog exists for - not a failure. */
           spoke = true;
-          try { synth.cancel(); } catch (e) {}
+          settled = true;
+          hush();
           next();
         };
 
@@ -274,18 +298,43 @@ const Speech = (function () {
            either of those as "nothing was said" would be wrong. */
         u.onstart = () => {
           spoke = true;
-          if (token !== speakToken) return;
+          if (settled || token !== speakToken) return;
           clearWatchdog();
           watchdog = setTimeout(stall, budget);
         };
-        u.onend = next;
-        u.onerror = next;          // on error do not stall, move on
+        u.onend = advance;
+        /* Stopped by a cancel that was not ours - a late one from before, or
+           the engine clearing its queue. Our own cancels change the token or
+           settle this piece first, so this one cut words the student never
+           heard: say the piece again (twice at most) instead of moving on
+           without it. Any other error: move on, never stall. */
+        u.onerror = ev => {
+          const why = ev && ev.error;
+          if (!settled && token === speakToken &&
+              (why === "interrupted" || why === "canceled") && (item.retries || 0) < 2) {
+            settled = true;
+            item.retries = (item.retries || 0) + 1;
+            i--;
+            clearWatchdog();
+            settleUntil = Math.max(settleUntil, Date.now() + CANCEL_SETTLE_MS);
+            next();
+            return;
+          }
+          advance();
+        };
 
         if (opts.onChunk) { try { opts.onChunk(part); } catch (e) {} }
 
-        watchdog = setTimeout(stall, budget + 6000);
-
-        try { synth.speak(u); } catch (e) { next(); }
+        /* Wait out a cancel that has not settled yet, then speak */
+        const go = () => {
+          if (token !== speakToken) return resolve(false);   // cancelled while waiting
+          if (settled) return;
+          watchdog = setTimeout(stall, budget + 6000);
+          try { synth.speak(u); } catch (e) { advance(); }
+        };
+        const wait = settleUntil - Date.now();
+        if (wait > 0) setTimeout(go, wait);
+        else go();
       }
       next();
     });
