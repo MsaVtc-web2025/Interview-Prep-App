@@ -13,13 +13,16 @@
   /* Colours taken straight from the "Interview Prep App" Claude Design canvas */
   --bg:#eef3fd; --card:rgba(255,255,255,.82); --cardsolid:#fff;
   --cardline:rgba(255,255,255,.92);
-  --ink:#101a33; --muted:#6c7c99; --lead:#66779a; --lab:#5b6b8c;
-  --faint:#8b98b4; --chev:#b3bccd; --grp:#7d8aa5; --icon:#33415c;
+  /* Text colours are all at least 4.5:1 (WCAG AA) on the white cards and the
+     pale blue page. muted, faint, grp and the amber/green score colours used
+     to be 2.6-4.0:1 - hard to read on a budget phone in daylight. */
+  --ink:#101a33; --muted:#55657f; --lead:#55657f; --lab:#5b6b8c;
+  --faint:#5f6d88; --chev:#b3bccd; --grp:#55657f; --icon:#33415c;
   --line:#eef1f7; --hair:rgba(20,40,90,.08);
   --accent:#2f5fe0; --accent-d:#2447c4; --soft:#e6ecfe;
   --grad:linear-gradient(180deg,#3f6ce6,#2447c4);
-  --good:#12915f; --goodbar:#22a06b; --goodtint:#e2f5ec;
-  --mid:#c07d09;  --midbar:#e59a12;  --midtint:#fdf1dc;
+  --good:#0d7a4f; --goodbar:#22a06b; --goodtint:#e2f5ec;
+  --mid:#8a5a00;  --midbar:#e59a12;  --midtint:#fdf1dc;
   --low:#c0392b;  --lowbar:#d1372a;  --lowtint:#fdeaea;
   --rec:#d1372a;
   --sh:0 4px 12px rgba(28,54,120,.08);
@@ -32,6 +35,15 @@
   --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Arial,sans-serif;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+/* Keyboard focus is always visible (WCAG 2.4.7). Only the keyboard shows it -
+   a tap does not draw a ring. */
+:focus-visible{outline:3px solid #2447c4;outline-offset:2px;border-radius:6px}
+#result:focus{outline:none}
+/* Less motion for those who ask for it: no slides, pulses or smooth scrolling */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;scroll-behavior:auto !important}
+}
 html,body{overscroll-behavior-y:none}
 html{background:var(--bg)}
 body{
@@ -144,6 +156,19 @@ h2.sec{font-size:17px;margin:24px 0 10px;color:var(--ink);font-weight:700}
   padding-top:calc(90px + env(safe-area-inset-top))
 }
 .splash h1{font-size:36px;font-weight:800;margin:34px 0 12px;line-height:1.05;letter-spacing:-.8px}
+/* The first thing on the first screen: the language, in three large buttons */
+.langfirst{margin:0 0 30px}
+.langfirst .cap{font-size:13px;font-weight:650;color:var(--lab);margin:0 0 8px}
+.langbig{display:flex;gap:8px}
+.langbig button{
+  flex:1;min-height:52px;border-radius:14px;cursor:pointer;
+  border:1.5px solid rgba(20,40,90,.14);background:rgba(255,255,255,.9);
+  font-size:17px;font-weight:650;color:var(--ink)
+}
+.langbig button[data-l="gu"]{font-family:"Noto Sans Gujarati","Shruti",sans-serif}
+.langbig button[data-l="hi"]{font-family:"Noto Sans Devanagari","Nirmala UI","Mangal",sans-serif}
+.langbig button.on{border-color:var(--accent);background:var(--soft);color:var(--accent-d)}
+#btnGoogle{margin-top:0}
 .splash .lead{font-size:21px;color:var(--lab);margin:0;line-height:1.35;font-weight:500}
 .feats{list-style:none;margin:44px 0 0;padding:0;display:flex;flex-direction:column;gap:22px}
 .feats li{display:flex;gap:16px;align-items:center}
@@ -293,17 +318,20 @@ h2.sec{font-size:17px;margin:24px 0 10px;color:var(--ink);font-weight:700}
    right, so they know who is marking them before they answer. It is the same
    .sw switch the settings screen uses, only smaller, so the two read as one
    control rather than two different things that happen to do the same job. */
-.aitog{
-  position:absolute;top:0;right:0;z-index:5;
-  display:flex;align-items:center;gap:7px
+/* Its own line above the interviewer - wide enough for "AI marking on" in
+   Gujarati or Hindi without covering the photo */
+.aitog{display:flex;justify-content:center;margin:0 0 10px}
+.aichip{
+  min-height:44px;padding:0 12px;border-radius:22px;cursor:pointer;
+  border:1px solid rgba(20,40,90,.12);background:#eceff4;color:#3f4b63;
+  font:inherit;font-size:12px;font-weight:700
 }
-.aitog .lbl{
-  font-size:12px;font-weight:700;letter-spacing:.2px;color:#67707f;
-  transition:color .18s ease
+.aitog.on .aichip{background:#efe9fd;color:#5b3fa8;border-color:#ddd2fb}
+.aiinfo{
+  margin:10px auto 0;max-width:420px;text-align:left;font-size:13px;line-height:1.5;
+  color:var(--ink);background:var(--cardsolid);border:1px solid var(--line);
+  border-radius:var(--rs);padding:11px 13px;box-shadow:var(--sh)
 }
-.aitog.on .lbl{color:var(--accent)}
-/* no internet - the switch cannot be turned on, so dim the whole control */
-.aitog.nonet{opacity:.45}
 .sw.mini{width:42px;height:25px}
 .sw.mini i{width:19px;height:19px}
 .sw.mini.on i{transform:translateX(17px)}
@@ -417,7 +445,7 @@ button{font:inherit;font-weight:600;cursor:pointer}
 /* Plain text button */
 .mini{
   border:0;background:none;color:var(--lab);font-size:13.5px;font-weight:600;
-  padding:4px;border-radius:8px
+  padding:4px 8px;min-height:44px;border-radius:8px
 }
 .mini:active{color:var(--accent-d)}
 .mini.on{color:var(--accent-d)}
@@ -427,7 +455,7 @@ button{font:inherit;font-weight:600;cursor:pointer}
 /* Small pill-shaped button, with an icon */
 .chipbtn{
   border:1px solid rgba(20,40,90,.07);background:#f2f5fb;color:var(--icon);
-  font-size:13px;font-weight:600;padding:9px 15px;border-radius:var(--rb);
+  font-size:13px;font-weight:600;padding:9px 15px;min-height:44px;border-radius:var(--rb);
   display:inline-flex;align-items:center;gap:7px
 }
 .chipbtn:active{background:var(--soft);color:var(--accent-d)}
@@ -450,6 +478,8 @@ textarea:focus{outline:2px solid rgba(47,95,224,.35);outline-offset:1px}
 }
 .heard:empty::before{content:"…";color:var(--faint)}
 .lab{font-size:13px;font-weight:600;color:var(--lab);margin-bottom:8px;display:block;text-align:left}
+.seg.inmode{margin:0 0 12px}
+.seg.inmode button{display:flex;align-items:center;justify-content:center;gap:6px;min-height:44px;font-size:14.5px}
 .hint{font-size:12.5px;color:var(--muted);margin-top:10px;text-align:center}
 .hint.warn{
   color:#8a5a00;background:#fdf7e8;border:1px solid #f2e2bd;
@@ -506,6 +536,8 @@ details.model .en{
 /* ---------- Progress table ---------- */
 table{width:100%;border-collapse:collapse;font-size:13px}
 th,td{text-align:right;padding:9px 6px;border-bottom:1px solid var(--line)}
+/* The name column reads left to right, heading and all; the scores stay right */
+th:first-child,td:first-child{text-align:left}
 tr:last-child td{border-bottom:0}
 th{color:var(--muted);font-size:11.5px;font-weight:600}
 td.n{font-weight:750}
@@ -560,10 +592,18 @@ details[open]>.lhead .chev{transform:rotate(90deg)}
 .opt .txt{flex:1;min-width:0}
 .opt .txt .t{font-weight:650;font-size:14.5px}
 .opt .txt .d{font-size:12.5px;color:var(--muted);line-height:1.45;margin-top:2px}
+.vpick{display:flex;gap:8px;margin-top:10px;align-items:center}
+.vpick select{
+  flex:1;min-width:0;min-height:44px;font:inherit;font-size:14px;color:var(--ink);
+  padding:8px 10px;border:1px solid rgba(20,40,90,.14);border-radius:12px;background:#fbfcfe
+}
+.act.sm{width:auto;min-height:44px;font-size:14px;padding:0 14px;flex:none}
 .sw{
   width:48px;height:29px;border-radius:20px;background:#dbe1ee;border:0;flex:none;
   position:relative;transition:background .18s;padding:0
 }
+/* The switch looks 29px tall but answers a 44px touch */
+.sw::before{content:"";position:absolute;left:-4px;right:-4px;top:-8px;bottom:-8px}
 .sw i{
   position:absolute;top:3px;left:3px;width:23px;height:23px;border-radius:50%;
   background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.22);transition:transform .18s
@@ -571,7 +611,7 @@ details[open]>.lhead .chev{transform:rotate(90deg)}
 .sw.on{background:var(--accent)}
 .sw.on i{transform:translateX(19px)}
 .seg{display:flex;gap:5px;background:#eef2fa;padding:4px;border-radius:14px;margin-top:10px}
-.seg button{flex:1;border:0;background:transparent;padding:9px 4px;border-radius:10px;font-size:13px;font-weight:600;color:var(--faint)}
+.seg button{flex:1;border:0;background:transparent;padding:9px 4px;min-height:44px;border-radius:10px;font-size:13px;font-weight:600;color:var(--faint)}
 .seg button.on{background:#fff;color:var(--accent-d);font-weight:650;box-shadow:var(--sh)}
 .danger{color:var(--rec);font-weight:650}
 .diag{font-size:13px;color:var(--muted);line-height:1.7;margin-top:4px}
@@ -692,6 +732,8 @@ body.tabs .wrap{padding-bottom:calc(108px + env(safe-area-inset-bottom))}
   background:#efe9fd;color:#5b3fa8;border-radius:10px;
   font-size:12px;font-weight:650
 }
+.aibadge.off{background:#eceff4;color:#3f4b63}
+.box.aidown{background:var(--midtint)} .box.aidown b{color:#7a4f00}
 
 /* ---------- The brief message at the bottom ----------
    Used to warn that the back button is about to exit the app. It sits above the
@@ -806,12 +848,28 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
 }
 @keyframes fade{0%,100%{opacity:0}15%,80%{opacity:1}}
 
+/* Confirmation dialog */
+.dlg{
+  position:fixed;inset:0;z-index:95;display:flex;align-items:center;justify-content:center;
+  padding:20px;background:rgba(16,26,51,.45)
+}
+.dlgbox{
+  width:100%;max-width:400px;background:var(--cardsolid);border-radius:var(--rl);
+  padding:20px 18px 16px;box-shadow:0 18px 44px rgba(16,26,51,.3)
+}
+.dlgbox h2{margin:0 0 8px;font-size:19px;font-weight:750}
+.dlgbox p{margin:0 0 16px;font-size:14.5px;line-height:1.5;color:var(--ink)}
+.dlgbtns{display:flex;gap:10px}
+.dlgbtns .act{flex:1;min-height:48px}
+.act.erase{background:var(--rec);box-shadow:none}
+
 /* Report card */
 .repsum{text-align:center;padding:20px 16px}
 .reporg{font-size:11.5px;font-weight:700;letter-spacing:.3px;color:var(--faint);text-transform:uppercase}
 .reptrade{font-size:13.5px;font-weight:650;color:var(--accent-d);margin-top:10px}
 .repch{font-size:19px;font-weight:750;margin:4px 0 0;line-height:1.3}
 .repmeta{font-size:12.5px;color:var(--muted);margin-top:6px}
+.sumline{margin:8px 0 0;font-size:15px;color:var(--ink)}
 .ring.big{width:104px;height:104px;margin:16px auto 4px}
 .ring.big b{font-size:24px}
 .repcnt{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px}
@@ -929,6 +987,17 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
 <div id="scSplash" hidden>
   <div class="wrap splashwrap">
     <div class="splash">
+      <!-- Language comes first: most students read Gujarati or Hindi more
+           easily than English, so they choose before reading anything else.
+           Each button is written in its own script. -->
+      <div class="langfirst">
+        <p class="cap">Language · ભાષા · भाषा</p>
+        <div class="langbig" id="langSeg0" role="group" aria-label="Language">
+          <button data-l="en" lang="en">English</button>
+          <button data-l="gu" lang="gu">ગુજરાતી</button>
+          <button data-l="hi" lang="hi">हिन्दी</button>
+        </div>
+      </div>
       <div class="logo lg"><svg class="svi" aria-hidden="true"><use href="#i-logo"/></svg></div>
       <h1 data-i18n="app.name">Interview Prep</h1>
       <p class="lead">
@@ -974,7 +1043,7 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
       </div>
 
       <div class="fld">
-        <label class="lab" for="uname" data-i18n="welcome.nameLabel">What is your name?</label>
+        <label class="lab" for="uname" data-i18n="welcome.nameLabel">What is your name? (optional)</label>
         <input id="uname" type="text" autocomplete="name" enterkeyhint="go"
                data-i18n-ph="welcome.namePh" placeholder="Your full name">
         <p class="why" data-i18n="welcome.why"></p>
@@ -986,7 +1055,10 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
 
       <div id="gwrap" hidden>
         <div class="or" data-i18n="welcome.or">or</div>
-        <div id="gbtn"></div>
+        <!-- Our own button. Google's script is loaded only when this is
+             tapped, so the phone contacts Google only if the student asks. -->
+        <button class="act ghost" id="btnGoogle" data-i18n="welcome.google">Sign up with Google</button>
+        <div id="gbtn" hidden></div>
         <!-- Reported here if Google falls over, so the student is not stuck -->
         <p class="hint warn" id="gerr" hidden></p>
       </div>
@@ -1012,16 +1084,6 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
 
     <!-- The whole dashboard is built by stats.js -->
     <div id="statsBody"></div>
-
-    <!-- Language picker - also present in the profile -->
-    <div class="langbar">
-      <span class="cap" data-i18n="home.lang">App language</span>
-      <div class="langseg" id="langSeg">
-        <button data-l="en">English</button>
-        <button data-l="gu">ગુજરાતી</button>
-        <button data-l="hi">हिन्दी</button>
-      </div>
-    </div>
 
     <div class="foot">
       <span data-i18n="home.foot2">Scoring is automatic.</span>
@@ -1113,7 +1175,31 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
       </ol>
     </div>
     <div class="startbar">
+      <!-- Shown part way through a round (renderBrief) -->
+      <button class="act" id="btnResume" hidden>Continue</button>
       <button class="act" id="btnStart" data-i18n="btn.start">Start mock interview</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ End of a mock interview round ============ -->
+<div id="scSummary" hidden>
+  <div class="bar solid">
+    <button class="ib" id="btnSumBack" data-i18n-aria="run.back" aria-label="Back">
+      <svg class="svi" aria-hidden="true"><use href="#i-back"/></svg>
+    </button>
+    <h1 data-i18n="sum.title">Interview finished</h1>
+  </div>
+  <div class="wrap">
+    <div class="card repsum" role="status">
+      <div class="reptrade" id="sumName">—</div>
+      <h2 class="repch" data-i18n="sum.heading">Well done for finishing</h2>
+      <div id="sumBody"></div>
+    </div>
+    <div class="stack">
+      <button class="act" id="btnSumRetry" hidden>Retry the skipped questions</button>
+      <button class="act ghost" id="btnSumAgain" data-i18n="sum.again">Start a new interview</button>
+      <button class="mini blk" id="btnSumDone" data-i18n="sum.done">Back to practice</button>
     </div>
   </div>
 </div>
@@ -1130,14 +1216,16 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
 
   <div class="wrap">
     <div class="stage">
+      <!-- Says how answers are being marked. Tapping it explains; the setting
+           itself lives in Profile, so nothing that decides what leaves the
+           phone can be changed by a stray tap mid-interview. -->
       <div class="aitog" id="aiTog" hidden>
-        <span class="lbl" aria-hidden="true">AI</span>
-        <button class="sw mini" id="btnAiTog" type="button" role="switch"
-                aria-checked="false"><i></i></button>
+        <button class="aichip" id="btnAiTog" type="button" aria-expanded="false" aria-controls="aiInfo">AI</button>
       </div>
       <div class="avatar" id="av"></div>
       <div class="status" id="status" data-i18n="status.ready">Ready</div>
       <div class="micmeter" id="micMeter" hidden><i id="micLevel"></i></div>
+      <div class="aiinfo" id="aiInfo" hidden></div>
     </div>
 
     <div class="card qcard">
@@ -1159,28 +1247,37 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
     </div>
 
     <div class="card" id="ansCard">
-      <span class="lab" id="ansLabel" data-i18n="run.answerLabel">Your answer (in English)</span>
+      <!-- Speak or type: one place to answer at a time. Speaking shows what was
+           heard; typing shows one editable box, filled with anything heard. -->
+      <div class="seg inmode" id="inModeSeg" role="group" data-i18n-aria="run.answerHow" aria-label="How to answer">
+        <button data-m="speak" aria-pressed="true">
+          <svg class="svi xs" aria-hidden="true"><use href="#i-mic"/></svg>
+          <span data-i18n="inmode.speak">Speak</span>
+        </button>
+        <button data-m="type" aria-pressed="false">
+          <svg class="svi xs" aria-hidden="true"><use href="#i-keyboard"/></svg>
+          <span data-i18n="inmode.type">Type</span>
+        </button>
+      </div>
+      <label class="lab" id="ansLabel" for="ans" data-i18n="run.answerLabel">Your answer (in English)</label>
       <div class="heard lat" id="heard"></div>
-      <div class="stack" style="margin-top:14px">
+      <div id="typeWrap" hidden>
+        <textarea id="ans" aria-describedby="hint" data-i18n-ph="run.typePlaceholder" placeholder="Type your answer in English here."></textarea>
+        <div class="stack" style="margin-top:9px">
+          <button class="act" id="btnCheck" data-i18n="btn.check">Check my answer</button>
+        </div>
+      </div>
+      <div class="hint" id="hint" role="status" aria-live="polite"></div>
+      <div class="stack" style="margin-top:12px">
         <button class="act" id="btnAct" data-i18n="btn.answer">🎤 Answer</button>
       </div>
       <div class="row tight" style="margin-top:10px">
-        <button class="mini ico" id="btnType">
-          <svg class="svi xs" aria-hidden="true"><use href="#i-keyboard"/></svg>
-          <span data-i18n="btn.type">Type instead</span>
-        </button>
         <button class="mini" id="btnClear" data-i18n="btn.clear">Clear</button>
       </div>
-      <div id="typeWrap" hidden style="margin-top:12px">
-        <textarea id="ans" data-i18n-ph="run.typePlaceholder" placeholder="Type your answer in English here."></textarea>
-        <div class="stack" style="margin-top:9px">
-          <button class="act ghost" id="btnCheck" data-i18n="btn.check">Check my answer</button>
-        </div>
-      </div>
-      <div class="hint" id="hint"></div>
     </div>
 
-    <div class="card" id="result" hidden></div>
+    <div class="card" id="result" hidden role="status" aria-live="polite" tabindex="-1"
+         data-i18n-aria="res.region" aria-label="Your result"></div>
 
     <div id="runStats">
       <h2 class="sec" data-i18n="run.progress">This course</h2>
@@ -1190,6 +1287,19 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
         <div class="sc"><div class="v sm" id="cWeak">—</div><div class="k" data-i18n="st.weak">Needs work</div></div>
       </div>
       <div class="card" id="histwrap" style="margin-top:12px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- A confirmation dialog (askDialog in app.js) - says exactly what will
+     happen, in the app's language, with the button coloured for what it does -->
+<div class="dlg" id="dlg" hidden>
+  <div class="dlgbox" role="alertdialog" aria-modal="true" aria-labelledby="dlgT" aria-describedby="dlgB">
+    <h2 id="dlgT"></h2>
+    <p id="dlgB"></p>
+    <div class="dlgbtns">
+      <button class="act ghost" id="dlgNo"></button>
+      <button class="act" id="dlgYes"></button>
     </div>
   </div>
 </div>
@@ -1269,6 +1379,19 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
               <button data-r="0.75" data-i18n="set.rateSlow">Slow</button>
               <button data-r="0.92" data-i18n="set.rateNormal">Normal</button>
               <button data-r="1.1" data-i18n="set.rateFast">Fast</button>
+            </div>
+          </div>
+
+          <!-- Which installed voice reads aloud in the app's language. Automatic
+               (a male voice where the phone has one) unless an instructor picks. -->
+          <div class="opt col">
+            <div class="txt">
+              <div class="t" data-i18n="set.voicePick">Interviewer voice</div>
+              <div class="d" id="voicePickD"></div>
+            </div>
+            <div class="vpick">
+              <select id="voiceSel" data-i18n-aria="set.voicePick" aria-label="Interviewer voice"></select>
+              <button class="act ghost sm" id="btnVoiceTest" data-i18n="set.voiceTest">Play sample</button>
             </div>
           </div>
 

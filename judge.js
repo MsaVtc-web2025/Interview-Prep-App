@@ -200,6 +200,8 @@ const Judge = (function () {
 
     if (judged.scores) {
       CRIT_KEYS.forEach(k => { r.scores[k] = judged.scores[k]; });
+      // The notes describe the scores, so they follow the AI's (scoring.js)
+      if (offline.noteCtx && typeof notesFor === "function") r.notes = notesFor(r.scores, offline.noteCtx);
       // Find the weakest criterion again, using the new scores
       let weakest = CRIT_KEYS[0];
       CRIT_KEYS.forEach(k => { if (r.scores[k] < r.scores[weakest]) weakest = k; });

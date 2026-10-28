@@ -363,7 +363,9 @@ const Quiz = (function () {
     const off = offline(ans, q);
     if (judged) return Promise.resolve(withAi(off, judged));
     if (!Judge.active()) return Promise.resolve(off);
-    return Judge.evaluate(ans, q, "technical", getLang(), false).then(j => withAi(off, j));
+    // No reply from the AI: the word match stands, and the card says so
+    return Judge.evaluate(ans, q, "technical", getLang(), false)
+      .then(j => j ? withAi(off, j) : Object.assign({}, off, { aiFailed: true }));
   }
 
   /* The latest answer to a question replaces any earlier one */
@@ -394,9 +396,13 @@ const Quiz = (function () {
       "<li" + (/[઀-૿]/.test(m) ? ' class="guscript"' : "") + ">" + esc(m) + "</li>").join("") + "</ul>";
   }
 
-  /* quiet = redraw only (a language change) - no thumbs up a second time */
-  function showResult(r, quiet) {
+  let lastRetry = null;        // "Try AI again" for the result on screen
+
+  /* quiet = redraw only (a language change) - no thumbs up a second time.
+     onRetry: the AI did not answer - offer to try it again. */
+  function showResult(r, quiet, onRetry) {
     lastMark = r;
+    if (!quiet) lastRetry = onRetry || null;
     let h;
     if (r.v === "right") {
       h = verdict("right", "👍", t("quiz.right"), t("quiz.rightD"));
@@ -407,15 +413,16 @@ const Quiz = (function () {
     } else {
       h = verdict("wrong", "❌", t("quiz.wrong"), t("quiz.wrongD"));
     }
-    if (r.byAi) h += '<div class="aibadge">' + esc(t("ai.badge")) + "</div>";
+    h += markedBy(r, lastRetry);          // "Marked by AI" / "Marked offline" - app.js
 
     $("hint").className = "hint";
     $("hint").textContent = "";
     $("result").hidden = false;
     $("result").innerHTML = h;
+    if (lastRetry && $("btnAiRetry")) $("btnAiRetry").addEventListener("click", lastRetry);
     if (quiet) return;
     if (r.v === "right") cheer();
-    $("result").scrollIntoView({ behavior: "smooth", block: "start" });
+    revealResult();
   }
 
   /* The big thumbs up. Off the page again by itself; it never blocks a tap. */

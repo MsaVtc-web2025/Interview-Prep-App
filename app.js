@@ -52,7 +52,9 @@ const GOOGLE_CLIENT_ID = "604155826405-15oddjk71jr042kbe4bk3j02kdgt547e.apps.goo
 /* hands defaults to off: a mic that opens by itself picks up the student
    sitting next to you in a classroom. ai defaults to on: the offline score only
    counts words, and most students never open the settings at all. */
-const DEFAULTS = { hands: false, ask: true, speakFb: true, rate: 0.92, silence: 3000, lang: "en", ai: true, dflt2: true, track: "", pmode: "chapter" };
+/* rate 0.75 ("Slow"): the setting's own hint says to keep it on Slow for
+   beginners, and every new student is one. Saved settings keep their choice. */
+const DEFAULTS = { hands: false, ask: true, speakFb: true, rate: 0.75, silence: 3000, lang: "en", ai: true, dflt2: true, track: "", pmode: "chapter" };
 
 /* quiz = Chapter Quiz results, apart from the interview history (see quiz.js) */
 let state = { settings: Object.assign({}, DEFAULTS), courses: {}, quiz: {}, user: null };
@@ -189,8 +191,11 @@ function practiceMode() { return state.settings.pmode === "interview" ? "intervi
 
 function paintPracticeMode() {
   const m = practiceMode();
-  Array.prototype.forEach.call($("pmodeSeg").children, b =>
-    b.classList.toggle("on", b.getAttribute("data-m") === m));
+  Array.prototype.forEach.call($("pmodeSeg").children, b => {
+    const on = b.getAttribute("data-m") === m;
+    b.classList.toggle("on", on);
+    b.setAttribute("aria-selected", on ? "true" : "false");
+  });
   $("pracLead").textContent = t(m === "chapter" ? "quiz.lead" : "prac.lead");
 }
 
@@ -327,12 +332,18 @@ function qIsGuOnly(q) {
   return lang !== "gu" && !(q.i18n && q.i18n[lang] && q.i18n[lang].gu != null);
 }
 
-/* The language picker appears twice - at the foot of home and in settings.
-   Both are painted together. */
+/* The language picker appears twice - first thing on the intro screen, and in
+   Profile. Both are painted together. aria-pressed tells a screen reader which
+   one is chosen. */
+const LANG_PICKERS = ["langSeg0", "langSeg2"];
+
 function paintLang() {
-  ["langSeg", "langSeg2"].forEach(id => {
-    Array.prototype.forEach.call($(id).children, b =>
-      b.classList.toggle("on", b.getAttribute("data-l") === getLang()));
+  LANG_PICKERS.forEach(id => {
+    Array.prototype.forEach.call($(id).children, b => {
+      const on = b.getAttribute("data-l") === getLang();
+      b.classList.toggle("on", on);
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+    });
   });
   $("setLangVal").textContent = langDef(getLang()).label;
 }
@@ -346,6 +357,7 @@ function relocalize() {
   if (course) {
     renderBrief();
     paintRunHead();
+    paintAiTog();
     /* A language change redraws the question in that language too. A book
        question is fetched again in the new language - but not while its
        answer is being marked, which is waiting on this very question. */
@@ -364,6 +376,7 @@ function relocalize() {
   if (!$("scWelcome").hidden) paintTrackSelect();
   if (!$("scChapters").hidden) Quiz.renderChapters();
   if (!$("scQuizReport").hidden) Quiz.renderReport();
+  if (!$("scSummary").hidden) renderSummary();
 }
 
 /* The category line above the question. A book question's topic is already
@@ -375,7 +388,7 @@ function catLabel(q) { return q.quiz ? q.cat : tCat(q.cat); }
 const SC_ID = {
   splash: "scSplash", welcome: "scWelcome", stats: "scStats", practice: "scPractice",
   brief: "scBrief", run: "scRun", profile: "scProfile", help: "scHelp",
-  chapters: "scChapters", qreport: "scQuizReport"
+  chapters: "scChapters", qreport: "scQuizReport", summary: "scSummary"
 };
 /* The three tabs with the bottom bar - the bar hides on every other screen */
 const TABS = ["stats", "practice", "profile"];
@@ -391,8 +404,12 @@ function show(which) {
   $("tabbar").hidden = !isTab;
   document.body.classList.toggle("tabs", isTab);
   if (isTab) {
-    Array.prototype.forEach.call($("tabbar").querySelectorAll(".tab"), b =>
-      b.classList.toggle("on", b.getAttribute("data-tab") === which));
+    Array.prototype.forEach.call($("tabbar").querySelectorAll(".tab"), b => {
+      const on = b.getAttribute("data-tab") === which;
+      b.classList.toggle("on", on);
+      // Tells a screen reader which tab is open
+      if (on) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
+    });
   }
   // Leaving the practice screen pauses the question clock
   if (which === "run") paintAiTog();
@@ -434,7 +451,8 @@ const BACK_TO = {
   run:     () => leaveCourse(),      // same as $("btnBack")
   help:    () => show("profile"),    // same as $("btnHelpBack")
   chapters: () => goTab("practice"), // same as $("btnChapBack")
-  qreport: () => Quiz.backToChapters()   // same as $("btnRepBack")
+  qreport: () => Quiz.backToChapters(),  // same as $("btnRepBack")
+  summary: () => leaveSummary()          // same as $("btnSumBack")
 };
 
 /* Push our entry if history does not already hold one. Never push a second -
@@ -492,7 +510,18 @@ function openWelcome() {
   $("utrack").innerHTML = "";        // reread the saved choice
   paintTrackSelect();
   show("welcome");
-  initGoogle();
+  /* Only our own button shows here. Google's script loads when it is tapped
+     (initGoogle), so opening this screen never contacts Google. */
+  $("gwrap").hidden = !GOOGLE_CLIENT_ID;
+  $("gerr").hidden = true;
+  if (!GOOGLE_CLIENT_ID) return;
+  if (window.google && window.google.accounts && window.google.accounts.id) {
+    renderGoogleButton();            // already asked for once - show Google's own button
+  } else {
+    $("btnGoogle").hidden = false;
+    $("btnGoogle").disabled = false;
+    $("gbtn").hidden = true;
+  }
 }
 
 function finishWelcome(name, via) {
@@ -526,7 +555,11 @@ function initGoogle() {
   s.onload = () => { googleLoading = false; renderGoogleButton(); };
   /* If the script is blocked or there is no internet, fall back quietly to the
      name field - the app works completely without Google. */
-  s.onerror = () => { googleLoading = false; $("gwrap").hidden = true; };
+  s.onerror = () => {
+    googleLoading = false;
+    $("btnGoogle").disabled = false;
+    onGoogleError({ type: "script-load-failed" });
+  };
   document.head.appendChild(s);
 }
 
@@ -535,6 +568,8 @@ function renderGoogleButton() {
     /* Show the wrapper first: inside a display:none element the Google button
        measures itself wrongly and sometimes never appears at all. */
     $("gwrap").hidden = false;
+    $("btnGoogle").hidden = true;
+    $("gbtn").hidden = false;
     $("gbtn").innerHTML = "";
 
     window.google.accounts.id.initialize({
@@ -549,6 +584,10 @@ function renderGoogleButton() {
       theme: "outline", size: "large", shape: "pill",
       text: "signup_with", width: 280
     });
+    // Our button only loaded Google's - say that this one is the one to tap
+    $("gerr").className = "hint";
+    $("gerr").textContent = t("welcome.googleTap");
+    $("gerr").hidden = false;
   } catch (e) {
     onGoogleError(e);
   }
@@ -564,6 +603,7 @@ function onGoogleError(err) {
   const type = (err && (err.type || err.message)) || "unknown";
   if (type === "popup_closed") return;
   console.warn("Google sign-in unavailable:", type, err);
+  $("gerr").className = "hint warn";
   $("gerr").hidden = false;
   $("gerr").textContent = t("err.google");
 }
@@ -603,6 +643,14 @@ function renderBriefIfOpen() {
 
 function renderBrief() {
   const n = course.questions.length;
+  /* Part way through a round: offer to carry on where they left off, or to
+     start again - leaving and coming back used to silently continue. */
+  const r = openRound(course);
+  const resumable = !!r && roundAnswered(r) + r.skipped.length > 0;
+  $("btnResume").hidden = !resumable;
+  if (resumable) $("btnResume").textContent = t("brief.resume", { a: roundAnswered(r), n: r.order.length });
+  $("btnStart").textContent = t(resumable ? "brief.restart" : "btn.start");
+  $("btnStart").className = "act" + (resumable ? " ghost" : "");
   $("briefIcon").textContent = course.icon;
   $("briefName").textContent = tCourse(course, "name");
   // Roughly a minute and a half per question - being asked, answering, reading feedback
@@ -614,12 +662,20 @@ function renderBrief() {
   $("briefI3").textContent = t("brief.i3", { n: n });
 }
 
-/* "Start mock interview" - the real practice begins here */
+/* "Start mock interview" - a new round from the first question */
 function startInterview() {
   if (!course) { show("practice"); return; }
   Speech.prime();                 // the tap that must precede the first speak()
-  // A mock interview always starts at the first question
-  if (isSequential()) { bucket(course.id).pos = 0; save(); }
+  bucket(course.id).round = newRound(course);
+  save();
+  openRun();
+}
+
+/* "Continue your interview" - the round already under way */
+function resumeInterview() {
+  if (!course) { show("practice"); return; }
+  Speech.prime();
+  if (!openRound(course)) bucket(course.id).round = newRound(course);
   openRun();
 }
 
@@ -636,6 +692,7 @@ function startChapterQuiz(cid, chId) {
 
 function openRun() {
   paintRunHead();
+  paintInputMode();
   show("run");
   Avatar.mount($("av"));
   renderProgress();
@@ -677,11 +734,66 @@ function leaveCourse() {
 /* Is this a sequential course? (general interview - follows the order list) */
 function isSequential() { return !!(course && Array.isArray(course.order) && course.order.length); }
 
+/* ---------------- A round ----------------
+
+   A mock interview is one round through the course's questions - in the set
+   order for the general interview, shuffled for a trade. It used to have no
+   end: the counter ran 10/10 back to 1/10, a skipped question counted as
+   progress, and coming back carried on silently.
+
+   round = { order: [question index], pos, done: { index: {o, s} }, skipped: [index], finished }
+   done holds every answer of the round (o = overall, s = the six scores), and
+   is kept when the skipped questions are retried, so the summary covers them
+   all. Lives in the course's bucket, so it survives leaving the app. */
+function newRound(c, only) {
+  const qs = c.questions;
+  let order;
+  if (only) order = only.slice();
+  else if (Array.isArray(c.order) && c.order.length) {
+    order = c.order.map(id => qs.findIndex(q => q.id === id)).filter(i => i >= 0);
+  } else {
+    order = qs.map((_, i) => i);
+    for (let i = order.length - 1; i > 0; i--) {          // shuffle
+      const j = Math.floor(Math.random() * (i + 1));
+      const x = order[i]; order[i] = order[j]; order[j] = x;
+    }
+  }
+  return { order: order, pos: 0, done: {}, skipped: [], finished: false };
+}
+
+/* The round in progress for this course, or null. One that refers to
+   questions the bank no longer has is dropped. */
+function openRound(c) {
+  const r = bucket(c.id).round;
+  if (!r || r.finished || !Array.isArray(r.order) || !r.order.length) return null;
+  if (r.order.some(i => !c.questions[i])) return null;
+  if (!r.done || typeof r.done !== "object") r.done = {};
+  if (!Array.isArray(r.skipped)) r.skipped = [];
+  if (typeof r.pos !== "number" || r.pos >= r.order.length) r.pos = 0;
+  return r;
+}
+
+function round() {
+  let r = openRound(course);
+  if (!r) { r = bucket(course.id).round = newRound(course); }
+  return r;
+}
+
+/* Answered in this round's order - what the counter shows */
+function roundAnswered(r) { return r.order.filter(i => r.done[i]).length; }
+
+function paintRoundProgress() {
+  const r = round();
+  $("runProg").textContent = roundAnswered(r) + "/" + r.order.length;
+  $("runProg").setAttribute("aria-label", t("run.progA", { a: roundAnswered(r), n: r.order.length }));
+}
+
 /* Have we reached the last question? */
 function atLastQuestion() {
   if (Quiz.on()) return Quiz.atLast();
-  if (!isSequential()) return false;
-  return bucket(course.id).pos >= course.order.length - 1;
+  if (!course) return false;
+  const r = round();
+  return r.pos >= r.order.length - 1;
 }
 
 /* advance = true moves forward in the order; false stays where we are */
@@ -700,8 +812,9 @@ function pickQuestion(advance) {
   $("ans").value = "";
   $("result").hidden = true;
   $("result").innerHTML = "";
-  $("typeWrap").hidden = true;
-  $("btnType").classList.remove("on");
+  // Speak or type stays as the student left it (setInputMode)
+  $("heard").hidden = inputMode === "type";
+  $("typeWrap").hidden = inputMode !== "type";
   lastResult = null;
 
   paintAnswerLabels();
@@ -710,24 +823,76 @@ function pickQuestion(advance) {
 }
 
 function pickCourseQuestion(advance) {
-  const b = bucket(course.id);
-  const qs = course.questions;
-
-  if (isSequential()) {
-    if (advance) b.pos++;
-    if (b.pos >= course.order.length) b.pos = 0;      // wrap around to the start
-    const id = course.order[b.pos];
-    current = qs.filter(q => q.id === id)[0] || qs[b.pos];
-    $("runProg").textContent = (b.pos + 1) + "/" + course.order.length;
-  } else {
-    let pool = qs.map((_, i) => i).filter(i => b.asked.indexOf(i) === -1);
-    if (!pool.length) { b.asked = []; pool = qs.map((_, i) => i); }
-    const idx = pool[Math.floor(Math.random() * pool.length)];
-    current = qs[idx];
-    b.asked.push(idx);
-    $("runProg").textContent = b.asked.length + "/" + qs.length;
-  }
+  const r = round();
+  if (advance && r.pos < r.order.length - 1) r.pos++;
+  current = course.questions[r.order[r.pos]];
+  paintRoundProgress();
   save();
+}
+
+/* Skip this question: it counts as skipped, not as progress, unless it was
+   already answered. Skipping the last one ends the round. */
+function skipQuestion() {
+  const r = round();
+  const idx = r.order[r.pos];
+  if (!r.done[idx] && r.skipped.indexOf(idx) === -1) r.skipped.push(idx);
+  save();
+  if (atLastQuestion()) endRound();
+  else pickQuestion(true);
+}
+
+/* An answer, into the round - a retried AI mark replaces the earlier one */
+function roundRecord(q, r) {
+  if (Quiz.on() || !course) return;
+  const rd = round();
+  const idx = course.questions.indexOf(q);
+  if (idx < 0) return;
+  rd.done[idx] = { o: r.overall, s: r.scores };
+  rd.skipped = rd.skipped.filter(i => i !== idx);
+  save();
+  paintRoundProgress();
+}
+
+/* ---------------- End of the round ---------------- */
+
+function endRound() {
+  Speech.stopAll();
+  if (Dictation.active()) Dictation.abort();
+  Avatar.setState("idle");
+  phase = "idle";
+  const r = round();
+  r.finished = true;
+  save();
+  renderSummary();
+  show("summary");
+}
+
+/* The summary: how many were answered, the average, the weakest criterion,
+   and the skipped ones to go back to. */
+function renderSummary() {
+  if (!course) return;
+  const r = bucket(course.id).round;
+  if (!r) return;
+  const total = course.questions.length;
+  const done = Object.keys(r.done).map(k => r.done[k]);
+  const avg = done.length ? done.reduce((a, e) => a + e.o, 0) / done.length : 0;
+  const C = 2 * Math.PI * 33, off = C * (1 - avg / 10);
+
+  $("sumName").textContent = course.icon + " " + tCourse(course, "name");
+  let h = '<div class="ring big"><svg viewBox="0 0 74 74"><circle class="bgc" cx="37" cy="37" r="33"/>' +
+    '<circle class="fgc" cx="37" cy="37" r="33" stroke="' + colorFor(avg) + '" stroke-dasharray="' +
+    C.toFixed(1) + '" stroke-dashoffset="' + off.toFixed(1) + '"/></svg><b style="color:' + colorFor(avg) +
+    '">' + (done.length ? avg.toFixed(1) : "—") + "</b></div>" +
+    '<p class="sumline">' + esc(t("sum.answered", { a: done.length, n: total })) + "</p>";
+  if (done.length) {
+    h += '<p class="sumline">' + esc(t("sum.weakest", {
+      w: weakestLabel(done.map(e => ({ scores: e.s })), course.mode) })) + "</p>";
+  }
+  if (r.skipped.length) h += '<p class="sumline">' + esc(t("sum.skipped", { n: r.skipped.length })) + "</p>";
+  $("sumBody").innerHTML = h;
+
+  $("btnSumRetry").hidden = !r.skipped.length;
+  $("btnSumRetry").textContent = t("sum.retry", { n: r.skipped.length });
 }
 
 /* The greeting - only on the first question of a sequential course, and only
@@ -737,7 +902,8 @@ function pickCourseQuestion(advance) {
    out as nonsense, so what is spoken and what is written are kept separate. */
 function greetingLine(lang) {
   if (!course || !course.greet || !isSequential()) return "";
-  if (bucket(course.id).pos !== 0) return "";
+  const r = openRound(course);
+  if (!r || r.pos !== 0 || roundAnswered(r)) return "";
   const fn = firstName();
   const l = lang || getLang();
   return fn ? tIn(l, "q.greetName", { name: fn }) : tIn(l, "q.greet");
@@ -817,8 +983,9 @@ function afterAsking(spoken) {
   /* The question has been asked, so open the mic and leave it open. The student
      talks when they are ready and presses the button when they are done -
      nothing closes it in between. Hands-free mode no longer decides whether the
-     mic opens, only whether a silence submits the answer by itself. */
-  if (canListen()) beginListen();
+     mic opens, only whether a silence submits the answer by itself. A student
+     who chose to type gets no mic at all. */
+  if (inputMode === "speak" && canListen()) beginListen();
   else setPhase("ready");
 }
 
@@ -903,7 +1070,8 @@ function beginListen(seed) {
   if (Dictation.enabled() && navigator.onLine !== false) return beginDictation(seed);
   if (!Speech.micSupported()) {
     setPhase("ready");
-    showTypeFallback("આ ફોનમાં બોલીને લખવાની સુવિધા નથી. જવાબ ટાઇપ કરો.");
+    micOff = true;
+    showTypeFallback(t("err.mic.unsupported"));
     return;
   }
   Speech.cancelSpeech();
@@ -985,6 +1153,8 @@ function clearMicWatch() { if (micWatch) { clearTimeout(micWatch); micWatch = nu
 
 function onMicError(err) {
   setPhase("ready");
+  // Refused or missing: the status line says the mic is off from now on
+  micOff = err === "not-allowed" || err === "service-not-allowed" || err === "unsupported";
   const h = $("hint");
   h.className = "hint warn";
   if (err === "not-allowed" || err === "service-not-allowed") h.textContent = t("err.mic.denied");
@@ -1003,11 +1173,52 @@ function notCaught() {
   $("result").hidden = false;
   $("result").innerHTML = '<div class="err">' + esc(t("res.notCaught")) + "</div>";
   showTypeFallback(null);
+  revealResult();
 }
 
+/* Speak or type - one place to answer at a time.
+
+   Speaking shows what was heard; typing shows one editable box, filled with
+   anything already heard, and the big Answer button steps aside for "Check my
+   answer". Chosen by the student with the Speak | Type switch, or by the app
+   when the mic cannot be used - and then the status line says the mic is off
+   instead of "tap Answer". The choice stays from one question to the next. */
+let inputMode = "speak";
+let micOff = false;            // the mic was refused or is missing on this phone
+
+function paintInputMode() {
+  Array.prototype.forEach.call($("inModeSeg").children, b => {
+    const on = b.getAttribute("data-m") === inputMode;
+    b.classList.toggle("on", on);
+    b.setAttribute("aria-pressed", on ? "true" : "false");
+  });
+}
+
+function setInputMode(m, keepHint) {
+  inputMode = m === "type" ? "type" : "speak";
+  const typing = inputMode === "type";
+  paintInputMode();
+
+  if (typing) {
+    if (phase === "listening") stopListening();
+    if (phase === "asking") Speech.cancelSpeech();
+    const heard = $("heard").textContent.trim();
+    if (heard && !$("ans").value.trim()) $("ans").value = heard;
+  } else if ($("ans").value.trim()) {
+    $("heard").textContent = $("ans").value.trim();
+  }
+  $("heard").hidden = typing;
+  $("typeWrap").hidden = !typing;
+  const hint = { cls: $("hint").className, txt: $("hint").textContent };
+  if (phase === "listening" || phase === "asking") setPhase("ready");
+  else setPhase(phase === "idle" ? "ready" : phase);
+  if (keepHint) { $("hint").className = hint.cls; $("hint").textContent = hint.txt; }
+  else clearHint();
+}
+
+/* Switch to typing because the mic cannot be used; msg says why */
 function showTypeFallback(msg) {
-  $("typeWrap").hidden = false;
-  $("btnType").classList.add("on");
+  setInputMode("type", true);
   if (msg) { $("hint").className = "hint warn"; $("hint").textContent = msg; }
 }
 
@@ -1019,10 +1230,14 @@ function submit(text, judged) {
   const ans = String(text || "").trim();
   stopListening();
 
+  /* Said right under the answer field, where the student is looking - it
+     used to appear below the fold, so the tap seemed to do nothing. */
   if (!ans) {
     setPhase("ready");
-    $("result").hidden = false;
-    $("result").innerHTML = '<div class="err">' + esc(t("res.noAnswer")) + "</div>";
+    $("result").hidden = true;
+    $("hint").className = "hint warn";
+    $("hint").textContent = t("res.noAnswer");
+    try { $("hint").scrollIntoView({ behavior: "smooth", block: "center" }); } catch (e) {}
     return;
   }
 
@@ -1036,30 +1251,42 @@ function submit(text, judged) {
 
     // The offline score is always computed first, even with AI on. It is the
     // base, and it is what shows if the AI never arrives.
-    const offline = scoreAnswer(ans, current, course.mode, qNeedsEnglish(current));
+    const offline = scoreAnswer(ans, current, course.mode, qNeedsEnglish(current), course.id);
     const q = current, c = course;      // so we can tell if the student moved on
+
+    let entry = null;                 // this answer's history row, once saved
 
     function finish(r) {
       if (current !== q || course !== c) return;   // another question came up meanwhile
       lastResult = r;
+      clearHint();
 
       /* `q` and `answer` stay on this phone. `cid` is for the backup - the
          server keeps (user, cid) unique, so re-sending the queue never
-         duplicates anything. See sync.js for which fields actually leave. */
-      bucket(c.id).history.push({
-        // The question id is a number but used as an identifier - store it as text
-        ts: Date.now(), cid: newCid(), course: c.id,
-        qid: q.id == null ? "" : String(q.id),
-        q: q.q, cat: q.cat,
-        answer: ans, overall: r.overall, scores: r.scores,
+         duplicates anything. See sync.js for which fields actually leave.
+
+         A retried AI mark replaces the offline one in the same row, so one
+         answer is never counted twice. */
+      const fields = {
+        overall: r.overall, scores: r.scores,
         words: r.stats.words, coverage: r.stats.coverage,
-        weakest: r.weakest, missed: r.missingMust, secs: secs,
-        byAi: !!r.byAi
-      });
+        weakest: r.weakest, missed: r.missingMust, byAi: !!r.byAi
+      };
+      if (entry) Object.assign(entry, fields);
+      else {
+        entry = Object.assign({
+          // The question id is a number but used as an identifier - store it as text
+          ts: Date.now(), cid: newCid(), course: c.id,
+          qid: q.id == null ? "" : String(q.id),
+          q: q.q, cat: q.cat, answer: ans, secs: secs
+        }, fields);
+        bucket(c.id).history.push(entry);
+      }
       save();
       Sync.flush();                  // does nothing when backup is off
+      roundRecord(q, r);
 
-      showResult(r);
+      showResult(r, r.aiFailed ? askAi : null);
       renderProgress();
       setPhase("feedback");
       speakFeedback(r);
@@ -1075,27 +1302,69 @@ function submit(text, judged) {
         setPhase("ready");
         $("result").hidden = false;
         $("result").innerHTML = '<div class="err">' + esc(t("res.needsNet")) + "</div>";
+        revealResult();
         return;
       }
       finish(offline);
       return;
     }
 
-    // Let the student see something is happening while the AI reads
-    $("hint").className = "hint";
-    $("hint").textContent = t("ai.reading");
-    /* When the model is busy the Worker retries, which can run to half a
-       minute. Staring at one unchanging line that long makes the app look
-       frozen - so after a while we say it is still going. */
-    const patience = setTimeout(() => {
-      if (phase === "scoring") $("hint").textContent = t("ai.stillReading");
-    }, 7000);
-
-    Judge.evaluate(ans, q, c.mode, getLang(), qNeedsEnglish(q)).then(j => {
-      clearTimeout(patience);
-      finish(Judge.merge(offline, j));
-    });
+    /* Ask the AI. When it does not answer - busy, offline, an error - the
+       student is told so, plainly, and gets the offline score labelled as
+       such with a button to try the AI again. Before, "AI is reading..." sat
+       there for ever next to a score that was really the offline one. */
+    function askAi() {
+      if (current !== q || course !== c) return;
+      setPhase("scoring");
+      showAiWaiting();
+      Judge.evaluate(ans, q, c.mode, getLang(), qNeedsEnglish(q)).then(j => {
+        stopAiWaiting();
+        if (j) return finish(Judge.merge(offline, j));
+        if (current !== q || course !== c) return;
+        /* Their own language, and no AI to read it: an offline number would
+           mean nothing, so there is no score to show - only the retry. */
+        if (offline.unmarkableOffline) return aiDown(askAi);
+        finish(Object.assign({}, offline, { aiFailed: true }));
+      });
+    }
+    askAi();
   }, 420);
+}
+
+/* "AI is reading your answer..." while it does - and after a while, that it is
+   still going, since a busy model can take half a minute and one unchanging
+   line that long makes the app look frozen. */
+let aiPatience = null;
+
+function showAiWaiting() {
+  $("hint").className = "hint";
+  $("hint").textContent = t("ai.reading");
+  if (aiPatience) clearTimeout(aiPatience);
+  aiPatience = setTimeout(() => {
+    if (phase === "scoring") $("hint").textContent = t("ai.stillReading");
+  }, 7000);
+}
+
+function stopAiWaiting() {
+  if (aiPatience) { clearTimeout(aiPatience); aiPatience = null; }
+  clearHint();
+}
+
+function clearHint() {
+  $("hint").className = "hint";
+  $("hint").textContent = "";
+}
+
+/* The AI did not answer and there is nothing offline to fall back on (an
+   answer in Gujarati or Hindi). Say so, and offer to try again. */
+function aiDown(retry) {
+  setPhase("ready");
+  $("result").hidden = false;
+  $("result").innerHTML = '<div class="err" role="status">' + esc(t("ai.downNoScore")) + "</div>" +
+    '<div class="row" style="margin-top:10px"><button class="act ghost sm" id="btnAiRetry">' +
+    esc(t("ai.retry")) + "</button></div>";
+  $("btnAiRetry").addEventListener("click", retry);
+  revealResult();
 }
 
 /* A chapter quiz answer - marked against the book answer, and kept out of the
@@ -1103,20 +1372,18 @@ function submit(text, judged) {
    same as in the interview. */
 function markQuiz(ans, judged) {
   const q = current;
-  let patience = null;
-  if (!judged && Judge.active()) {
-    $("hint").className = "hint";
-    $("hint").textContent = t("ai.reading");
-    patience = setTimeout(() => {
-      if (phase === "scoring") $("hint").textContent = t("ai.stillReading");
-    }, 7000);
-  }
+  if (!judged && Judge.active()) showAiWaiting();
 
   Quiz.mark(ans, q, judged).then(r => {
-    if (patience) clearTimeout(patience);
+    stopAiWaiting();
     if (!Quiz.on() || current !== q) return;   // skipped or left meanwhile
     Quiz.record(q, ans, r);
-    Quiz.showResult(r);
+    // The AI did not answer: the word-match verdict shows, with a retry
+    Quiz.showResult(r, false, r.aiFailed ? () => {
+      if (!Quiz.on() || current !== q) return;
+      setPhase("scoring");
+      markQuiz(ans);
+    } : null);
     setPhase("feedback");
     Quiz.speak(r);
   });
@@ -1170,8 +1437,10 @@ function setPhase(p) {
   if (meter && p !== "listening") meter.hidden = true;
   phase = p;
   const u = PHASE_UI[p];
+  const typing = inputMode === "type";
   Avatar.setState(u.av);
-  $("status").textContent = t(u.st);
+  /* Typing: "tap Answer" would be wrong - there is no mic to answer with. */
+  $("status").textContent = t(typing && p === "ready" ? (micOff ? "status.micOff" : "status.typeReady") : u.st);
   $("status").className = "status " + u.cls;
   const b = $("btnAct");
   // After the last question of a sequential course: "Finish", not "Next question"
@@ -1179,12 +1448,16 @@ function setPhase(p) {
     ? t(Quiz.on() ? "quiz.seeReport" : "btn.finish") : t(u.btn);
   b.className = "act" + (u.rec ? " rec" : "");
   b.disabled = p === "scoring";
+  // While typing, "Check my answer" is the button; this one returns for "Next"
+  b.hidden = typing && (p === "ready" || p === "asking" || p === "listening");
   if (p === "ready" || p === "asking") { $("hint").className = "hint"; $("hint").textContent = ""; }
 }
 
 /* ---------------- Show the result ---------------- */
 
-function showResult(r) {
+/* onRetry: given when the AI did not answer - the card then says so and
+   offers to try the AI again. */
+function showResult(r, onRetry) {
   const C = 2 * Math.PI * 33;
   const off = C * (1 - r.overall / 10);
 
@@ -1210,7 +1483,7 @@ function showResult(r) {
   CRITERIA.forEach(c => {
     const v = r.scores[c.key];
     h += '<div class="crit"><div class="cline">' +
-      '<span class="cname">' + esc(criterionLabel(c, r.mode)) + "</span>" +
+      '<span class="cname">' + esc(criterionLabel(c, r.mode, r.process)) + "</span>" +
       '<span class="bar2"><i style="width:' + (v * 10) + "%;background:" + colorFor(v) + '"></i></span>' +
       '<span class="cnum" style="color:' + colorFor(v) + '">' + v.toFixed(1) + "</span></div>" +
       '<div class="cnote">' + esc(r.notes[c.key]) + "</div></div>";
@@ -1222,8 +1495,9 @@ function showResult(r) {
       r.grammar.map(g => "<li>" + esc(g) + "</li>").join("") + "</ul></div>";
   }
 
-  // Say so when the AI scored it - the student should know who marked them
-  if (r.byAi) h += '<div class="aibadge">' + esc(t("ai.badge")) + "</div>";
+  /* Who marked it, on every result - the student should know. Offline
+     marking only counts key words, and says so. */
+  h += markedBy(r, onRetry);
 
   h += '<div class="box adv"><b>' + esc(t("res.advice")) + "</b>" + esc(r.advice) + "</div>";
   if (r.tip) h += '<div class="box tip"><b>' + esc(t("res.tip")) + '</b><span class="' +
@@ -1243,6 +1517,7 @@ function showResult(r) {
 
   $("result").hidden = false;
   $("result").innerHTML = h;
+  if (onRetry) $("btnAiRetry").addEventListener("click", onRetry);
 
   $("btnHear").addEventListener("click", () => {
 
@@ -1252,7 +1527,31 @@ function showResult(r) {
       .then(() => { if (phase === "feedback") Avatar.setState("idle"); });
   });
 
-  $("result").scrollIntoView({ behavior: "smooth", block: "start" });
+  revealResult();
+}
+
+/* "Marked by AI" or "Marked offline (counts key words)" - and when the AI was
+   asked but did not answer, a plain notice that this is the offline score,
+   with a button to try the AI again. Shared with the chapter quiz. */
+function markedBy(r, onRetry) {
+  if (r.byAi) return '<div class="aibadge">' + esc(t("ai.badge")) + "</div>";
+  let h = '<div class="aibadge off">' + esc(t("ai.offBadge")) + "</div>";
+  if (r.aiFailed) {
+    h += '<div class="box aidown" role="status"><b>' + esc(t("ai.downT")) + "</b>" + esc(t("ai.downD")) +
+      (onRetry ? '<div style="margin-top:9px"><button class="act ghost sm" id="btnAiRetry">' +
+        esc(t("ai.retry")) + "</button></div>" : "") + "</div>";
+  }
+  return h;
+}
+
+/* Bring the result into view and tell a screen reader. On a small phone the
+   card lands below the fold, and a tap that seems to do nothing reads as
+   broken. Focus goes to the card itself, which is labelled as a status. */
+function revealResult() {
+  const el = $("result");
+  if (!el || el.hidden) return;
+  try { el.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) { el.scrollIntoView(); }
+  try { el.focus({ preventScroll: true }); } catch (e) {}
 }
 
 /* ---------------- Progress ---------------- */
@@ -1288,8 +1587,10 @@ function paintSettings() {
   const s = state.settings;
   const nm = userName();
   $("setNameVal").textContent = nm || t("set.nameNotSet");
-  // First letter of the name - shown in the round avatar
-  $("setAva").textContent = nm ? nm.trim().charAt(0).toUpperCase() : "•";
+  // Initials of the name in the round avatar - a person icon when there is none
+  $("setAva").textContent = nm
+    ? nm.trim().split(/\s+/).slice(0, 2).map(w => w.charAt(0).toUpperCase()).join("")
+    : "👤";
   $("setVer").textContent = t("set.version", { v: APP_VERSION });
   Stats.renderProfileStats($("profStats"));
   paintAi();
@@ -1301,20 +1602,57 @@ function paintSettings() {
   $("swAsk").setAttribute("aria-checked", !!s.ask);
   $("swFb").setAttribute("aria-checked", !!s.speakFb);
 
-  Array.prototype.forEach.call($("segRate").children, b =>
-    b.classList.toggle("on", Math.abs(parseFloat(b.dataset.r) - s.rate) < 0.02));
+  // aria-pressed: a screen reader hears which option is chosen
+  Array.prototype.forEach.call($("segRate").children, b => {
+    const on = Math.abs(parseFloat(b.dataset.r) - s.rate) < 0.02;
+    b.classList.toggle("on", on);
+    b.setAttribute("aria-pressed", on ? "true" : "false");
+  });
   Array.prototype.forEach.call($("segSil").children, b => {
+    const on = parseInt(b.dataset.s, 10) === s.silence;
     b.textContent = t("set.sec", { n: parseInt(b.dataset.s, 10) / 1000 });
-    b.classList.toggle("on", parseInt(b.dataset.s, 10) === s.silence);
+    b.classList.toggle("on", on);
+    b.setAttribute("aria-pressed", on ? "true" : "false");
   });
 
+  paintVoicePick();
+
   const fbVoice = LANG_VOICE[getLang()] || "en";
+  const inUse = Speech.voiceFor(fbVoice);
   const lines = [
     t(Speech.micSupported() ? "diag.micYes" : "diag.micNo"),
     t(Speech.hasVoice("en") ? "diag.enYes" : "diag.enNo"),
     t(Speech.hasVoice(fbVoice) ? "diag.fbYes" : "diag.fbNo")
   ];
+  if (inUse) lines.push(t("diag.voiceInUse", { name: voiceLabel(inUse) }));
   $("setDiag").innerHTML = lines.map(l => esc(l)).join("<br>");
+}
+
+/* ---------------- The interviewer's voice ----------------
+
+   Automatic by default: a male voice for the app's language wherever the
+   phone has one (speech.js). Phones name their voices differently and do not
+   say which are male, so an instructor setting a phone up can pick the right
+   one here and hear it first. Kept per language. */
+
+function voiceLabel(v) {
+  const g = Speech.gender(v);
+  return v.name + (g === "m" ? " · " + t("set.voiceMale") : g === "f" ? " · " + t("set.voiceFemale") : "");
+}
+
+function paintVoicePick() {
+  const lang = LANG_VOICE[getLang()] || "en";
+  const list = Speech.voicesFor(lang);
+  const sel = $("voiceSel");
+  const chosen = (state.settings.voices || {})[lang] || "";
+  sel.innerHTML = '<option value="">' + esc(t("set.voiceAuto")) + "</option>" +
+    list.map(v => '<option value="' + esc(v.name) + '">' + esc(voiceLabel(v)) + "</option>").join("");
+  sel.value = list.some(v => v.name === chosen) ? chosen : "";
+  sel.disabled = !list.length;
+  $("btnVoiceTest").disabled = !list.length;
+  const auto = Speech.voiceFor(lang);
+  $("voicePickD").textContent = !list.length ? t("diag.fbNo")
+    : t("set.voicePickD", { name: auto ? voiceLabel(auto) : "—" });
 }
 
 /* ---------------- Progress backup ----------------
@@ -1336,19 +1674,21 @@ function paintSettings() {
 function paintAiTog() {
   const w = $("aiTog"), b = $("btnAiTog");
   if (!w || !b) return;
-  if (!Judge.enabled()) { w.hidden = true; return; }
+  if (!Judge.enabled()) { w.hidden = true; $("aiInfo").hidden = true; return; }
   w.hidden = false;
 
   const net = Judge.online();
   const on = Judge.consented() && net;
-  w.classList.toggle("on", on);            // colours the "AI" label too
-  w.classList.toggle("nonet", !net);
-  b.classList.toggle("on", on);            // slides the knob
-  b.disabled = !net;                       // no point turning it on with no internet
-  b.setAttribute("aria-checked", on ? "true" : "false");
-  const lab = t("ai.title") + " — " + t(!net ? "ai.stOffline" : (on ? "ai.stOn" : "ai.stOff"));
-  b.setAttribute("aria-label", lab);
-  b.title = lab;
+  w.classList.toggle("on", on);
+  b.textContent = t(!net ? "ai.chipOffline" : (on ? "ai.chipOn" : "ai.chipOff"));
+  if (!$("aiInfo").hidden) paintAiInfo();
+}
+
+/* What the badge means, in a sentence or two - and where to change it */
+function paintAiInfo() {
+  const net = Judge.online(), on = Judge.consented() && net;
+  $("aiInfo").textContent = t(!net ? "ai.infoOffline" : (on ? "ai.infoOn" : "ai.infoOff"),
+    { profile: uiLabels().profile, ai: uiLabels().ai });
 }
 
 function paintAi() {
@@ -1409,6 +1749,46 @@ function toggle(key, el) {
   }
 }
 
+/* ---------------- Confirmation dialog ----------------
+
+   In place of the browser's confirm(): states exactly what will happen, in
+   the app's language, and colours the button by what it does - red for
+   erasing. Focus starts on Cancel, so a stray Enter never erases anything;
+   Escape or a tap outside cancels. Resolves true or false. */
+function askDialog(o) {
+  return new Promise(resolve => {
+    const dlg = $("dlg"), yes = $("dlgYes"), no = $("dlgNo");
+    const back = document.activeElement;
+    $("dlgT").textContent = o.title;
+    $("dlgB").textContent = o.body;
+    yes.textContent = o.yes;
+    no.textContent = o.no || t("btn.cancel");
+    yes.className = "act" + (o.danger ? " erase" : "");
+    dlg.hidden = false;
+    no.focus();
+
+    function done(v) {
+      dlg.hidden = true;
+      yes.onclick = no.onclick = dlg.onclick = null;
+      document.removeEventListener("keydown", onKey, true);
+      try { if (back && back.focus) back.focus(); } catch (e) {}
+      resolve(v);
+    }
+    function onKey(ev) {
+      if (ev.key === "Escape") { ev.preventDefault(); done(false); }
+      // Keep Tab inside the dialog
+      if (ev.key === "Tab") {
+        ev.preventDefault();
+        (document.activeElement === no ? yes : no).focus();
+      }
+    }
+    yes.onclick = () => done(true);
+    no.onclick = () => done(false);
+    dlg.onclick = ev => { if (ev.target === dlg) done(false); };
+    document.addEventListener("keydown", onKey, true);
+  });
+}
+
 /* ---------------- Wiring ---------------- */
 
 /* The bottom tab bar */
@@ -1419,9 +1799,10 @@ $("btnAiOn").addEventListener("click", () => { Judge.setConsent(true); paintAi()
 $("btnAiOff").addEventListener("click", () => { Judge.setConsent(false); paintAi(); paintAiTog(); });
 
 $("btnAiTog").addEventListener("click", () => {
-  if (!Judge.online()) return;
-  Judge.setConsent(!Judge.consented());
-  paintAiTog();
+  const box = $("aiInfo");
+  box.hidden = !box.hidden;
+  $("btnAiTog").setAttribute("aria-expanded", box.hidden ? "false" : "true");
+  if (!box.hidden) paintAiInfo();
 });
 
 /* Show the connection coming and going in both places at once - the student
@@ -1440,8 +1821,9 @@ $("btnSyncIn").addEventListener("click", () => {
   Sync.signIn().then(paintSync).catch(paintSync);
 });
 $("btnSyncOn").addEventListener("click", () => {
-  if (!confirm(t("sync.confirmOn"))) return;
-  Sync.setConsent(true).then(paintSync).catch(paintSync);
+  askDialog({ title: t("sync.title"), body: t("sync.confirmOn"), yes: t("sync.turnOn") }).then(ok => {
+    if (ok) Sync.setConsent(true).then(paintSync).catch(paintSync);
+  });
 });
 $("btnSyncOff").addEventListener("click", () => {
   Sync.setConsent(false).then(paintSync).catch(paintSync);
@@ -1451,23 +1833,38 @@ $("btnSyncNow").addEventListener("click", () => {
 });
 $("btnSyncOut").addEventListener("click", () => { Sync.signOut(); paintSync(); });
 $("btnSyncErase").addEventListener("click", () => {
-  if (!confirm(t("sync.confirmErase"))) return;
-  Sync.eraseRemote()
-    .then(n => { alert(t("sync.erased", { n: n })); paintSync(); })
-    .catch(paintSync);
+  askDialog({ title: t("sync.erase"), body: t("sync.confirmErase"), yes: t("set.resetYes"), danger: true }).then(ok => {
+    if (!ok) return;
+    Sync.eraseRemote()
+      .then(n => { toast(t("sync.erased", { n: n })); paintSync(); })
+      .catch(paintSync);
+  });
 });
 
 $("swHands").addEventListener("click", () => toggle("hands"));
 $("swAsk").addEventListener("click", () => toggle("ask"));
 $("swFb").addEventListener("click", () => toggle("speakFb"));
 
+$("voiceSel").addEventListener("change", () => {
+  const lang = LANG_VOICE[getLang()] || "en";
+  if (!state.settings.voices || typeof state.settings.voices !== "object") state.settings.voices = {};
+  state.settings.voices[lang] = $("voiceSel").value;
+  save();
+  paintSettings();
+});
+$("btnVoiceTest").addEventListener("click", () => {
+  Speech.prime();
+  const lang = LANG_VOICE[getLang()] || "en";
+  Speech.speak(t("set.voiceSample"), { lang: lang, rate: state.settings.rate });
+});
+
 Array.prototype.forEach.call($("segRate").children, b =>
   b.addEventListener("click", () => { state.settings.rate = parseFloat(b.dataset.r); save(); paintSettings(); }));
 Array.prototype.forEach.call($("segSil").children, b =>
   b.addEventListener("click", () => { state.settings.silence = parseInt(b.dataset.s, 10); save(); paintSettings(); }));
 
-/* Both language pickers - at the foot of home and in settings */
-["langSeg", "langSeg2"].forEach(id =>
+/* Both language pickers - on the intro screen and in Profile */
+LANG_PICKERS.forEach(id =>
   Array.prototype.forEach.call($(id).children, b =>
     b.addEventListener("click", () => {
       Speech.stopAll();
@@ -1478,7 +1875,11 @@ Array.prototype.forEach.call($("segSil").children, b =>
     })));
 
 $("btnReset").addEventListener("click", () => {
-  if (!confirm(t("set.resetAsk"))) return;
+  askDialog({ title: t("set.resetT"), body: t("set.resetList"), yes: t("set.resetYes"), danger: true })
+    .then(ok => { if (ok) eraseEverything(); });
+});
+
+function eraseEverything() {
   state.courses = {};
   state.quiz = {};
   save();
@@ -1487,7 +1888,8 @@ $("btnReset").addEventListener("click", () => {
   renderBriefIfOpen();
   renderDash();
   paintSettings();       // the profile summary empties too
-});
+  toast(t("set.erased"));
+}
 
 $("btnSaveName").addEventListener("click", () => finishWelcome($("uname").value));
 $("btnSkipName").addEventListener("click", () => { saveTrack(); show("practice"); });
@@ -1495,6 +1897,12 @@ $("uname").addEventListener("keydown", ev => {
   if (ev.key === "Enter") { ev.preventDefault(); finishWelcome($("uname").value); }
 });
 $("btnChangeName").addEventListener("click", openWelcome);
+/* Loads Google's script and shows Google's own button in place of ours - the
+   student taps that one to choose their account. */
+$("btnGoogle").addEventListener("click", () => {
+  $("btnGoogle").disabled = true;
+  initGoogle();
+});
 
 /* Intro screen - "Get started" asks for a name, "Maybe later" goes straight to
    practice */
@@ -1502,6 +1910,32 @@ $("btnGetStarted").addEventListener("click", () => { Speech.prime(); openWelcome
 $("btnMaybeLater").addEventListener("click", () => { Speech.prime(); show("practice"); });
 
 $("btnStart").addEventListener("click", startInterview);
+$("btnResume").addEventListener("click", resumeInterview);
+
+/* The end-of-round summary */
+function leaveSummary() {
+  course = null;
+  show("practice");
+  renderDash();
+}
+$("btnSumBack").addEventListener("click", leaveSummary);
+$("btnSumDone").addEventListener("click", leaveSummary);
+$("btnSumAgain").addEventListener("click", () => {
+  if (!course) return leaveSummary();
+  startInterview();
+});
+// Just the skipped questions, as a short round of their own
+$("btnSumRetry").addEventListener("click", () => {
+  if (!course) return leaveSummary();
+  const old = bucket(course.id).round;
+  if (!old || !old.skipped.length) return;
+  const r = newRound(course, old.skipped);
+  r.done = old.done;                   // the summary still covers the whole round
+  bucket(course.id).round = r;
+  save();
+  Speech.prime();
+  openRun();
+});
 $("btnBriefBack").addEventListener("click", leaveCourse);
 $("btnBack").addEventListener("click", leaveCourse);
 $("btnSkip").addEventListener("click", () => {
@@ -1513,7 +1947,7 @@ $("btnSkip").addEventListener("click", () => {
     else pickQuestion(true);
     return;
   }
-  pickQuestion(true);
+  skipQuestion();
 });
 
 /* The two practice modes, and the chapter quiz's own screens */
@@ -1538,7 +1972,7 @@ $("btnRepeat").addEventListener("click", () => {
   sayQuestion(gen).then(spoken => {
     if (gen !== askGen || phase !== "asking") return;
     if (!spoken) { setPhase("ready"); return; }
-    if (canListen()) beginListen();
+    if (inputMode === "speak" && canListen()) beginListen();
     else setPhase("ready");
   });
 });
@@ -1601,24 +2035,24 @@ $("btnAct").addEventListener("click", () => {
   }
   if (phase === "feedback") {
     Speech.cancelSpeech();
-    if (atLastQuestion()) leaveCourse();   // the mock interview is over
-    else pickQuestion(true);               // the next question in the order
+    if (atLastQuestion()) {                // the end of the chapter / the round
+      if (Quiz.on()) leaveCourse();
+      else endRound();
+      return;
+    }
+    pickQuestion(true);                    // the next question in the order
     return;
   }
   if (phase === "ready") { beginListen(); return; }
 });
 
-$("btnType").addEventListener("click", () => {
-  const wrap = $("typeWrap");
-  wrap.hidden = !wrap.hidden;
-  $("btnType").classList.toggle("on", !wrap.hidden);
-  if (!wrap.hidden) {
-    if (phase === "listening") { stopListening(); setPhase("ready"); }
-    Speech.cancelSpeech();
-    $("ans").value = $("heard").textContent.trim();
-    $("ans").focus();
-  }
-});
+Array.prototype.forEach.call($("inModeSeg").children, b =>
+  b.addEventListener("click", () => {
+    const m = b.getAttribute("data-m");
+    if (m === "speak") micOff = false;          // they want to try the mic again
+    setInputMode(m);
+    if (m === "type") $("ans").focus();
+  }));
 
 $("btnCheck").addEventListener("click", () => submit($("ans").value));
 
@@ -1690,6 +2124,15 @@ document.addEventListener("visibilitychange", () => {
 /* ---------------- Startup ---------------- */
 
 loadState();
+// The voice an instructor picked in Profile, per language ("" = automatic)
+Speech.setChooser(lang => (state.settings.voices && state.settings.voices[lang]) || "");
+/* Phones list their voices late. Repaint the voice picker when they arrive,
+   if Profile is open. */
+if (window.speechSynthesis && window.speechSynthesis.addEventListener) {
+  window.speechSynthesis.addEventListener("voiceschanged", () => {
+    setTimeout(() => { if (curScreen === "profile") paintSettings(); }, 0);
+  });
+}
 setLang(state.settings.lang);
 applyI18n();
 paintLang();

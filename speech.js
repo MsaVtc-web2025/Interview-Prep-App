@@ -12,8 +12,9 @@
    7. rec.start() throws while the previous session is winding down -> we back
       off and retry. (Swallowing that error leaves the mic off for good while the
       screen still says "listening".)
-   8. A Gujarati voice goes silent on English words ("PPE", "Safety") -> the
-      English runs are read by the English voice, see byScript().
+   8. A Gujarati voice goes silent on acronyms like "PPE" -> they are spelled
+      out in the voice's own letters, see spellOut(). One voice reads the whole
+      sentence; the interviewer's voice is male wherever the phone has one.
 */
 "use strict";
 
@@ -57,44 +58,68 @@ const Speech = (function () {
     hi: ["hi-in", "hi"]
   };
 
-  /* Good voices recognised by name, so that "Google Hindi" is the one picked
-     when a phone carries more than one Hindi voice. The name is spelled in
-     either script, so we check both. */
-  const VOICE_NAMES = {
-    hi: ["google हिन्दी", "google hindi"],
-    gu: ["google ગુજરાતી", "google gujarati"]
-  };
+  /* The interviewer is a man, so the voice is male wherever the phone has one.
+     The Web Speech API does not say which voices are male, so it is read from
+     the name. These are the names in use on the phones and browsers this app
+     meets: Android's Google voices (en-in-x-end, hi-in-x-hid ...), Windows and
+     Edge (Ravi, Hemant, Madhur, Niranjan ...), and iOS (Rishi). A name that
+     says "male" is taken at its word. Android's Gujarati voice names do not
+     give the gender away, which is what the Profile setting is for. A phone with no male voice for a
+     language still uses the voice it has, so the question is always heard;
+     the Profile voice setting lets an instructor fix the choice by hand. */
+  const MALE_HINTS = [
+    /\bmale\b/, /\bman\b/,
+    /x-end\b/, /x-ene\b/, /x-hid\b/, /x-hie\b/,
+    /ravi\b/, /hemant/, /prabhat/, /madhur/, /niranjan/, /kunal/, /aarav/, /rishi\b/,
+    /david\b/, /mark\b/, /guy\b/, /ryan\b/, /george\b/, /daniel\b/
+  ];
+  const FEMALE_HINTS = [
+    /female/, /woman/,
+    /x-ena\b/, /x-enc\b/, /x-ahp\b/, /x-cxx\b/, /x-hia\b/, /x-hic\b/,
+    /heera/, /kalpana/, /swara/, /dhwani/, /neerja/, /lekha/, /veena/, /zira/, /hazel/, /susan/,
+    /google हिन्दी/, /google hindi/, /google uk english female/
+  ];
 
-  function byName(list, names) {
-    if (!names) return null;
-    for (const n of names) {
-      const hit = list.filter(v => String(v.name || "").toLowerCase().indexOf(n) >= 0)[0];
-      if (hit) return hit;
-    }
-    return null;
+  function gender(v) {
+    const n = String((v && v.name) || "").toLowerCase();
+    if (FEMALE_HINTS.some(r => r.test(n))) return "f";
+    if (MALE_HINTS.some(r => r.test(n))) return "m";
+    return "?";
   }
 
-  /* Voice selection order:
-     1. Exact language match (hi-in first, then hi)
-     2. Of those, an on-device (offline) voice first - it speaks without internet
-     3. Failing that, a known-good voice by name (Google Hindi)
-     4. Failing that, whichever comes first
-     Design decision: the student is never asked to choose - the best voice is
-     picked automatically, so a wrong choice is not even possible. */
-  function pickVoice(prefs, names) {
+  /* An instructor's own pick for this phone, from Profile -> Voice. Read
+     through a hook so this file does not reach into the app's state. */
+  let chosenName = () => "";
+  function setChooser(fn) { if (typeof fn === "function") chosenName = fn; }
+
+  /* All voices for a language, best first: male, then unknown, then female;
+     within each, on-device (works offline) before network. */
+  function voicesFor(lang) {
     if (!voices.length) refreshVoices();
+    const prefs = VOICE_PREFS[lang] || VOICE_PREFS.en;
     for (const p of prefs) {
       const matches = voices.filter(v => v.lang && normLang(v.lang).indexOf(p) === 0);
       if (!matches.length) continue;
-      const local = matches.filter(v => v.localService);
-      if (local.length) return byName(local, names) || local[0];
-      return byName(matches, names) || matches[0];
+      const rank = v => ({ m: 0, "?": 1, f: 2 })[gender(v)] * 2 + (v.localService ? 0 : 1);
+      return matches.slice().sort((a, b) => rank(a) - rank(b));
     }
-    return null;
+    return [];
   }
 
+  /* Voice selection:
+     1. The voice an instructor chose for this language in Profile, if the
+        phone still has it
+     2. Otherwise the best match for the language (hi-in before hi), male
+        first, on-device before network
+     The student is never asked; the default works without anyone choosing. */
   function voiceFor(lang) {
-    return pickVoice(VOICE_PREFS[lang] || VOICE_PREFS.en, VOICE_NAMES[lang]);
+    const list = voicesFor(lang);
+    const want = chosenName(lang);
+    if (want) {
+      const hit = list.filter(v => v.name === want)[0];
+      if (hit) return hit;
+    }
+    return list[0] || null;
   }
 
   /* Does this voice work without internet? (Google's voices run over the network) */
@@ -159,22 +184,16 @@ const Speech = (function () {
     return out.filter(Boolean);
   }
 
-  /* Gujarati and Hindi text carries English words - "PPE નું સંપૂર્ણ નામ",
-     "Safety ના મુદ્દા". Many Gujarati voices go silent on Latin letters, and the
-     question came out with holes in it. So the English runs are read by the
-     English voice and the rest by the language's own: [{ text, lang }].
-
-     A run of English keeps its spaces, commas and numbers - "M03 S100",
-     "X, Y" - so it is read as one phrase, not one word at a time. Pieces with
-     no letter or digit (a lone "?") are dropped: a voice handed only
-     punctuation says nothing and can stall. */
-  const LATIN_RUN = /[A-Za-z][A-Za-z0-9.'’₂/&+-]*(?:[\s,/&+-]+[A-Za-z0-9][A-Za-z0-9.'’₂/&+-]*)*/g;
-  const HAS_WORD = /[0-9A-Za-zऀ-ॿ઀-૿]/;
-
   /* "PPE", "CNC", "ECG" are said letter by letter, but a voice reads them as
-     a word - "PPE" came out as one mumbled syllable. So short all-capital
-     words are spaced into letters ("P P E"), which every voice reads one by
-     one. Capitals that ARE words in this app's banks (the CNC keys and modes,
+     a word - "PPE" came out as one mumbled syllable, and a Gujarati voice
+     often said nothing at all. So short all-capital words are spelled out.
+     For an English voice that is "P P E"; a Gujarati or Hindi voice gets the
+     letters' names in its own script - "પી પી ઈ", "पी पी ई" - which it reads
+     properly, so the whole sentence stays in ONE voice. (It used to switch to
+     the English voice for every English word, which sounded like two people
+     taking turns.)
+
+     Capitals that ARE words in this app's banks (the CNC keys and modes,
      ON/OFF, MIG/TIG, AMBU, DOTS...) are left alone, and so is anything of five
      letters or more (RESET, RAPID, INPUT, NSAID); ABCDE and DRSABCD are letters.
      Letters mixed with digits are spelled when there are two letters or more
@@ -184,31 +203,26 @@ const Speech = (function () {
   const SAY_AS = { RECV: "receive" };
   const SPELL_LONG = new Set(["ABCDE", "DRSABCD"]);
 
-  function spellOut(text) {
-    return String(text).replace(/\b[A-Z0-9]*[A-Z][A-Z0-9]*\b/g, w => {
+  const LETTER_NAMES = {
+    gu: "એ બી સી ડી ઈ એફ જી એચ આઈ જે કે એલ એમ એન ઓ પી ક્યૂ આર એસ ટી યૂ વી ડબલ્યૂ એક્સ વાય ઝેડ".split(" "),
+    hi: "ए बी सी डी ई एफ जी एच आई जे के एल एम एन ओ पी क्यू आर एस टी यू वी डब्ल्यू एक्स वाई ज़ेड".split(" ")
+  };
+
+  function spell(w, lang) {
+    const names = LETTER_NAMES[lang];
+    return w.split("").map(c => (names && c >= "A" && c <= "Z") ? names[c.charCodeAt(0) - 65] : c).join(" ");
+  }
+
+  function spellOut(text, lang) {
+    return String(text).replace(/[A-Z0-9]*[A-Z][A-Z0-9]*/g, w => {
       if (SAY_AS[w]) return SAY_AS[w];
       const letters = w.replace(/[0-9]/g, "").length;
       if (letters < 2) return w;                                   // G01, M03, X40, A1
-      if (/[0-9]/.test(w)) return w.split("").join(" ");          // SPO2 -> S P O 2
-      if (SPELL_LONG.has(w)) return w.split("").join(" ");
+      if (/[0-9]/.test(w)) return spell(w, lang);                  // SPO2 -> S P O 2
+      if (SPELL_LONG.has(w)) return spell(w, lang);
       if (w.length > 4 || AS_WORDS.has(w)) return w;
-      return w.split("").join(" ");                               // PPE -> P P E
+      return spell(w, lang);                                       // PPE -> P P E
     });
-  }
-
-  function byScript(text, lang) {
-    if (lang === "en" || !voiceFor("en")) return [{ text: text, lang: lang }];
-    const out = [];
-    const push = (t, l) => { t = t.trim(); if (HAS_WORD.test(t)) out.push({ text: t, lang: l }); };
-    let at = 0, m;
-    LATIN_RUN.lastIndex = 0;
-    while ((m = LATIN_RUN.exec(text))) {
-      push(text.slice(at, m.index), lang);
-      push(m[0], "en");
-      at = m.index + m[0].length;
-    }
-    push(text.slice(at), lang);
-    return out;
   }
 
   function clearWatchdog() { if (watchdog) { clearTimeout(watchdog); watchdog = null; } }
@@ -256,11 +270,8 @@ const Speech = (function () {
 
     cancelSpeech();
     const token = speakToken;
-    const chunks = [];
-    byScript(String(text), lang).forEach(p => {
-      const v = p.lang === lang ? voice : voiceFor(p.lang);
-      toChunks(spellOut(p.text)).forEach(c => chunks.push({ text: c, voice: v, lang: p.lang }));
-    });
+    const chunks = toChunks(spellOut(String(text), lang))
+      .map(c => ({ text: c, voice: voice, lang: lang }));
     const rate = opts.rate || (lang === "gu" ? 1 : 0.92);
 
     return new Promise(resolve => {
@@ -686,6 +697,7 @@ const Speech = (function () {
   return {
     // speaking
     speak, cancelSpeech, isSpeaking, prime, hasVoice, voiceFor, voiceIsOffline, supported, toChunks,
+    voicesFor, gender, setChooser,
     // listening
     listen, stopListen, isListening, micSupported,
     // both

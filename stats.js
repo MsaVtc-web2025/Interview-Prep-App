@@ -43,6 +43,10 @@ const Stats = (function () {
     return t("unit.min", { v: Math.max(1, Math.round(min)) });
   }
 
+  /* Strongest course and weakest criterion are only said once there are this
+     many answers - "Strongest: Computer" after one 5.0 answer means nothing. */
+  const MIN_FOR_VERDICT = 5;
+
   /* ---------------- Gathering the data ---------------- */
 
   function summarise() {
@@ -122,13 +126,14 @@ const Stats = (function () {
   /* The top strip, per the design: answers, average, weakest criterion.
      The third cell holds an icon and the criterion name, not a number. */
   function panels(s) {
-    const weak = s.crit.slice().sort((a, b) => a.v - b.v)[0];
+    const weak = s.n >= MIN_FOR_VERDICT ? s.crit.slice().sort((a, b) => a.v - b.v)[0] : null;
+    const weakText = weak ? weak.label : (s.n ? t("stats.strongWait", { n: MIN_FOR_VERDICT }) : "—");
     const weakCell =
       '<div class="sc">' +
         '<svg class="svi" aria-hidden="true" style="width:20px;height:20px;margin:0 auto;color:' +
           (weak ? colorFor(weak.v) : "var(--accent)") + '"><use href="#i-chart"/></svg>' +
         '<div style="font-size:12px;font-weight:650;margin-top:3px">' +
-          esc(weak ? weak.label : "—") + "</div>" +
+          esc(weakText) + "</div>" +
         '<div style="font-size:11px;color:var(--muted)">' + esc(t("st.weak")) + "</div>" +
       "</div>";
 
@@ -138,7 +143,8 @@ const Stats = (function () {
         weakCell +
       "</div>" +
       '<div class="statpanel" style="margin-top:12px">' +
-        cell(s.hours ? s.hours.toFixed(1) : "—", t("st.hours")) +
+        // Minutes, then hours: "0.0 hours" after a first session looked like nothing
+        cell(esc(fmtDur(s.hours * 60)), t("st.hours"), "sm") +
         cell(esc(fmtDur(s.weekAvgMin)), t("stats.weekAvg"), "sm") +
         cell(s.streak || "—", t("st.streakLab")) +
       "</div>";
@@ -381,11 +387,12 @@ const Stats = (function () {
   /* The small strip on the profile screen */
   function renderProfileStats(el) {
     const s = summarise();
-    const best = s.courses.filter(c => c.n).sort((a, b) => b.avg - a.avg)[0];
+    const best = s.n >= MIN_FOR_VERDICT ? s.courses.filter(c => c.n).sort((a, b) => b.avg - a.avg)[0] : null;
     el.innerHTML =
       cell(s.n, t("st.answered")) +
-      cell(s.hours ? s.hours.toFixed(1) : "—", t("st.hours")) +
-      cell(best ? esc(tCourse(best.def, "name")) : "—", t("st.strong"), "sm");
+      cell(esc(fmtDur(s.hours * 60)), t("st.hours"), "sm") +
+      cell(best ? esc(tCourse(best.def, "name"))
+                : esc(s.n ? t("stats.strongWait", { n: MIN_FOR_VERDICT }) : "—"), t("st.strong"), "sm");
     return s;
   }
 

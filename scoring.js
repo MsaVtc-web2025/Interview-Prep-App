@@ -11,11 +11,22 @@ const CRITERIA = [
   { key: "coherence" }
 ];
 
-/* Criterion label, in the current language and for the current mode */
-function criterionLabel(c, mode) {
-  if (mode === "technical" && c.tech) return t("crit." + c.key + ".tech");
+/* Criterion label, in the current language and for the current mode.
+   "Order of steps" only means something on a question that asks for steps -
+   on "what is..." it was telling students their steps were out of order when
+   they had been asked for a definition. process = false gives the plain label. */
+function criterionLabel(c, mode, process) {
+  if (mode === "technical" && c.tech && !(c.key === "thought" && process === false)) {
+    return t("crit." + c.key + ".tech");
+  }
   return t("crit." + c.key);
 }
+
+/* Does the question ask for steps - how something is done, in what order?
+   Only then is the order of the answer marked as "order of steps". */
+const PROCESS_Q = /\b(how\s+(do|would|will|did|can|should)\s+you(?!\s+(know|feel|think|see|rate|deal|define|decide|handle|manage|keep|stay|like|spend|describe))|how\s+to|what\s+steps|which\s+steps|steps|procedure|process\s+of|walk\s+me\s+through|what\s+(do|would|will)\s+you\s+do|before\s+(starting|you\s+start)|sequence)\b/i;
+
+function isProcessQuestion(question) { return PROCESS_Q.test(String((question && question.q) || "")); }
 
 /* Weights per mode — language matters in an interview, knowledge matters on a
    technical course. A short but correct answer is fine on a technical question,
@@ -123,10 +134,16 @@ function analyse(text) {
     new RegExp("\\b" + c.replace(/\s+/g, "\\s+") + "\\b", "i").test(lower)
   ).length;
 
+  /* A sentence has a verb if a word is a known verb, ends -ing/-ed, or comes
+     straight after a subject ("It runs", "I wear", "that controls") - the verb
+     list cannot hold every verb, and "It runs all the programs" was being
+     marked as an unfinished sentence. */
+  const SUBJECT = /^(i|we|you|he|she|it|they|that|which|who)$/;
   const fragments = sentences.filter(s => {
     const sw = s.toLowerCase().replace(/[^a-z0-9'\s]/g, " ").split(/\s+/).filter(Boolean);
     if (sw.length < 3) return true;
-    return !sw.some(w => VERBS.includes(w) || /(?:ing|ed)$/.test(w));
+    return !sw.some((w, i) => VERBS.includes(w) || /(?:ing|ed)$/.test(w) ||
+      (i > 0 && SUBJECT.test(sw[i - 1]) && !FUNCTION_WORDS.includes(w)));
   }).length;
 
   const grammarHits = GRAMMAR.filter(g => g.re.test(clean)).map(g => g.id);
@@ -187,6 +204,39 @@ function band(v, base) {
   return t(base + (v < 4.5 ? ".low" : v < 7.5 ? ".mid" : ".high"));
 }
 
+/* The note under each criterion, from its score. In one place so that when
+   the AI replaces the scores (judge.js merge), the notes are rewritten to match
+   them - an AI 8 for "complete sentences" sitting next to the offline note
+   "the answer is just loose words" was the feedback contradicting itself.
+   ctx = { tech, process, hasFillers, grammarHits } from the answer itself. */
+function notesFor(s, ctx) {
+  return {
+    accuracy: band(s.accuracy, ctx.tech ? "note.accuracyT" : "note.accuracy"),
+    communication: bandFill(s.communication, "note.communication", ctx.hasFillers),
+    sentences: band(s.sentences, "note.sentences"),
+    thought: band(s.thought, ctx.process ? "note.thoughtT" : "note.thought"),
+    speechGrammar: ctx.grammarHits
+      ? t("note.speechGrammar.found", { n: ctx.grammarHits })
+      : bandFill(s.speechGrammar, "note.speechGrammar", ctx.hasFillers),
+    coherence: band(s.coherence, "note.coherence")
+  };
+}
+
+/* band(), but a note that talks about filler words is used only when the
+   answer had some - "use fewer filler words" to a student who used none is
+   simply wrong. Keys: <base>.mid / <base>.midFill, <base>.low / <base>.lowFill. */
+function bandFill(v, base, hasFillers) {
+  const lvl = v < 4.5 ? ".low" : v < 7.5 ? ".mid" : ".high";
+  return t(base + lvl + (hasFillers && lvl !== ".high" ? "Fill" : ""));
+}
+
+/* A full-sentence example from the student's own trade, for the advice */
+function courseExample(courseId) {
+  const k = "ex." + (courseId || "interview");
+  const v = t(k);
+  return v === k ? t("ex.interview") : v;
+}
+
 /* Does this text contain Gujarati or Devanagari letters? If it does, the
    student answered in their own language, and every English-specific rule below
    - the filler list, the function-word ratio, the grammar patterns - is
@@ -194,16 +244,20 @@ function band(v, base) {
 function hasIndicScript(s) { return /[ऀ-ॿ઀-૿]/.test(String(s || "")); }
 
 /* needsEnglish defaults to true: every existing caller is English practice, and
-   a question that has not opted out should not quietly become unmarked. */
-function scoreAnswer(text, question, mode, needsEnglish) {
+   a question that has not opted out should not quietly become unmarked.
+   courseId picks the example in the advice, so a Computer student is not
+   shown "First I switch off the power to the machine". */
+function scoreAnswer(text, question, mode, needsEnglish, courseId) {
   mode = mode === "technical" ? "technical" : "interview";
   const mustBeEnglish = needsEnglish !== false;
   const prof = profileFor(mode);
   const tech = mode === "technical";
+  // Steps are marked as steps only when the question asks for them
+  const process = tech && isProcessQuestion(question);
   const a = analyse(text);
   const cov = coverage(a, question.kw);
   const missing = missingMust(a, question.must);
-  const s = {}, notes = {};
+  const s = {};
 
   /* Did the student say "I don't know"? Only count it when keyword coverage is
      low — "I don't know the exact figure, but feed rate means..." is a good answer. */
@@ -221,20 +275,25 @@ function scoreAnswer(text, question, mode, needsEnglish) {
   // Meaningless on an answer with no English function words in it to count.
   const wordList = !ownLanguage && a.wc >= 4 && a.funcRatio < 0.15;
 
+  /* No full sentence at all - a list of words, or phrases with no verb.
+     Reciting the right keywords is not answering, so this is capped below. */
+  const noSentence = !ownLanguage && (wordList || (a.wc >= 4 && a.fragRatio >= 1));
+
+  // Filler words are mentioned in the feedback only when there were some
+  const hasFillers = a.fillerCount > 0;
+
   /* 1. Answer accuracy / technical accuracy */
   let accuracy = 1 + cov * 9;
   if (a.wc < 4) accuracy = Math.min(accuracy, 3);
   if (wordList) accuracy = Math.min(accuracy, 5);
   if (noAnswer) accuracy = 1;
   s.accuracy = clamp(accuracy);
-  notes.accuracy = band(s.accuracy, tech ? "note.accuracyT" : "note.accuracy");
 
   /* 2. Clear communication — in technical mode a short but correct answer is fine */
   let lenScore = prof.shortOk
     ? (a.wc < 4 ? 2 : a.wc < 8 ? 5 : a.wc < 12 ? 8 : a.wc <= 120 ? 9 : 8)
     : (a.wc < 4 ? 2 : a.wc < 8 ? 4 : a.wc < 15 ? 6 : a.wc <= 60 ? 9 : a.wc <= 90 ? 8 : 6);
   s.communication = clamp(lenScore * 0.7 + cov * 3 - Math.min(3, a.fillerCount * 0.6));
-  notes.communication = band(s.communication, "note.communication");
 
   /* 3. Complete sentences */
   let sent = a.wc < 4 ? 2 : 10 - a.fragRatio * 7;
@@ -244,14 +303,12 @@ function scoreAnswer(text, question, mode, needsEnglish) {
   // mistakes a bare list for a sentence. Cap the score when it is a list.
   if (wordList) sent = Math.min(sent, 3);
   s.sentences = clamp(sent);
-  notes.sentences = band(s.sentences, "note.sentences");
 
   /* 4. Clarity of thought */
   let thought = 3 + Math.min(3, a.connCount * 0.8) + cov * 4;
   if (a.wc < 8) thought = Math.min(thought, 4);
   if (a.sentCount >= 2) thought += 0.5;
   s.thought = clamp(thought);
-  notes.thought = band(s.thought, tech ? "note.thoughtT" : "note.thought");
 
   /* 5. Grammar and word choice.
      Note: this finds mistakes, it does not measure correctness — no mistakes
@@ -264,16 +321,15 @@ function scoreAnswer(text, question, mode, needsEnglish) {
   if (a.wc < 5) gram = Math.min(gram, 4);
   if (wordList) gram = Math.min(gram, 4);
   s.speechGrammar = clamp(gram);
-  notes.speechGrammar = a.grammarHits.length
-    ? t("note.speechGrammar.found", { n: a.grammarHits.length })
-    : band(s.speechGrammar, "note.speechGrammar");
 
   /* 6. Coherence of speech */
   let coh = 4 + Math.min(3, a.connCount * 0.7) + cov * 3 - a.repetition * 5;
   if (a.wc < 6) coh = Math.min(coh, 3);
   if (a.sentCount >= 2) coh += 0.5;
   s.coherence = clamp(coh);
-  notes.coherence = band(s.coherence, "note.coherence");
+
+  const noteCtx = { tech: tech, process: process, hasFillers: hasFillers, grammarHits: a.grammarHits.length };
+  const notes = notesFor(s, noteCtx);
 
   /* Overall score — the average weighted by mode */
   let wSum = 0, wTot = 0;
@@ -296,6 +352,10 @@ function scoreAnswer(text, question, mode, needsEnglish) {
   /* "I don't know" fails an interview, however good the language is */
   if (noAnswer) overall = clamp(Math.min(overall, 2));
 
+  /* Keywords with no sentence: "windows linux operating system software
+     hardware" used to score 5.0. Knowing the words is not answering. */
+  if (noSentence) overall = clamp(Math.min(overall, 4.5));
+
   /* Safety gate — miss a mandatory point and the overall score is capped at 6.
      Missing these costs you the job in industry, so the app does not excuse it either. */
   if (missing.length) overall = clamp(Math.min(overall, 6));
@@ -306,6 +366,16 @@ function scoreAnswer(text, question, mode, needsEnglish) {
 
   /* Advice — from the weakest criterion. Technical courses use a different set
      ("advT."). A missed safety point outranks every other piece of advice. */
+  /* The step-by-step advice only fits a question that asks for steps; on any
+     other question the general advice is given. A list of words gets the
+     "full sentences" advice, whatever else is weak. */
+  const adviceKey = k => {
+    if (k === "communication" && !process) return hasFillers ? "adv.communicationFill" : "adv.communication";
+    if (!tech) return "adv." + k;
+    if (!process && (k === "thought" || k === "coherence")) return "adv." + k;
+    return "advT." + k;
+  };
+  const ex = { ex: courseExample(courseId) };
   let advice;
   if (noAnswer) {
     advice = t("adv.dontKnow");
@@ -313,10 +383,12 @@ function scoreAnswer(text, question, mode, needsEnglish) {
     advice = t("adv.missing", { list: missing.map(tMust).join(", ") });
   } else if (offTopic) {
     advice = t(tech ? "adv.offTopicT" : "adv.offTopic");
+  } else if (noSentence) {
+    advice = t(tech ? "advT.sentences" : "adv.sentences", ex);
   } else if (overall >= 8.5 && s[weakest] >= 8) {
     advice = t("adv.praise");
   } else {
-    advice = tech ? t("advT." + weakest) : t("adv." + weakest);
+    advice = t(adviceKey(weakest), ex);
   }
 
   return {
@@ -330,6 +402,9 @@ function scoreAnswer(text, question, mode, needsEnglish) {
     weakest: weakest,
     offTopic: offTopic,
     noAnswer: noAnswer,
+    noSentence: noSentence,
+    process: process,
+    noteCtx: noteCtx,
     missingMust: missing,
     mode: mode,
     advice: advice,
@@ -340,5 +415,5 @@ function scoreAnswer(text, question, mode, needsEnglish) {
 }
 
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { scoreAnswer, CRITERIA, analyse, criterionLabel, MODE_PROFILES };
+  module.exports = { scoreAnswer, CRITERIA, analyse, criterionLabel, MODE_PROFILES, notesFor, isProcessQuestion };
 }
