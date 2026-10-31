@@ -214,7 +214,7 @@ const Speech = (function () {
   }
 
   function spellOut(text, lang) {
-    return String(text).replace(/[A-Z0-9]*[A-Z][A-Z0-9]*/g, w => {
+    return String(text).replace(/\b[A-Z0-9]*[A-Z][A-Z0-9]*\b/g, w => {
       if (SAY_AS[w]) return SAY_AS[w];
       const letters = w.replace(/[0-9]/g, "").length;
       if (letters < 2) return w;                                   // G01, M03, X40, A1

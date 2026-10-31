@@ -397,12 +397,25 @@ Practice opens on **Chapter Quiz**; trades with no book show "Coming soon".
 1. Create `chapters-<course id>.js` containing `registerChapters("<course id>", [ ... ])`
    — one `{ id, no, title, titles: { en, hi }, qs: [{ q, a, t, en: { q, a }, hi: { q, a } }] }`
    per chapter, where `q` is the question, `a` the book answer (Gujarati, as in the
-   book), `t` an optional topic, and `en` / `hi` the translations (copy
+   book), `t` an optional topic (one name, or `{ gu, en, hi }`), and `en` / `hi`
+   the translations (copy
    `chapters-nursing.js`). The quiz is asked in the app's language; a question
    with no `en` / `hi` is asked in Gujarati. Translations keep the answer's
    lines and numbers exactly, and Hindi keeps trade words in English too.
 2. Add its `<script>` line in `index.html` after the other `chapters-*.js` scripts.
 3. Add the filename to `ASSETS` in `sw.js` and bump the `CACHE` number.
+
+One quiz per book chapter, numbered as in the book (`no: "2"`). When the book
+splits a chapter into sections (2.1, 2.4, 2.6 ...), put them all in that one
+chapter and give each question its section's name in `t`.
+
+Write each question the way an interviewer would ask it out loud, since the
+avatar reads it word for word. Say a term once, not twice in brackets
+(`Bed Bath`, not `બેડબાથ (Bed Bath)`). Use the full name of a role, tool or
+unit (`General Duty Assistant`, `Dial Test Indicator`, `Millimeter`), not `GDA`,
+`DTI` or `mm`. Keep the acronym when it is what the question asks about
+(`BLS એટલે શું?`, the full name of `MPG`), or when it is said as letters at
+work (`CNC`, `VMC`, `RPM`, `PPE`, `ECG`, `IV`, `CPR`).
 
 Write technical words the way students say them — in English (`Safety`,
 `Patient`, `Pressure`), not the formal Gujarati (`સલામતી`, `દર્દી`, `દબાણ`).

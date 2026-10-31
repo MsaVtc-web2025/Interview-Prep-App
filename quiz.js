@@ -71,6 +71,13 @@ const Quiz = (function () {
     return (l !== "gu" && ch.titles && ch.titles[l]) || ch.title;
   }
 
+  /* The section a question comes from, shown above it: one name, or a name
+     per language for a chapter made of the book's sections */
+  function topic(b) {
+    if (!b.t) return "";
+    return typeof b.t === "object" ? b.t[getLang()] || b.t.gu : b.t;
+  }
+
   /* Is any question of these chapters missing from this language? */
   function untranslated(chs, lang) {
     return lang !== "gu" && chs.some(ch => ch.qs.some(b => version(b, lang).lang !== lang));
@@ -175,7 +182,7 @@ const Quiz = (function () {
     const v = version(b, getLang());
     return {
       id: "quiz." + run.cid + "." + run.ch.id + "." + i + "." + v.lang,
-      q: v.q, en: v.a, cat: b.t || chTitle(run.ch),
+      q: v.q, en: v.a, cat: topic(b) || chTitle(run.ch),
       quiz: true, i: i, qlang: v.lang, alts: versions(b)
     };
   }
