@@ -1744,7 +1744,7 @@ function submitAccess() {
 }
 
 function paintAccess() {
-  const on = Access.enabled() && Access.allowed();
+  const on = Access.enabled() && !!Access.student();
   $("accWrap").hidden = !on;
   $("accAbout").hidden = !Access.enabled();
   if (!on) return;
@@ -2292,9 +2292,16 @@ renderDash();
 /* No name yet: introduce the app first. Name known: show progress if they have
    practised, otherwise go straight to the practice tab (a course list is more
    use than an empty chart). */
-if (!Access.allowed()) openAccess("");
-else if (!state.user) show("splash");
-else show(allHistory().length ? "stats" : "practice");
+/* Where the app opens - also once the Worker says codes are not in use yet */
+function firstScreen() {
+  if (!state.user) show("splash");
+  else show(allHistory().length ? "stats" : "practice");
+}
+
+if (!Access.allowed()) {
+  openAccess("");
+  Access.probe().then(open => { if (open && curScreen === "access") firstScreen(); });
+} else firstScreen();
 
 /* Send any pending progress when the app opens - a no-op when backup is off.
    Not right at startup but slightly after: let the first screen paint. Then

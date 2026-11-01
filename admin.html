@@ -130,6 +130,18 @@ tbody tr.click{cursor:pointer}
   <section id="vMain" hidden>
     <div class="tiles" id="tiles"></div>
 
+    <!-- One code shared by many students (signup_codes) -->
+    <div class="card" style="margin-bottom:14px">
+      <div class="bar" style="align-items:center;margin:0">
+        <div class="grow">
+          <b>Sign-up code for everyone</b>
+          <div class="muted" style="font-size:13px">One code for all students. Each one types it with their own name and mobile number and gets a record of their own, so results never mix.</div>
+        </div>
+        <button id="btnNewSignup">+ Make a sign-up code</button>
+      </div>
+      <div id="signupList"></div>
+    </div>
+
     <div class="bar">
       <div class="grow"><label for="q">Search</label><input id="q" type="search" placeholder="Name, code, phone…"></div>
       <div><label for="fTrade">Trade</label><select id="fTrade"></select></div>
@@ -193,7 +205,7 @@ tbody tr.click{cursor:pointer}
         <div><label for="eName">Name</label><input id="eName" required maxlength="80"></div>
         <div><label for="eTrade">Trade</label><select id="eTrade"></select></div>
         <div><label for="eBatch">Batch</label><input id="eBatch" maxlength="40"></div>
-        <div><label for="ePhone">Phone number</label><input id="ePhone" maxlength="20" inputmode="tel"></div>
+        <div><label for="ePhone">Mobile number</label><input id="ePhone" maxlength="20" inputmode="tel" required></div>
         <div><label for="eExp">Access ends on (optional)</label><input id="eExp" type="date"></div>
         <div><label for="eLimit">AI marks per day</label><input id="eLimit" type="number" min="0" max="2000"></div>
       </div>
@@ -244,7 +256,7 @@ tbody tr.click{cursor:pointer}
     <div class="row2">
       <div><label for="aTrade">Trade</label><select id="aTrade"></select></div>
       <div><label for="aBatch">Batch</label><input id="aBatch" maxlength="40" placeholder="e.g. CNC-2026-Nov"></div>
-      <div><label for="aPhone">Phone number (optional)</label><input id="aPhone" maxlength="20" inputmode="tel"></div>
+      <div><label for="aPhone">Mobile number</label><input id="aPhone" maxlength="20" inputmode="tel" required placeholder="10-digit number"></div>
       <div><label for="aExp">Access ends on (optional)</label><input id="aExp" type="date"></div>
     </div>
     <p class="msg err" id="addMsg" hidden></p>
@@ -256,13 +268,13 @@ tbody tr.click{cursor:pointer}
 <div class="dlgshade" id="batchDlg" hidden>
   <form class="dlg" id="batchForm" role="dialog" aria-modal="true" aria-labelledby="batchT">
     <h2 id="batchT">Add a batch</h2>
-    <p class="muted" style="margin:0">One name per line. Every student gets their own code.</p>
+    <p class="muted" style="margin:0">One student per line: name, then a comma, then their 10-digit mobile number. Every student gets their own code.</p>
     <div class="row2">
       <div><label for="bTrade">Trade</label><select id="bTrade"></select></div>
       <div><label for="bBatch">Batch</label><input id="bBatch" required maxlength="40" placeholder="e.g. NUR-2026-Nov"></div>
     </div>
     <label for="bExp">Access ends on (optional)</label><input id="bExp" type="date">
-    <label for="bNames">Names</label><textarea id="bNames" required></textarea>
+    <label for="bNames">Students</label><textarea id="bNames" required placeholder="Asha Patel, 9825011111&#10;Ravi Shah, 9909022222"></textarea>
     <p class="msg err" id="batchMsg" hidden></p>
     <div class="btns"><button type="button" id="batchCancel">Cancel</button><button class="pri" type="submit">Make codes</button></div>
   </form>
@@ -281,6 +293,21 @@ tbody tr.click{cursor:pointer}
       <button class="pri" id="codesDone">Done</button>
     </div>
   </div>
+</div>
+
+<!-- Make a sign-up code -->
+<div class="dlgshade" id="signupDlg" hidden>
+  <form class="dlg" id="signupForm" role="dialog" aria-modal="true" aria-labelledby="signupT">
+    <h2 id="signupT">Make a sign-up code</h2>
+    <p class="muted" style="margin:0">Students who sign up with it are put in this batch and trade. You can change both for any student later.</p>
+    <div class="row2">
+      <div><label for="sLabel">Name of the code</label><input id="sLabel" required maxlength="40" value="Everyone"></div>
+      <div><label for="sBatch">Batch for those who join</label><input id="sBatch" required maxlength="40" value="Open sign-up"></div>
+      <div><label for="sTrade">Trade</label><select id="sTrade"></select></div>
+      <div><label for="sExp">Stops working after (optional)</label><input id="sExp" type="date"></div>
+    </div>
+    <div class="btns"><button type="button" id="signupCancel">Cancel</button><button class="pri" type="submit">Make code</button></div>
+  </form>
 </div>
 
 <!-- Confirm -->

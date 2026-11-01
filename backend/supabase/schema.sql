@@ -113,6 +113,25 @@ alter table public.students add column if not exists last_name  text not null de
 alter table public.students add column if not exists mobile     text not null default '';
 alter table public.students add column if not exists details_at timestamptz;
 
+-- A sign-up code: ONE code for many students. Each student types it with
+-- their own name and mobile number and gets their own record (and their own
+-- personal code) the first time - found again by mobile + first name after
+-- that. Turning a sign-up code off stops new sign-ups with it; students who
+-- already joined keep working until turned off one by one.
+create table if not exists public.signup_codes (
+  id         uuid primary key default gen_random_uuid(),
+  code       text not null unique check (code ~ '^[A-Z0-9]{6,16}$'),
+  label      text not null default 'Everyone',
+  trade      text not null default '',
+  batch      text not null default 'Open sign-up',
+  active     boolean not null default true,
+  expires_on date,
+  created_at timestamptz not null default now()
+);
+alter table public.students add column if not exists signup_code_id uuid
+  references public.signup_codes(id) on delete set null;
+create index if not exists students_mobile_idx on public.students (mobile);
+
 create index if not exists quiz_attempts_student_idx on public.quiz_attempts (student_id, finished_at desc);
 create index if not exists interview_answers_student_idx on public.interview_answers (student_id, answered_at desc);
 create index if not exists students_batch_idx on public.students (batch);
@@ -151,6 +170,7 @@ alter table public.quiz_attempts     enable row level security;
 alter table public.interview_answers enable row level security;
 alter table public.ai_usage          enable row level security;
 alter table public.admins            enable row level security;
+alter table public.signup_codes      enable row level security;
 
 -- The public (anon) key can do nothing at all here
 revoke all on public.students, public.devices, public.quiz_attempts,
@@ -159,9 +179,15 @@ grant select, insert, update, delete on public.students to authenticated;
 grant select, delete on public.devices, public.quiz_attempts,
                         public.interview_answers, public.ai_usage to authenticated;
 grant select on public.admins to authenticated;
+revoke all on public.signup_codes from anon;
+grant select, insert, update, delete on public.signup_codes to authenticated;
 
 drop policy if exists admin_all on public.students;
 create policy admin_all on public.students for all to authenticated
+  using (public.is_admin()) with check (public.is_admin());
+
+drop policy if exists admin_all on public.signup_codes;
+create policy admin_all on public.signup_codes for all to authenticated
   using (public.is_admin()) with check (public.is_admin());
 
 drop policy if exists admin_read on public.devices;

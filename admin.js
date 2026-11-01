@@ -38,6 +38,7 @@ const Admin = (function () {
   let students = [];
   let openId = null;
   let lastCodes = [];          // the codes in the "New codes" dialog
+  let signups = [];            // the sign-up codes (one code, many students)
 
   /* ---------------- Small helpers ---------------- */
 
@@ -53,6 +54,15 @@ const Admin = (function () {
   }
 
   const showCode = c => c ? String(c).replace(/^(.{4})(.+)$/, "$1-$2") : "—";
+
+  /* A 10-digit Indian mobile number from what was typed (+91, a leading 0,
+     spaces and dashes are fine), or "" if it is not one */
+  function cleanMobile(v) {
+    let m = String(v || "").replace(/\D/g, "");
+    if (m.length === 12 && m.indexOf("91") === 0) m = m.slice(2);
+    else if (m.length === 11 && m[0] === "0") m = m.slice(1);
+    return /^[6-9]\d{9}$/.test(m) ? m : "";
+  }
 
   function istToday() {
     return new Date(Date.now() + 5.5 * 3600 * 1000).toISOString().slice(0, 10);
@@ -223,9 +233,14 @@ const Admin = (function () {
   /* ---------------- The student list ---------------- */
 
   async function load() {
-    const { data, error } = await sb.from("student_overview").select("*").order("name");
+    const [{ data, error }, sc] = await Promise.all([
+      sb.from("student_overview").select("*").order("name"),
+      sb.from("signup_codes").select("*").order("created_at")
+    ]);
     if (error) return fail(error);
     students = data || [];
+    signups = sc.data || [];
+    renderSignups();
     fillBatches();
     render();
   }
@@ -287,7 +302,7 @@ const Admin = (function () {
 
   function listCsv() {
     const rows = [["Name", "First name (typed by student)", "Last name (typed by student)", "Mobile (typed by student)",
-      "Trade", "Batch", "Phone (entered here)", "Access code", "Status", "Access ends", "Phones used",
+      "Trade", "Batch", "Mobile (entered here)", "Access code", "Status", "Access ends", "Phones used",
       "Chapter quizzes", "Quiz average %", "Interview answers", "Interview average /10", "Last seen", "Added"]];
     filtered().forEach(s => rows.push([
       s.name, s.first_name, s.last_name, s.mobile,
@@ -316,6 +331,8 @@ const Admin = (function () {
         "<div><span>Mobile</span>" + esc(s.mobile) + "</div>" +
         "<div><span>Signed in on a phone</span>" + when(s.details_at, true) + "</div>"
       : '<div class="muted">Not signed in on a phone yet - their name and mobile number appear here once they enter the code.</div>';
+    const via = s.signup_code_id && signups.find(c => c.id === s.signup_code_id);
+    if (via) $("dSelf").innerHTML += "<div><span>Joined with</span>sign-up code “" + esc(via.label) + "”</div>";
     $("eName").value = s.name;
     $("eTrade").value = s.trade || "cnc";
     $("eBatch").value = s.batch || "";
@@ -372,9 +389,11 @@ const Admin = (function () {
     const s = cur();
     if (!s) return;
     const lim = parseInt($("eLimit").value, 10);
+    const phone = cleanMobile($("ePhone").value);
+    if (!phone) { $("ePhone").focus(); return toast("Type a 10-digit mobile number."); }
     const patch = {
       name: $("eName").value.trim(), trade: $("eTrade").value, batch: $("eBatch").value.trim(),
-      phone: $("ePhone").value.trim(), expires_on: $("eExp").value || null,
+      phone: phone, expires_on: $("eExp").value || null,
       daily_ai_limit: isFinite(lim) && lim >= 0 ? lim : s.daily_ai_limit,
       notes: $("eNotes").value.trim(), active: $("eActive").checked
     };
@@ -445,9 +464,15 @@ const Admin = (function () {
     ev.preventDefault();
     const row = {
       name: $("aName").value.trim(), trade: $("aTrade").value, batch: $("aBatch").value.trim(),
-      phone: $("aPhone").value.trim(), expires_on: $("aExp").value || null
+      phone: cleanMobile($("aPhone").value), expires_on: $("aExp").value || null
     };
     if (!row.name) return;
+    if (!row.phone) {
+      $("addMsg").textContent = "Type the student's 10-digit mobile number.";
+      $("addMsg").hidden = false;
+      $("aPhone").focus();
+      return;
+    }
     try {
       const r = await withNewCode(code => sb.from("students").insert(Object.assign({ code: code }, row)));
       $("addDlg").hidden = true;
@@ -469,17 +494,31 @@ const Admin = (function () {
 
   async function addBatch(ev) {
     ev.preventDefault();
-    const names = $("bNames").value.split(/\r?\n/).map(n => n.replace(/\s+/g, " ").trim()).filter(Boolean);
-    if (!names.length) return;
+    /* "Asha Patel, 98250 11111" per line - the mobile is what follows the last
+       comma (or tab). Every line is checked before anything is saved. */
+    const lines = $("bNames").value.split(/\r?\n/).map(n => n.trim()).filter(Boolean);
+    if (!lines.length) return;
+    const people = [], bad = [];
+    lines.forEach((line, i) => {
+      const cut = Math.max(line.lastIndexOf(","), line.lastIndexOf("\t"));
+      const name = (cut > 0 ? line.slice(0, cut) : line).replace(/\s+/g, " ").trim();
+      const phone = cut > 0 ? cleanMobile(line.slice(cut + 1)) : "";
+      if (!name || !phone) bad.push(i + 1); else people.push({ name: name, phone: phone });
+    });
+    if (bad.length) {
+      $("batchMsg").textContent = "Line " + bad.join(", ") + ": write the name, a comma, then a 10-digit mobile number.";
+      $("batchMsg").hidden = false;
+      return;
+    }
     const base = { trade: $("bTrade").value, batch: $("bBatch").value.trim(), expires_on: $("bExp").value || null };
     const made = [];
     try {
-      for (const name of names) {
-        const r = await withNewCode(code => sb.from("students").insert(Object.assign({ name: name, code: code }, base)));
-        made.push({ name: name, batch: base.batch, code: r.code });
+      for (const p of people) {
+        const r = await withNewCode(code => sb.from("students").insert(Object.assign({ name: p.name, phone: p.phone, code: code }, base)));
+        made.push({ name: p.name, batch: base.batch, code: r.code });
       }
     } catch (e) {
-      $("batchMsg").textContent = "Stopped after " + made.length + " of " + names.length + ": " + (e.message || "error");
+      $("batchMsg").textContent = "Stopped after " + made.length + " of " + people.length + ": " + (e.message || "error");
       $("batchMsg").hidden = false;
       if (!made.length) return;
     }
@@ -509,6 +548,88 @@ const Admin = (function () {
     } catch (e) { fail(e); }
     await load();
     if (made.length) showCodes(made, "New codes for " + batch + ". The old ones no longer work.");
+  }
+
+  /* ---------------- Sign-up codes ----------------
+     One code for many students: the Worker gives each one who signs up with
+     it a record of their own (backend/worker/students.js). */
+
+  function renderSignups() {
+    $("signupList").innerHTML = signups.map(c => {
+      const st = !c.active ? "off" : c.expires_on && c.expires_on < istToday() ? "exp" : "on";
+      const n = students.filter(s => s.signup_code_id === c.id).length;
+      return '<div class="bar" style="align-items:center;margin:12px 0 0" data-sc="' + c.id + '">' +
+        '<div class="code" style="font-size:22px;min-width:150px">' + esc(showCode(c.code)) + "</div>" +
+        '<div class="grow"><b>' + esc(c.label) + '</b> <span class="pill ' + st + '">' + STATUS_TEXT[st] + "</span>" +
+        '<div class="muted" style="font-size:13px">' + esc(c.batch) + (c.trade ? " · " + esc(TRADE_NAME[c.trade] || c.trade) : "") +
+        " · " + n + " joined" + (c.expires_on ? " · until " + esc(c.expires_on) : "") + "</div></div>" +
+        '<button data-act="copy">Copy</button>' +
+        '<button data-act="toggle">' + (c.active ? "Turn off" : "Turn on") + "</button>" +
+        '<button data-act="change">Change code</button>' +
+        '<button data-act="delete" class="danger">Delete</button></div>';
+    }).join("") || '<p class="muted" style="margin:10px 0 0">No sign-up code yet.</p>';
+  }
+
+  function openSignup() {
+    $("signupForm").reset();
+    $("signupDlg").hidden = false;
+    $("sLabel").focus();
+  }
+
+  async function makeSignup(ev) {
+    ev.preventDefault();
+    const row = { label: $("sLabel").value.trim() || "Everyone", batch: $("sBatch").value.trim() || "Open sign-up",
+      trade: $("sTrade").value, expires_on: $("sExp").value || null };
+    try {
+      const r = await withNewCode(code => sb.from("signup_codes").insert(Object.assign({ code: code }, row)));
+      $("signupDlg").hidden = true;
+      await load();
+      showCodes([{ name: "Sign-up code: " + row.label, batch: row.batch, code: r.code }],
+        "Share this one code with all your students. Each types it with their own name and mobile number.");
+    } catch (e) { fail(e); }
+  }
+
+  async function signupAction(ev) {
+    const btn = ev.target.closest("button[data-act]");
+    const rowEl = ev.target.closest("[data-sc]");
+    if (!btn || !rowEl) return;
+    const c = signups.find(x => x.id === rowEl.dataset.sc);
+    if (!c) return;
+    const act = btn.dataset.act;
+    if (act === "copy") {
+      if (navigator.clipboard) navigator.clipboard.writeText(showCode(c.code)).then(() => toast("Code copied."), () => {});
+      return;
+    }
+    if (act === "toggle") {
+      const off = c.active;
+      if (off && !(await ask("Turn off “" + c.label + "”?",
+        "Nobody new can sign up with it. Students who already joined keep working - turn them off one by one if you need to.",
+        "Turn off", true))) return;
+      const { error } = await sb.from("signup_codes").update({ active: !c.active }).eq("id", c.id);
+      if (error) return fail(error);
+      toast(off ? "Sign-up code turned off." : "Sign-up code turned on.");
+      return load();
+    }
+    if (act === "change") {
+      if (!(await ask("Change the sign-up code “" + c.label + "”?",
+        "The old code stops working for new sign-ups. Students who already joined are not affected.",
+        "Change code", true))) return;
+      try {
+        const r = await withNewCode(code => sb.from("signup_codes").update({ code: code }).eq("id", c.id));
+        await load();
+        showCodes([{ name: "Sign-up code: " + c.label, batch: c.batch, code: r.code }], "The new sign-up code. Share it in place of the old one.");
+      } catch (e) { fail(e); }
+      return;
+    }
+    if (act === "delete") {
+      if (!(await ask("Delete the sign-up code “" + c.label + "”?",
+        "Nobody can sign up with it any more. Students who already joined, and their results, are kept.",
+        "Delete code", true))) return;
+      const { error } = await sb.from("signup_codes").delete().eq("id", c.id);
+      if (error) return fail(error);
+      toast("Sign-up code deleted.");
+      load();
+    }
   }
 
   /* ---------------- Codes to hand out ---------------- */
@@ -549,6 +670,12 @@ const Admin = (function () {
   function wire() {
     tradeOptions($("fTrade"), true);
     ["eTrade", "aTrade", "bTrade"].forEach(id => tradeOptions($(id), false));
+    tradeOptions($("sTrade"), false);
+    $("sTrade").insertAdjacentHTML("afterbegin", '<option value="" selected>Any (set later)</option>');
+    $("btnNewSignup").addEventListener("click", openSignup);
+    $("signupForm").addEventListener("submit", makeSignup);
+    $("signupCancel").addEventListener("click", () => { $("signupDlg").hidden = true; });
+    $("signupList").addEventListener("click", signupAction);
     $("vLogin").addEventListener("submit", signIn);
     $("btnOut").addEventListener("click", signOut);
     ["q", "fTrade", "fBatch", "fStatus"].forEach(id => $(id).addEventListener("input", render));
@@ -588,6 +715,7 @@ const Admin = (function () {
       else if (!$("codesDlg").hidden) $("codesDlg").hidden = true;
       else if (!$("addDlg").hidden) $("addDlg").hidden = true;
       else if (!$("batchDlg").hidden) $("batchDlg").hidden = true;
+      else if (!$("signupDlg").hidden) $("signupDlg").hidden = true;
       else if (!$("detail").hidden) closeStudent();
     });
   }

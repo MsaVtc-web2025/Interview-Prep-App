@@ -30,8 +30,15 @@ admin page (`admin.html`) shows them chapter by chapter.
 * **Offline still works.** A phone that has been let in keeps working without
   internet; its results wait on the phone and go when it is back online.
 
-Until every step below is done, nothing changes: `ACCESS_URL` in `access.js`
-is empty, the Worker's access check is off, and the app works as before.
+Until every step below is done, nothing changes for students: the Worker
+answers "codes are off" until it has all three Supabase secrets, and the app
+then lets everyone in as before. The moment the third secret is set, every
+phone asks for a code.
+
+**One code for everyone** (admin page, *Sign-up code for everyone*): students
+type the same code with their own name and mobile number, and each gets a
+record of their own - found again by mobile number + first name on a new
+phone. Personal codes and sign-up codes can be used side by side.
 
 ---
 

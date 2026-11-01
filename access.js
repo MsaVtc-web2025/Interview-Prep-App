@@ -19,11 +19,11 @@
 
 /* The Worker. Leave empty until Supabase and the Worker's secrets are set up.
    Example: "https://interview-judge.msa-vtc.workers.dev"  (no trailing slash) */
-const ACCESS_URL = "";
+const ACCESS_URL = "https://interview-judge.msa-vtc.workers.dev";
 
 const Access = (function () {
 
-  const KEY = "ip.access.v1";          // {token, student, checkedAt}
+  const KEY = "ip.access.v1";          // {token, student, checkedAt}, or {open, checkedAt}
   const DEVICE_KEY = "ip.device.v1";   // a random id for this phone
   const ME_KEY = "ip.me.v1";           // {first, last, mobile} last typed, to fill the boxes again
   const RECHECK_MS = 6 * 3600 * 1000;  // ask the Worker "still allowed?" at most this often
@@ -52,8 +52,9 @@ const Access = (function () {
 
   function enabled() { return !!ACCESS_URL; }
 
-  /* May this phone use the app? Always, when access codes are off. */
-  function allowed() { return !enabled() || !!(cur() && cur().token); }
+  /* May this phone use the app? Always, when access codes are off - here
+     (ACCESS_URL empty) or at the Worker (open: it said so, see probe). */
+  function allowed() { return !enabled() || !!(cur() && (cur().token || cur().open)); }
 
   function student() { const c = cur(); return (c && c.student) || null; }
   function sid() { const s = student(); return (s && s.id) || ""; }
@@ -83,7 +84,9 @@ const Access = (function () {
      (offline, the server busy) changes nothing - the phone keeps working. */
   function seen(res) {
     if (enabled() && res && res.status === 401 && cur()) {
-      res.clone().json().catch(() => ({})).then(j => lock((j && j.error) || "no_access"));
+      // A phone let in while codes were off is simply asked for one - no warning
+      const wasOpen = !!cur().open;
+      res.clone().json().catch(() => ({})).then(j => lock(wasOpen ? "" : (j && j.error) || "no_access"));
     }
     return res;
   }
@@ -142,11 +145,27 @@ const Access = (function () {
       .catch(() => ({ ok: false, error: "offline" }));
   }
 
-  /* Still allowed? Asked when the app opens, online, at most every RECHECK_MS */
+  /* No code yet: does the Worker ask for codes at all? Until its Supabase
+     secrets are set it answers 404 access_off, and the phone is let in as
+     before - so switching ACCESS_URL on can never lock everyone out. Resolves
+     true when the phone was let in this way. */
+  function probe() {
+    const c = cur();
+    if (!enabled() || (c && c.token) || navigator.onLine === false) return Promise.resolve(false);
+    return post("/me").then(res => {
+      if (res.status !== 404) return false;
+      write({ open: true, checkedAt: Date.now() });
+      return true;
+    }).catch(() => false);
+  }
+
+  /* Still allowed? Asked when the app opens, online, at most every RECHECK_MS.
+     A phone let in while codes were off asks every time it opens, so it is
+     asked for a code soon after the institute switches them on. */
   function recheck(force) {
     const c = cur();
     if (!enabled() || !c || navigator.onLine === false) return Promise.resolve();
-    if (!force && Date.now() - (c.checkedAt || 0) < RECHECK_MS) return Promise.resolve();
+    if (!force && !c.open && Date.now() - (c.checkedAt || 0) < RECHECK_MS) return Promise.resolve();
     return post("/me").then(seen).then(res => {
       if (!res.ok) return;
       return res.json().then(j => {
@@ -242,7 +261,7 @@ const Access = (function () {
 
   return {
     enabled, allowed, student, sid, device, headers, seen, onLocked,
-    enter, recheck, signOut, flush, unsent, lastDetails, cleanDetails,
+    enter, probe, recheck, signOut, flush, unsent, lastDetails, cleanDetails,
     // exposed for tests
     interviewRow, quizRow, ACCESS_URL
   };

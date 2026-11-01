@@ -7,6 +7,10 @@
  * student off, deletes them, or changes their code.
  *
  *   /access    {code, device, first, last, mobile} -> {token, student}
+ *
+ * The code is either a student's own code, or a sign-up code shared by many
+ * (signup_codes): then the student is found by mobile number + first name,
+ * or a record of their own is made for them, so results never mix.
  *   /me        (token)                -> {student}           is this phone still allowed?
  *   /progress  (token) {quiz, interview} -> {ok}             scores into Supabase
  *
@@ -188,6 +192,38 @@ function touch(env, st, device, ua) {
   return Promise.all(jobs).catch(() => {});
 }
 
+/* ---- Sign-up codes ---------------------------------------------------- */
+
+const ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";   // as admin.js: no 0/O, 1/I/L
+
+function personalCode() {
+  const a = new Uint32Array(8);
+  crypto.getRandomValues(a);
+  return Array.from(a, n => ALPHABET[n % ALPHABET.length]).join("");
+}
+
+/* The student behind a sign-up code: the one who signed up before with this
+   mobile number and first name, or a new record of their own. */
+async function joinWithSignupCode(env, sc, me) {
+  const found = await rows(await sb(env, "students?mobile=eq." + me.mobile + "&select=" + FIELDS + ",first_name"));
+  const same = found.filter(st => String(st.first_name || "").toLowerCase() === me.first.toLowerCase())[0];
+  if (same) return same;
+
+  for (let i = 0; i < 5; i++) {                  // a clash with an existing code is retried
+    const res = await sb(env, "students?select=" + FIELDS, {
+      method: "POST", headers: { Prefer: "return=representation" },
+      body: JSON.stringify({
+        name: me.first + " " + me.last, trade: sc.trade, batch: sc.batch, phone: me.mobile,
+        code: personalCode(), first_name: me.first, last_name: me.last, mobile: me.mobile,
+        details_at: new Date().toISOString(), signup_code_id: sc.id
+      })
+    });
+    if (res.status === 409) continue;
+    return (await rows(res))[0];
+  }
+  throw new Error("no_unique_code");
+}
+
 /* ---- Wrong-code throttle --------------------------------------------- */
 
 const tries = new Map();                      // ip -> {from, n}
@@ -270,7 +306,17 @@ export async function studentRoute(path, request, env, ctx, head, json) {
     if (!/^[A-Z0-9]{6,16}$/.test(code) || device.length < 8) { missed(ip); return json({ error: "bad_code" }, 401, head); }
 
     let st;
-    try { st = (await rows(await sb(env, "students?code=eq." + code + "&select=" + FIELDS)))[0] || null; }
+    try {
+      st = (await rows(await sb(env, "students?code=eq." + code + "&select=" + FIELDS)))[0] || null;
+      if (!st) {
+        const sc = (await rows(await sb(env, "signup_codes?code=eq." + code + "&select=id,trade,batch,active,expires_on")))[0];
+        if (sc) {
+          if (!sc.active) return json({ error: "inactive" }, 401, head);
+          if (sc.expires_on && sc.expires_on < istToday()) return json({ error: "expired" }, 401, head);
+          st = await joinWithSignupCode(env, sc, me);
+        }
+      }
+    }
     catch (e) { return json({ error: "access_unavailable" }, 503, head); }
     const why = refusal(st);
     if (why) { if (why === "bad_code") missed(ip); return json({ error: why }, 401, head); }
