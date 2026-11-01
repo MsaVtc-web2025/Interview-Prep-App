@@ -1073,8 +1073,16 @@ function paintLevel(v) {
 
 /* seed = text already heard, when an answer is being picked back up after the
    mic was taken away from us. */
+/* Recording to the AI (dictation) costs AI quota. The chapter quiz, and any
+   answer while the AI is busy, use the phone's own speech recognition
+   instead - free, and it needs no AI to read the words. A phone without one
+   still records. */
+function phoneListens() {
+  return Speech.micSupported() && (Quiz.on() || Judge.busy());
+}
+
 function beginListen(seed) {
-  if (Dictation.enabled() && navigator.onLine !== false) return beginDictation(seed);
+  if (Dictation.enabled() && navigator.onLine !== false && !phoneListens()) return beginDictation(seed);
   if (!Speech.micSupported()) {
     setPhase("ready");
     micOff = true;
@@ -1252,9 +1260,11 @@ function submit(text, judged) {
   $("heard").textContent = ans;
   const secs = qClockSecs();          // real time spent on this question
 
+  // The chapter quiz is checked against the book on the phone: show it at once
+  if (Quiz.on()) { markQuiz(ans, judged); return; }
+
   // Scoring is instant; a short pause so the avatar is seen to think
   setTimeout(() => {
-    if (Quiz.on()) { markQuiz(ans, judged); return; }
 
     // The offline score is always computed first, even with AI on. It is the
     // base, and it is what shows if the AI never arrives.
@@ -1310,7 +1320,7 @@ function submit(text, judged) {
       if (offline.unmarkableOffline) {
         setPhase("ready");
         $("result").hidden = false;
-        $("result").innerHTML = '<div class="err">' + esc(t("res.needsNet")) + "</div>";
+        $("result").innerHTML = '<div class="err">' + esc(t(Judge.busy() ? "res.aiBusy" : "res.needsNet")) + "</div>";
         revealResult();
         return;
       }
@@ -1381,7 +1391,6 @@ function aiDown(retry) {
    same as in the interview. */
 function markQuiz(ans, judged) {
   const q = current;
-  if (!judged && Judge.active()) showAiWaiting();
 
   Quiz.mark(ans, q, judged).then(r => {
     stopAiWaiting();
@@ -1827,19 +1836,27 @@ function paintAiTog() {
   if (!Judge.enabled()) { w.hidden = true; $("aiInfo").hidden = true; return; }
   w.hidden = false;
 
-  const net = Judge.online();
-  const on = Judge.consented() && net;
-  w.classList.toggle("on", on);
-  b.textContent = t(!net ? "ai.chipOffline" : (on ? "ai.chipOn" : "ai.chipOff"));
+  w.classList.toggle("on", aiState() === "on");
+  b.textContent = t("ai.chip" + AI_KEY[aiState()]);
   if (!$("aiInfo").hidden) paintAiInfo();
+}
+
+/* Who marks the answer on the run screen right now */
+const AI_KEY = { quiz: "Quiz", offline: "Offline", busy: "Busy", on: "On", off: "Off" };
+function aiState() {
+  if (Quiz.on()) return "quiz";
+  if (!Judge.online()) return "offline";
+  if (!Judge.consented()) return "off";
+  return Judge.busy() ? "busy" : "on";
 }
 
 /* What the badge means, in a sentence or two - and where to change it */
 function paintAiInfo() {
-  const net = Judge.online(), on = Judge.consented() && net;
-  $("aiInfo").textContent = t(!net ? "ai.infoOffline" : (on ? "ai.infoOn" : "ai.infoOff"),
-    { profile: uiLabels().profile, ai: uiLabels().ai });
+  $("aiInfo").textContent = t("ai.info" + AI_KEY[aiState()], { profile: uiLabels().profile, ai: uiLabels().ai });
 }
+
+// The AI says it is busy: the chip says so at once
+Judge.setOnBusy(() => { if (curScreen === "run") paintAiTog(); });
 
 function paintAi() {
   const wrap = $("aiWrap");
@@ -2154,7 +2171,7 @@ $("btnAct").addEventListener("click", () => {
          that costs seconds, not the answer. */
       const otherLang = sttLang === "en" ? (lang === "hi" ? "hi" : "gu") : "en";
       const transcribeOnly = payload => Dictation.transcribe(payload, sttLang)
-        .then(txt => txt || Dictation.transcribe(payload, otherLang))
+        .then(txt => txt || (Judge.busy() ? "" : Dictation.transcribe(payload, otherLang)))
         .then(txt => {
           const full = useText(txt);
           if (full) return submit(full);
@@ -2167,9 +2184,9 @@ $("btnAct").addEventListener("click", () => {
         /* With AI marking on, one call transcribes AND marks - a whole round
            trip less for the student to sit through. If it comes back empty,
            fall back to transcribing alone: that costs time, not the answer. */
-        if (Judge.active()) {
+        if (Judge.active() && !Quiz.on()) {
           return Judge.fromAudio(payload, q, course.mode, lang, needsEn).then(r => {
-            if (r && r.text) return submit(useText(r.text), r);
+            if (r && r.text) return r.unmarked ? submit(useText(r.text)) : submit(useText(r.text), r);
             return transcribeOnly(payload);
           });
         }

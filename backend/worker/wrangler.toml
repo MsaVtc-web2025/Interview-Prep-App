@@ -3,6 +3,7 @@
 # Deploy from this folder:
 #   wrangler login
 #   wrangler deploy
+#   wrangler secret put GROQ_API_KEY        <- asked first (groq.js); Gemini is the backup
 #   wrangler secret put GEMINI_API_KEY
 #   wrangler secret put ALLOWED_ORIGINS     <- before sharing the app link
 #

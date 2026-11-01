@@ -54,7 +54,29 @@ const Judge = (function () {
      25 seconds and ends up with the offline score anyway. Go offline at once. */
   function online() { return typeof navigator === "undefined" || navigator.onLine !== false; }
 
-  function active() { return enabled() && consented() && online(); }
+  /* The Worker said "AI busy": the free AI quota is used up for now. Stop
+     asking until the time it gave - answers are marked on the phone at once
+     meanwhile, and voice goes through the phone's own speech recognition
+     (app.js), instead of every student waiting on a call that cannot work. */
+  const BUSY_KEY = "interview_ai_busy_until";
+  function busy() {
+    try { return Date.now() < Number(localStorage.getItem(BUSY_KEY) || 0); } catch (e) { return false; }
+  }
+  function setBusy(seconds) {
+    const s = Math.min(Math.max(Number(seconds) || 60, 30), 6 * 3600);
+    try { localStorage.setItem(BUSY_KEY, String(Date.now() + s * 1000)); } catch (e) {}
+    if (typeof onBusy === "function") { try { onBusy(); } catch (e) {} }
+  }
+  function noteBusy(res) {
+    if (!res || res.status !== 429) return;
+    res.clone().json().then(j => {
+      if (j && j.error === "ai_busy") setBusy(j.retry_after);
+    }).catch(() => {});
+  }
+  let onBusy = null;
+  function setOnBusy(fn) { onBusy = fn; }
+
+  function active() { return enabled() && consented() && online() && !busy(); }
 
   function setConsent(on) {
     state.settings.ai = !!on;
@@ -249,11 +271,18 @@ const Judge = (function () {
     }
 
     return fetch(audioUrl(), opts)
-      .then(res => (workerSeen(res) && res.ok ? res.json() : null))
+      .then(res => { noteBusy(res); return workerSeen(res) && res.ok ? res.json() : null; })
       .then(raw => {
+        const text = raw && typeof raw.text === "string" ? raw.text.replace(/\s+/g, " ").trim() : "";
+        /* Written down but not marked - the marking models are busy. The
+           words still count: the app marks them itself (unmarked). */
+        if (raw && raw.unmarked) {
+          if (raw.busy_for) setBusy(raw.busy_for);
+          return text ? { text: text, unmarked: true } : null;
+        }
         const r = clean(raw);
         if (!r) return null;
-        r.text = raw && typeof raw.text === "string" ? raw.text.replace(/\s+/g, " ").trim() : "";
+        r.text = text;
         return r;
       })
       .catch(() => null)
@@ -282,7 +311,7 @@ const Judge = (function () {
     if (ctrl) timer = setTimeout(() => { try { ctrl.abort(); } catch (e) {} }, TIMEOUT_MS);
 
     return fetch(JUDGE_URL, opts)
-      .then(res => (workerSeen(res) && res.ok ? res.json() : null))
+      .then(res => { noteBusy(res); return workerSeen(res) && res.ok ? res.json() : null; })
       .then(raw => {
         const r = clean(raw);
         if (r) cacheSet(key, r);
@@ -292,7 +321,7 @@ const Judge = (function () {
       .then(r => { if (timer) clearTimeout(timer); return r; });
   }
 
-  return { enabled, consented, active, online, setConsent, evaluate, fromAudio, merge, clearCache };
+  return { enabled, consented, active, online, busy, noteBusy, setOnBusy, setConsent, evaluate, fromAudio, merge, clearCache };
 })();
 
 if (typeof module !== "undefined" && module.exports) module.exports = { Judge };

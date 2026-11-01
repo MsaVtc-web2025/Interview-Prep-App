@@ -425,7 +425,26 @@ The same goes for every Gujarati text in the `bank-*.js` files. The `SAME`
 table in `quiz.js` keeps the formal word and the English spelt in Gujarati
 letters (`સેફ્ટી`) matching the English one, so add a row when you add a term.
 
-Answers are marked against `a`: with AI on the judge compares meaning (any
-language); offline the words are matched, so only an answer in the book's own
-words is recognised. Quiz results are kept in `state.quiz`, apart from the
-interview history and its averages.
+Answers are checked against `a` **on the phone, never by the AI** (`quiz.js`
+`offline()`), in all three languages at once, instantly and without internet.
+Spoken answers go through the phone's own speech recognition. The checker:
+
+- weighs each word by how rare it is across all the book answers, so a
+  specific word ("Interlock") counts more than an everyday one ("Patient");
+- gives no credit for the question's own words said back;
+- marks wrong an answer that says the opposite (minimum/maximum, internal/
+  external, left/right, Hole/Shaft, × and ÷) or negates a point ("not visible");
+- keeps numbers with their units, axis signs (X+ / X–) and letters (G-code);
+- counts a book answer's separate points, so naming some is partly right;
+- matches English words a Gujarati or Hindi phone writes in its own letters
+  ("પર્સનલ પ્રોટેક્ટિવ ઇક્વિપમેન્ટ" = "Personal Protective Equipment") by their
+  consonants.
+
+Measured on 24,129 answers made from every book question in every language
+(2026-11-01): the book answer, typed or spoken, is always right; another
+question's answer is accepted as right 0.2% of the time; the question said
+back 0.1%; "I don't know" never; overall 1.3% of verdicts are off (most of
+them a half answer called right or partly right). It cannot recognise a
+correct answer said in entirely different words - only the AI could, and the
+quiz keeps the AI for interview practice. Quiz results are kept in
+`state.quiz`, apart from the interview history and its averages.

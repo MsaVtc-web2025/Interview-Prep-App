@@ -22,6 +22,7 @@
  */
 
 import { accessOn, requireStudent, studentRoute, withinDailyLimit } from "./students.js";
+import { groqChatModels, groqSttModels, groqMark, groqTranscribe } from "./groq.js";
 
 const CRITERIA = ["communication", "sentences", "thought", "speechGrammar", "accuracy", "coherence"];
 
@@ -126,6 +127,122 @@ async function gemFetch(model, key, req, signal) {
     return send(false);
   }
   return res;
+}
+
+/* ---- Quota -------------------------------------------------------------
+   429 from Gemini means a quota is used up - asking again straight away only
+   spends more of it. So a 429 is never retried on the same model: the model
+   rests (per-minute limit: for the delay Gemini gives; per-day limit: half an
+   hour, then one request tries again), the next model gets one go, and when
+   none is left the app is told "AI busy" at once (aiBusy below), with how
+   long to wait. resting lives as long as this Worker instance. */
+
+const resting = {};                        // model -> rest until (ms)
+const DAY_REST_MS = 30 * 60 * 1000;
+
+function rests(model) { return Date.now() < (resting[model] || 0); }
+
+/* Which limit a 429 hit. Only the quota id and the delay are read from the
+   body - never the body itself, which is not passed on or logged. */
+async function quotaFrom(res) {
+  let limit = "unknown", id = "", retryS = 0;
+  try {
+    const j = await res.json();
+    const details = (j && j.error && j.error.details) || [];
+    details.forEach(d => {
+      (d.violations || []).forEach(v => {
+        id = id || String(v.quotaId || v.quotaMetric || "");
+      });
+      if (d.retryDelay) retryS = parseFloat(String(d.retryDelay)) || 0;
+    });
+    if (/per ?day/i.test(id)) limit = "per_day";
+    else if (/per ?minute/i.test(id)) limit = "per_minute";
+  } catch (e) {}
+  return { limit: limit, id: id.slice(0, 80), retryS: Math.round(retryS) };
+}
+
+function rest(model, q) {
+  const ms = q.limit === "per_day" ? DAY_REST_MS : Math.max(q.retryS || 60, 10) * 1000;
+  resting[model] = Date.now() + ms;
+}
+
+/* Every model of the chain resting: the reply the app gets, with no call made */
+/* Seconds until the first of these models can be asked again */
+function busyFor(chain) {
+  const soonest = Math.min(...chain.map(m => resting[m] || 0));
+  return Math.max(30, Math.round((soonest - Date.now()) / 1000));
+}
+
+function aiBusy(chain, head) {
+  const wait = busyFor(chain);
+  const h = Object.assign({ "Retry-After": String(wait) }, head);
+  return json({ error: "ai_busy", limit: lastLimit, retry_after: wait }, 429, h);
+}
+let lastLimit = "unknown";
+
+/* The error a failed call returns: a 429 carries its quota, and is not retried */
+async function failure(res) {
+  if (res.status === 429) {
+    const q = await quotaFrom(res);
+    lastLimit = q.limit;
+    return { ok: false, error: "upstream_429", retry: false, quota: q };
+  }
+  // Never pass the upstream body through - it can echo the key back.
+  return { ok: false, error: "upstream_" + res.status, retry: res.status >= 500 };
+}
+
+/* ---- The marking stack -------------------------------------------------
+   Groq's models first (groq.js), then Gemini's. Every model gets one go -
+   Gemini a second one on a 503, which is its capacity rather than its quota -
+   and a used-up quota rests that model (above) so later requests skip it.
+   Returns {out} with the marks, or {out: null, lastErr, busy} where busy
+   means every model is resting. */
+
+function geminiModels(env) {
+  if (!env.GEMINI_API_KEY) return [];
+  /* Lite first: measured 2026-09-28, the bigger model answered 503 on nearly
+     every call while lite replied in ~2s. The bigger model is the backup. */
+  const lite = "gemini-3.1-flash-lite", backup = env.GEMINI_MODEL || "gemini-3.6-flash";
+  return backup === lite ? [lite] : [lite, backup];
+}
+
+/* One log line per attempt: which provider and model, how long, what came
+   back, and which quota. `wrangler tail` shows it. No answer text is logged. */
+function logTry(info, r) {
+  console.log(JSON.stringify(Object.assign(info, { result: r.ok ? "ok" : r.error },
+    r.quota ? { limit: r.quota.limit, quota_id: r.quota.id, retry_s: r.quota.retryS } : {})));
+}
+
+async function markAnswer(env, body, budgetMs) {
+  const stack = groqChatModels(env).map(m => ({ via: "groq", m: m }))
+    .concat(geminiModels(env).map(m => ({ via: "gemini", m: m })));
+  const all = stack.map(x => x.m);
+  const live = stack.filter(x => !rests(x.m));
+  if (!live.length) return { out: null, busy: true, all: all, lastErr: "ai_busy" };
+
+  const prompt = buildPrompt(body);
+  const t0 = Date.now();
+  const left = () => budgetMs - (Date.now() - t0);
+  let lastErr = "upstream_unreachable";
+
+  for (const x of live) {
+    const tries = x.via === "gemini" ? 2 : 1;
+    for (let attempt = 0; attempt < tries; attempt++) {
+      const remain = left();
+      if (remain < 1500) return { out: null, all: all, lastErr: lastErr };
+      const started = Date.now();
+      const r = x.via === "groq"
+        ? await groqMark(x.m, env.GROQ_API_KEY, prompt, Math.min(8000, remain))
+        : await callGemini(x.m, env.GEMINI_API_KEY, body, Math.min(5000, remain));
+      logTry({ via: x.via, model: x.m, attempt: attempt + 1, ms: Date.now() - started }, r);
+      if (r.ok) return { out: r.data, all: all };
+      lastErr = r.error;
+      if (r.quota) { rest(x.m, r.quota); break; }        // used up: on to the next model
+      if (!r.retry) break;
+      if (attempt + 1 < tries && left() > 3000) await new Promise(ok => setTimeout(ok, 500 + Math.floor(Math.random() * 300)));
+    }
+  }
+  return { out: null, all: all, lastErr: lastErr, busy: all.every(rests) };
 }
 
 function firstText(data) {
@@ -282,14 +399,7 @@ async function callGemini(model, key, body, capMs) {
       }
     }, ctrl && ctrl.signal);
 
-    if (!res.ok) {
-      // Never pass the upstream body through — it can echo the key back.
-      return {
-        ok: false,
-        error: "upstream_" + res.status,
-        retry: res.status === 429 || res.status >= 500
-      };
-    }
+    if (!res.ok) return failure(res);
 
     const data = await res.json();
     const text = data &&
@@ -346,11 +456,7 @@ async function transcribe(model, key, body, capMs) {
       }],
       generationConfig: { temperature: 0 }
     }, ctrl && ctrl.signal);
-    if (!res.ok) {
-      // Never pass the upstream body through — it can echo the key back.
-      return { ok: false, error: "upstream_" + res.status,
-               retry: res.status === 429 || res.status >= 500 };
-    }
+    if (!res.ok) return failure(res);
 
     const data = await res.json();
     const text = data &&
@@ -436,10 +542,7 @@ async function answerFromAudio(model, key, b, capMs) {
         responseSchema: SCHEMA
       }
     }, ctrl && ctrl.signal);
-    if (!res.ok) {
-      return { ok: false, error: "upstream_" + res.status,
-               retry: res.status === 429 || res.status >= 500 };
-    }
+    if (!res.ok) return failure(res);
 
     const data = await res.json();
     const out = data &&
@@ -476,7 +579,7 @@ export default {
     // Access codes and scores - students.js
     if (/\/(access|me|progress)$/.test(path)) return studentRoute(path, request, env, ctx, head, json);
 
-    if (!env.GEMINI_API_KEY) return json({ error: "not_configured" }, 500, head);
+    if (!env.GEMINI_API_KEY && !env.GROQ_API_KEY) return json({ error: "not_configured" }, 500, head);
 
     /* With Supabase set up, only a student with a valid access code gets AI
        marking or dictation - a shared link alone gets nothing from here. */
@@ -509,56 +612,70 @@ export default {
       }
       if (student && !(await withinDailyLimit(env, student))) return json({ error: "daily_limit" }, 429, head);
 
-      /* Gemini's free tier sheds load with 503 often enough that measuring this
-         endpoint hit it twice in five calls. On the text path a 503 costs a
-         retry; here it would cost the student their whole answer, because the
-         recording only exists on their phone until this returns. So the audio
-         path retries too - a different model pool, since 503 is capacity and
-         capacity is tracked per model.
-
-         The budget is the ceiling and it is enforced, not summed: the second
-         attempt only starts if there is time left for it inside the 40s the
-         client waits. */
+      /* The budget is the ceiling and it is enforced, not summed: each step
+         only starts if there is time left for it inside the 40s the client
+         waits. */
       const AUDIO_BUDGET_MS = 34000;
       const AUDIO_ATTEMPT_MS = 16000;
-      /* Lite first: measured 2026-09-28, the bigger model answered 503 on
-         nearly every call and each answer waited out two failures on it before
-         lite replied in ~2s. The bigger model is now the backup. */
-      const FALLBACK = "gemini-3.1-flash-lite";
-      const backup = env.GEMINI_MODEL || "gemini-3.6-flash";
-      const chain = [FALLBACK];
-      if (backup !== FALLBACK) chain.push(backup);
-
       const started = Date.now();
       const left = () => AUDIO_BUDGET_MS - (Date.now() - started);
+      const lg = body.lang;
+      const stt = groqSttModels(env);
+      const gem = geminiModels(env);
+      const all = stt.concat(gem);
+      if (!all.filter(m => !rests(m)).length) return aiBusy(all, head);
+
+      // Romanised in spite of the prompt: fix the letters (Gemini lite, if it has quota)
+      const fixLetters = async text => {
+        if (!looksRomanised(text, lg) || !env.GEMINI_API_KEY || rests(gem[0]) || left() < 3000) return text;
+        const fixed = await fixScript(gem[0], env.GEMINI_API_KEY, text, lg, Math.min(6000, left()));
+        console.log(JSON.stringify({ path: "fixScript", lang: lg, fixed: NATIVE_SCRIPT[lg].test(fixed), ms: Date.now() - started }));
+        return fixed;
+      };
+
+      /* 1. Groq: Whisper writes the recording down, then the marking stack
+            marks the words - the same marking a typed answer gets. */
+      for (const model of stt.filter(m => !rests(m))) {
+        const cap = Math.min(AUDIO_ATTEMPT_MS, left());
+        if (cap < 4000) break;
+        const r = await groqTranscribe(model, env.GROQ_API_KEY, body, cap);
+        logTry({ path: isAnswer ? "answer" : "transcribe", via: "groq", model: model, lang: lg || "en",
+                 bytes: body.audio.length, ms: Date.now() - started }, r);
+        if (r.quota) { rest(model, r.quota); continue; }
+        if (!r.ok) { if (r.retry) continue; break; }
+
+        const text = await fixLetters(r.data.text);
+        if (!isAnswer || !text) return json({ text: text }, 200, head);
+        const mk = await markAnswer(env, Object.assign({}, body, { answer: text }), Math.min(22500, left()));
+        if (mk.out) return json(Object.assign({ text: text }, mk.out), 200, head);
+        // Written down but not marked: the words still reach the student, and
+        // the app learns the marking is busy (busy_for) instead of asking again
+        const out = { text: text, unmarked: true };
+        if (mk.busy) out.busy_for = busyFor(mk.all);
+        return json(out, 200, head);
+      }
+
+      /* 2. Gemini reads the recording itself (and marks it, on /answer). Its
+            free tier sheds load with 503, so the next model is tried too. */
       const run = (m, cap) => isAnswer
         ? answerFromAudio(m, env.GEMINI_API_KEY, body, cap)
         : transcribe(m, env.GEMINI_API_KEY, body, cap);
-
       let r = null;
-      for (const model of chain) {
+      for (const model of gem.filter(m => !rests(m))) {
         const cap = Math.min(AUDIO_ATTEMPT_MS, left());
         if (cap < 4000) break;                  // not enough time left to be useful
         r = await run(model, cap);
-        // No transcript is logged - only size, model and elapsed time.
-        console.log(JSON.stringify({
-          path: isAnswer ? "answer" : "transcribe", model: model, lang: body.lang || "en",
-          bytes: body.audio.length, ms: Date.now() - started, result: r.ok ? "ok" : r.error
-        }));
+        // No transcript is logged - only size, model, elapsed time, and which quota
+        logTry({ path: isAnswer ? "answer" : "transcribe", via: "gemini", model: model, lang: lg || "en",
+                 bytes: body.audio.length, ms: Date.now() - started }, r);
+        if (r.quota) { rest(model, r.quota); continue; }   // used up: the next model, once
         if (r.ok || !r.retry) break;
       }
+      if (r && r.ok && r.data) r.data.text = await fixLetters(r.data.text);
 
-      // Romanised in spite of the prompt: fix the letters, keep the marks.
-      const lg = body.lang;
-      if (r && r.ok && r.data && looksRomanised(r.data.text, lg)) {
-        r.data.text = await fixScript(FALLBACK, env.GEMINI_API_KEY, r.data.text, lg,
-                                      Math.min(6000, left()));
-        console.log(JSON.stringify({ path: "fixScript", lang: lg,
-          fixed: NATIVE_SCRIPT[lg].test(r.data.text), ms: Date.now() - started }));
-      }
-
-      return r && r.ok ? json(r.data, 200, head)
-                       : json({ error: (r && r.error) || "no_time" }, 502, head);
+      if (r && r.ok) return json(r.data, 200, head);
+      if (all.every(rests)) return aiBusy(all, head);
+      return json({ error: (r && r.error) || "no_time" }, 502, head);
     }
 
     if (!body || typeof body.question !== "string" || typeof body.answer !== "string") {
@@ -568,8 +685,8 @@ export default {
     if (student && !(await withinDailyLimit(env, student))) return json({ error: "daily_limit" }, 429, head);
 
     /* Optional per-day cap, per IP. Only runs if you bind a KV namespace called
-       RATE. Without it there is no limit here and Gemini's own free-tier quota
-       is the only ceiling — see the README before sharing the URL widely. */
+       RATE. Without it there is no limit here and the models' own free-tier
+       quotas are the only ceiling — see the README before sharing the URL widely. */
     const cap = parseInt(env.DAILY_LIMIT || "0", 10);
     let rateKey = null;
     if (env.RATE && cap > 0) {
@@ -579,71 +696,11 @@ export default {
       if (used >= cap) return json({ error: "rate_limited" }, 429, head);
     }
 
-    /* ---- The model chain ---------------------------------------------
-       Gemini's free tier sheds load with 503 far more often than it fails
-       for any other reason: measured against this Worker, 5 of 9 calls came
-       back 503. That is shared serving capacity, not quota, so paying would
-       not remove it — but 503 is retryable by definition, and capacity is
-       tracked per model. So: ask the same model again, then ask a different
-       pool. Roughly, 44% success per call becomes ~90% over four attempts.
-
-       BUDGET_MS is the hard ceiling and it is enforced, not summed. Every
-       attempt reads the clock and shrinks its own cap to whatever is left,
-       so adding a model or mistuning a backoff cannot push the total past
-       it. That matters: the client gives up at 25s, and any work finishing
-       after that is discarded without anyone seeing it — the same silent
-       failure the old 12s client timeout was causing.                    */
-
-    const BUDGET_MS      = 22500;   // hard ceiling; stays under the client's 25s
-    const ATTEMPT_MS     = 5000;    // cap per call — also catches a socket that hangs
-    const TRIES_PER_MODEL = 2;
-    const BACKOFF_MS     = 500;
-    const BACKOFF_MAX    = 1000;    // capped: doubling forever outruns the budget
-    const MIN_USEFUL_MS  = 1500;    // too little left to be worth starting
-
-    // Lite first, for the same reason as the audio path above.
-    const FALLBACK_MODEL = "gemini-3.1-flash-lite";
-    const backup = env.GEMINI_MODEL || "gemini-3.6-flash";
-    const chain = [FALLBACK_MODEL];
-    if (backup !== FALLBACK_MODEL) chain.push(backup);
-
-    const t0 = Date.now();
-    const left = () => BUDGET_MS - (Date.now() - t0);
-    const sleep = ms => new Promise(r => setTimeout(r, ms));
-
-    let out = null, lastErr = "upstream_unreachable";
-
-    outer:
-    for (let ci = 0; ci < chain.length; ci++) {
-      const model = chain[ci];
-      let backoff = BACKOFF_MS;          // per model — never carried across pools
-
-      for (let attempt = 0; attempt < TRIES_PER_MODEL; attempt++) {
-        const remain = left();
-        if (remain < MIN_USEFUL_MS) break outer;
-
-        const started = Date.now();
-        const r = await callGemini(model, env.GEMINI_API_KEY, body, Math.min(ATTEMPT_MS, remain));
-
-        /* One line per attempt. `wrangler tail` is the only view into which
-           pool is actually failing, and without the model name and elapsed
-           time the fallback order is guesswork. No answer text is logged. */
-        console.log(JSON.stringify({
-          model: model, attempt: attempt + 1,
-          ms: Date.now() - started, result: r.ok ? "ok" : r.error
-        }));
-
-        if (r.ok) { out = r.data; break outer; }
-        lastErr = r.error;
-        if (!r.retry) break;                       // our fault — next pool won't help either
-        if (left() < MIN_USEFUL_MS + backoff) break outer;
-
-        await sleep(backoff + Math.floor(Math.random() * 300));   // jitter
-        backoff = Math.min(backoff * 2, BACKOFF_MAX);
-      }
+    const mk = await markAnswer(env, body, 22500);   // stays under the client's 25s
+    if (!mk.out) {
+      if (mk.busy || mk.all.every(rests)) return aiBusy(mk.all, head);
+      return json({ error: mk.lastErr }, 502, head);
     }
-
-    if (!out) return json({ error: lastErr }, 502, head);
 
     if (rateKey && env.RATE) {
       const used = parseInt((await env.RATE.get(rateKey)) || "0", 10);
@@ -651,6 +708,6 @@ export default {
       await env.RATE.put(rateKey, String(used + 1), { expirationTtl: 129600 });
     }
 
-    return json(out, 200, head);
+    return json(mk.out, 200, head);
   }
 };

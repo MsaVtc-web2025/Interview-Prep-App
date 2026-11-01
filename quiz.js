@@ -26,9 +26,14 @@
 
 const Quiz = (function () {
 
-  /* Offline: the share of the book answer's words the student said.
-     AI: the judge's accuracy mark out of 10. */
-  const RIGHT_AT = 0.6, PART_AT = 0.25;
+  /* Offline (the chapter quiz): cover = the weighted share of the book
+     answer's words the student said; focus = the weighted share of the
+     student's words that are about the book answer (see offline()). Set
+     against every book answer in the bank - see the test bench numbers in
+     README.md. AI: the judge's accuracy mark out of 10. */
+  const RIGHT_AT = 0.65, PART_AT = 0.25;
+  const FOCUS_RIGHT = 0.5, FOCUS_PART = 0.3;
+  const POINTS_PART = 0.25;    // a quarter of a 3+ point answer's points named
   const AI_RIGHT = 7, AI_PART = 4;
   const MAX_KEEP = 1200;       // characters of an answer kept in the report
 
@@ -213,7 +218,11 @@ const Quiz = (function () {
     "है हैं था थी थे और या के की का को में से पर लिए क्या क्यों कैसे कौन कौनसा किस किन कब कहाँ " +
     "यह वह ये वे जो तो भी एक होता होती होते होना करना करने करते करता करती किया जाता जाती जाते " +
     "the a an of to and or is are was be in on at for with by as it its that this from into " +
-    "what why how which when where who do does done should can will used use using not their they"
+    "what why how which when where who do does done should can will used use using not their they " +
+    "make sure whether has had have been being would could may might must shall also any " +
+    "we you he she them his her our your my me us am were so very just " +
+    "હોવું હોવી હોવો હોવા રાખવું રાખવી રાખવા રાખો જોઈએ જોઇએ તથા પણ વગેરે ખૂબ જ જેમ જેવી જેવા જેવું વખતે " +
+    "कि हो हुआ हुई हुए गया गई गए दी दिया दिए रखना रखें रखा करें करे जाना वाला वाली वाले तरह जैसे ही तक तथा एवं जब तब"
   ).split(/\s+/));
 
   /* Gujarati sticks the postposition onto the word - "મશીનમાં", "ટૂલનો" - so
@@ -226,6 +235,17 @@ const Quiz = (function () {
     return String(s || "").normalize("NFC").toLowerCase()
       .replace(/[૦-૯]/g, d => String(d.charCodeAt(0) - 0x0AE6))   // Gujarati digits
       .replace(/[०-९]/g, d => String(d.charCodeAt(0) - 0x0966))   // Devanagari digits
+      // "Z.R.N", "S.I." - an abbreviation is one word
+      .replace(/\b[a-z](?:\.[a-z])+\.?/g, w => w.replace(/\./g, ""))
+      // The axis direction is the answer: "X+" and "X–" are different words
+      .replace(/\b([abcuvwxyz])\s*\+/g, "$1plus ")
+      .replace(/\b([abcuvwxyz])\s*[-–−](?=[\s.,;।)]|$)/g, "$1minus ")
+      .replace(/\b([abcuvwxyz])\s+(plus|minus)\b/g, "$1$2")
+      // × and ÷ are the answer in a unit conversion
+      .replace(/×/g, " multiply ").replace(/÷/g, " divide ")
+      .replace(/[।॥]/g, " ")
+      // "...है या नहीं", "...છે કે નહીં", "whether or not" - a question, not a negation
+      .replace(/\s(या|કે|or)\s+(नहीं|નહીં|નહિ|not)(?=\s|$)/g, " ")
       .replace(/[^a-z0-9ऀ-ॿ઀-૿]+/g, " ")
       .trim();
   }
@@ -267,7 +287,9 @@ const Quiz = (function () {
     ["consent", "સંમતિ", "કન્સેન્ટ"], ["waste", "કચરો", "કચરા", "વેસ્ટ"], ["sterile", "જંતુરહિત", "સ્ટરાઈલ"],
     ["hygiene", "સ્વચ્છતા", "હાઇજીન"], ["mental", "માનસિક", "મેન્ટલ"], ["physical", "શારીરિક", "ફિઝિકલ"],
     ["nutrition", "પોષણ", "ન્યુટ્રિશન"], ["diet", "આહાર", "ડાયેટ"], ["emergency", "કટોકટી", "ઇમરજન્સી"],
-    ["pulse", "નાડી", "પલ્સ"], ["muscle", "સ્નાયુ", "મસલ"], ["system", "તંત્ર", "સિસ્ટમ"]
+    ["pulse", "નાડી", "પલ્સ"], ["muscle", "સ્નાયુ", "મસલ"], ["system", "તંત્ર", "સિસ્ટમ"],
+    ["dose", "માત્રા", "ડોઝ", "ડોસ"], ["check", "તપાસ", "તપાસવું", "તપાસવા", "ચેક"],
+    ["medicine", "દવા", "દવાઓ", "દવાની", "મેડિસિન", "મેડીસીન"]
   ];
   /* The same for Hindi: the formal Hindi word, then the English spelt in
      Devanagari. Joined onto the group of the English word in front. */
@@ -288,25 +310,95 @@ const Quiz = (function () {
     vaccine: ["टीका", "वैक्सीन"], urine: ["मूत्र", "यूरिन"], skin: ["त्वचा", "स्किन"], consent: ["सहमति", "कंसेंट"],
     hygiene: ["स्वच्छता", "हाइजीन"], mental: ["मानसिक", "मेंटल"], physical: ["शारीरिक", "फिजिकल"],
     nutrition: ["पोषण", "न्यूट्रिशन"], diet: ["आहार", "डाइट"], emergency: ["आपातकाल", "आपातकालीन", "इमरजेंसी"],
-    pulse: ["नाड़ी", "नब्ज़", "नब्ज", "पल्स"], muscle: ["मांसपेशी", "मसल"]
+    pulse: ["नाड़ी", "नब्ज़", "नब्ज", "पल्स"], muscle: ["मांसपेशी", "मसल"],
+    dose: ["मात्रा", "डोज़", "डोज"], check: ["जाँच", "जांच", "जाँचें", "जांचें", "चेक"],
+    medicine: ["दवा", "दवाई", "दवाएँ", "दवाइयाँ", "मेडिसिन"]
   };
   const CANON = Object.create(null);
   SAME.forEach(g => g.forEach(w => { CANON[w] = g[0]; }));
   Object.keys(SAME_HI).forEach(k => SAME_HI[k].forEach(w => { CANON[w.normalize("NFC")] = k; }));
 
+  /* "Not visible" is not "visible": a negation is joined to the word it
+     negates - the next word in English and Hindi ("not visible", "नहीं दिखते"),
+     the one before in Gujarati ("દેખાતી નથી"). */
+  const NOT_BEFORE = new Set(["not", "no", "never", "without", "नहीं", "न", "मत", "बिना"]);
+  const NOT_AFTER = new Set(["નથી", "નહીં", "નહિ", "ના"]);
+
+  function negate(toks) {
+    const out = [];
+    for (let i = 0; i < toks.length; i++) {
+      const w = toks[i];
+      if (NOT_BEFORE.has(w) && i + 1 < toks.length) { out.push("not_" + toks[++i]); continue; }
+      if (NOT_AFTER.has(w) && out.length && !/^not_/.test(out[out.length - 1])) { out.push("not_" + out.pop()); continue; }
+      out.push(w);
+    }
+    return out;
+  }
+
+  /* A single letter is kept when it is English (the X axis, G-code, M-code);
+     a stray Gujarati or Hindi letter is noise. */
   function words(s) {
-    const out = norm(s).split(" ").filter(Boolean).map(stem).map(w => CANON[w] || w)
-      .filter(w => !STOP.has(w) && (w.length > 1 || /\d/.test(w)));
+    const toks = norm(s).split(" ").filter(Boolean).map(stem).map(w => CANON[w] || w);
+    const out = negate(toks).map(w => /^not_/.test(w) ? "not_" + (CANON[w.slice(4)] || w.slice(4)) : w)
+      .filter(w => !STOP.has(w) && (w.length > 1 || /[a-z\d]/.test(w)));
     return out.filter((w, i) => out.indexOf(w) === i);
   }
 
   /* One word the same as another - exactly, or one the start of the other
-     ("ગ્લોવ્સ" / "ગ્લોવ્ઝ" are not caught, "spindle" / "spindles" are). Numbers
-     have to match exactly: 25.4 is not 25. */
+     when they are nearly as long ("spindle" / "spindles", "chip" / "chips",
+     but not "cut" / "cutting tool"). Numbers have to match exactly: 25.4 is
+     not 25. */
   function same(a, b) {
     if (a === b) return true;
     if (/\d/.test(a) || /\d/.test(b)) return false;
-    return Math.min(a.length, b.length) >= 3 && (a.startsWith(b) || b.startsWith(a));
+    const s = Math.min(a.length, b.length), l = Math.max(a.length, b.length);
+    if (s >= 3 && s / l >= 0.6 && (a.startsWith(b) || b.startsWith(a))) return true;
+    return sounds(a, b);
+  }
+
+  /* ---- The same word in another script --------------------------------
+     A Gujarati or Hindi phone writes English words down in its own letters -
+     "પર્સનલ પ્રોટેક્ટિવ ઇક્વિપમેન્ટ" for "Personal Protective Equipment" - while
+     the books write them in English letters. So a word in one script is
+     compared with a word in the other by its consonants: p-r-s-n-l either
+     way. Vowels are dropped (they are spelt too many ways to compare) and
+     sounds a speaker does not tell apart are one (t/th, d/dh, s/sh, v/w). */
+  const CONS = {
+    "ક": "k", "ખ": "k", "ગ": "g", "ઘ": "g", "ઙ": "n", "ચ": "c", "છ": "c", "જ": "j", "ઝ": "j", "ઞ": "n",
+    "ટ": "t", "ઠ": "t", "ડ": "d", "ઢ": "d", "ણ": "n", "ત": "t", "થ": "t", "દ": "d", "ધ": "d", "ન": "n",
+    "પ": "p", "ફ": "f", "બ": "b", "ભ": "b", "મ": "m", "ય": "y", "ર": "r", "લ": "l", "ળ": "l", "વ": "v",
+    "શ": "s", "ષ": "s", "સ": "s", "હ": "", "ં": "n",
+    "क": "k", "ख": "k", "ग": "g", "घ": "g", "ङ": "n", "च": "c", "छ": "c", "ज": "j", "झ": "j", "ञ": "n",
+    "ट": "t", "ठ": "t", "ड": "d", "ढ": "d", "ण": "n", "त": "t", "थ": "t", "द": "d", "ध": "d", "न": "n",
+    "प": "p", "फ": "f", "ब": "b", "भ": "b", "म": "m", "य": "y", "र": "r", "ल": "l", "ळ": "l", "व": "v",
+    "श": "s", "ष": "s", "स": "s", "ह": "", "ं": "n", "ऱ": "r", "ड़": "d", "ढ़": "d", "ज़": "j", "फ़": "f"
+  };
+  const skelCache = Object.create(null);
+  function skeleton(w) {
+    if (w in skelCache) return skelCache[w];
+    let k;
+    if (/^[a-z]+$/.test(w)) {
+      // "ch" is held as C while the soft c ("ce" = s) and hard c (= k) are decided
+      k = w.replace(/ph/g, "f").replace(/tch/g, "ch").replace(/ch/g, "C").replace(/qu/g, "kv").replace(/ck/g, "k")
+        .replace(/g(?=[eiy])/g, "j").replace(/c(?=[eiy])/g, "s").replace(/c/g, "k").replace(/q/g, "k").replace(/x/g, "ks")
+        .replace(/w/g, "v").replace(/z/g, "j").replace(/sh/g, "s").replace(/(?<=[tdkgb])h/g, "")
+        .replace(/[aeiouh]/g, "").replace(/C/g, "c");
+    } else {
+      k = "";
+      for (const ch of w.normalize("NFD").replace(/\u093C|\u0ABC/g, "")) k += CONS[ch] != null ? CONS[ch] : "";
+    }
+    k = k.replace(/y/g, "").replace(/(.)\1+/g, "$1");      // y: a glide, spelt or not
+    return (skelCache[w] = k);
+  }
+  function sounds(a, b) {
+    if (/[a-z]/.test(a) === /[a-z]/.test(b)) return false;      // only across scripts
+    const x = skeleton(a), y = skeleton(b);
+    // Too short to tell apart - three consonants only for longer words, exactly
+    if (x.length < 3 || y.length < 3) return false;
+    if (x.length === 3 || y.length === 3) return x === y && a.length >= 5 && b.length >= 5;
+    if (x === y) return true;
+    const s = Math.min(x.length, y.length), l = Math.max(x.length, y.length);
+    return s / l >= 0.8 && (x.startsWith(y) || y.startsWith(x));
   }
 
   /* The book answer in its own phrases, for "you also needed to say...". Split
@@ -317,34 +409,157 @@ const Quiz = (function () {
       .filter(s => s.length > 1);
   }
 
-  /* Word match against the book answer. Words the question already gives away
-     do not count - repeating the question back is not knowing the answer. */
+  /* ---- How much a word tells -----------------------------------------
+     A word in nearly every answer of the book ("Patient", "Machine",
+     "Safety") says little about whether this answer is right; a word in
+     three answers ("Interlock", "ઘર્ષણ") says a lot. So every word weighs
+     log(1 + answers / answers that have it), counted over every book answer
+     in every course, once. */
+  let weights = null;
+  function weightOf(w) {
+    if (!weights) {
+      const df = Object.create(null);
+      let n = 0;
+      Object.keys(CHAPTERS).forEach(cid => getChapters(cid).forEach(ch => ch.qs.forEach(b =>
+        versions(b).forEach(v => { n++; words(v.a).forEach(x => { df[x] = (df[x] || 0) + 1; }); }))));
+      weights = { df: df, n: Math.max(n, 1) };
+    }
+    return Math.log(1 + weights.n / (1 + (weights.df[w] || 0)));
+  }
+
+  /* "I don't know" in any of the three languages - a short answer that only
+     says it does not know is wrong, whatever else it happens to share. */
+  const DONT_KNOW = /\b(don'?t know|do not know|no idea|not sure|forgot|forget|can'?t remember)\b|ખબર\s*નથી|ખબર\s*નહીં|યાદ\s*નથી|આવડતું\s*નથી|नहीं\s*पता|पता\s*नहीं|मालूम\s*नहीं|याद\s*नहीं|नहीं\s*आता/i;
+
+  /* Opposites: the answer with "Minimum" where the book says "Maximum",
+     "left" for "right", "Hole" for "Shaft" shares nearly every other word -
+     and is wrong. Each pair is matched as words (see same()), in English,
+     Gujarati and Hindi. */
+  const OPPOSITES = [
+    ["minimum", "maximum"], ["min", "max"], ["smallest", "largest"], ["smallest", "biggest"],
+    ["small", "large"], ["small", "big"], ["smaller", "larger"], ["smaller", "bigger"],
+    ["lower", "upper"], ["low", "high"], ["internal", "external"], ["inside", "outside"],
+    ["inner", "outer"], ["left", "right"], ["positive", "negative"], ["increase", "decrease"],
+    ["increases", "decreases"], ["more", "less"], ["hot", "cold"], ["open", "close"],
+    ["clockwise", "anticlockwise"], ["before", "after"], ["above", "below"], ["start", "stop"],
+    ["tight", "loose"], ["fast", "slow"], ["hard", "soft"], ["wet", "dry"], ["hole", "shaft"],
+    ["capital", "small"], ["multiply", "divide"], ["xplus", "xminus"], ["yplus", "yminus"],
+    ["zplus", "zminus"], ["visible", "hidden"], ["male", "female"], ["full", "empty"],
+    ["નાનું", "મોટું"], ["નાના", "મોટા"], ["નાની", "મોટી"], ["ઓછું", "વધુ"], ["ઓછી", "વધારે"],
+    ["ડાબી", "જમણી"], ["ડાબે", "જમણે"], ["અંદર", "બહાર"], ["આંતરિક", "બાહ્ય"],
+    ["પહેલાં", "પછી"], ["ઉપર", "નીચે"], ["ગરમ", "ઠંડુ"], ["ગરમ", "ઠંડા"], ["શરૂ", "બંધ"],
+    ["છोटा", "बड़ा"], ["छोटा", "बड़ा"], ["छोटे", "बड़े"], ["छोटी", "बड़ी"], ["सबसे छोटा", "सबसे बड़ा"],
+    ["कम", "ज़्यादा"], ["कम", "अधिक"], ["बाईं", "दाईं"], ["बाएँ", "दाएँ"], ["बाएं", "दाएं"],
+    ["अंदर", "बाहर"], ["आंतरिक", "बाहरी"], ["पहले", "बाद"], ["ऊपर", "नीचे"], ["गर्म", "ठंडा"], ["गरम", "ठंडा"]
+  ].filter(p => p.every(w => !/\s/.test(w)));
+  const OPP = Object.create(null);
+  OPPOSITES.forEach(([a, b]) => {
+    a = CANON[a] || a; b = CANON[b] || b;
+    (OPP[a] = OPP[a] || []).push(b);
+    (OPP[b] = OPP[b] || []).push(a);
+  });
+
+  /* Did the student say the opposite of something the book answer says -
+     the opposite word without the book's word, or the book's word negated? */
+  function contradicts(said, book) {
+    const has = (list, w) => list.some(x => same(x, w));
+    // An opposite the book itself uses ("the Hole is larger than the Shaft") is no clash
+    return book.some(w =>
+      ((OPP[w] || []).some(o => has(said, o) && !has(book, o)) && !has(said, w)) ||
+      (!/^not_/.test(w) && has(said, "not_" + w) && !has(book, "not_" + w)) ||
+      (/^not_/.test(w) && has(said, w.slice(4)) && !has(said, w) && !has(book, w.slice(4))));
+  }
+
+  /* Numbers with the unit right after them ("25.4 mm", "1000 Micron") -
+     a number said with a different unit is a different fact. */
+  function numberUnits(s) {
+    const t = norm(s).split(" ");
+    const out = [];
+    t.forEach((w, i) => {
+      if (/^\d+(\.\d+)?$/.test(w) && t[i + 1] && !/\d/.test(t[i + 1])) out.push([w, CANON[stem(t[i + 1])] || stem(t[i + 1])]);
+    });
+    return out;
+  }
+
+  /* Score one version of the book answer against what was said:
+       cover - the weight of the book answer's words the student said
+       focus - the weight of the student's words that are in the book answer
+     Words of the question count in neither: repeating the question back is
+     not knowing the answer. */
+  function against(saidAll, ans, v) {
+    const qw = words(v.q);
+    const inQ = w => qw.some(x => same(x, w));
+    const bookAll = words(v.a);
+    let key = bookAll.filter(w => !inQ(w));
+    // The book answer is all question words ("In the X- Direction", "Workpiece"):
+    // then they are the answer, and count
+    const restates = !key.length;
+    if (restates) key = bookAll;
+    const said = restates ? saidAll : saidAll.filter(w => !inQ(w));
+    const has = (list, w) => list.some(x => same(x, w)) ||
+      (/^[a-z]{2,5}$/.test(w) && list.length >= w.length && w.split("").every(ch => list.indexOf(ch) >= 0));
+
+    const kw = key.reduce((s, w) => s + weightOf(w), 0);
+    const cover = kw ? key.filter(w => has(said, w)).reduce((s, w) => s + weightOf(w), 0) / kw : 0;
+    const sw = said.reduce((s, w) => s + weightOf(w), 0);
+    const focus = sw ? said.filter(w => has(bookAll, w)).reduce((s, w) => s + weightOf(w), 0) / sw : 0;
+
+    // Every number-and-unit of the book answer, said with the same unit
+    const said_nu = numberUnits(ans);
+    const unitsOk = numberUnits(v.a).every(([n, u]) =>
+      !said_nu.some(([sn]) => sn === n) || said_nu.some(([sn, su]) => sn === n && same(su, u)));
+
+    /* Points: the book answer as its separate points ("right Patient, right
+       medicine, right time..."). A point is named when most of its words were
+       said - its question words too, since "right medicine" is a point even
+       though "medicine" is in the question. Naming some of the points is
+       partly right, however light their words weigh. */
+    const pts = phrases(v.a).map(words).filter(pw => pw.length);
+    const named = pts.filter(pw => pw.filter(w => has(saidAll, w)).length / pw.length >= 0.6).length;
+    const points = pts.length >= 3 ? named / pts.length : 0;
+
+    return { cover: cover, focus: focus, points: points, unitsOk: unitsOk, said: said.length, clash: contradicts(saidAll, bookAll) };
+  }
+
+  /* The verdict. Right needs most of the book answer's weight (cover), an
+     answer that is mostly about it (focus), and its numbers with their own
+     units. Partly right: a real share of it, still on the subject. */
+  function decide(s) {
+    if (!s.said || s.clash) return "wrong";
+    if (s.cover >= RIGHT_AT && s.focus >= FOCUS_RIGHT && s.unitsOk) return "right";
+    if ((s.cover >= PART_AT || s.points >= POINTS_PART) && s.focus >= FOCUS_PART) return "partial";
+    return "wrong";
+  }
+
+  /* Word match against the book answer, in whichever of its languages the
+     student came closest to - they may answer in any of the three. */
   function offline(ans, q) {
-    const said = words(ans);
-    const hit = w => said.some(s => same(s, w));
+    const saidAll = words(ans);
+    const alts = q.alts && q.alts.length ? q.alts : [{ q: q.q, a: q.en }];
+    if (DONT_KNOW.test(String(ans || "")) && saidAll.length <= 6) {
+      return { v: "wrong", miss: phrases(alts[0].a).slice(0, 4), fb: "", byAi: false };
+    }
 
-    /* The student may answer in any of the three languages, whatever the app
-       shows - so mark against the book answer they came closest to. */
+    const RANK = { right: 2, partial: 1, wrong: 0 };
     let best = null;
-    (q.alts && q.alts.length ? q.alts : [{ q: q.q, a: q.en }]).forEach(v => {
-      const qw = words(v.q);
-      const fresh = ws => ws.filter(w => qw.indexOf(w) === -1);
-      let key = fresh(words(v.a));
-      if (!key.length) key = words(v.a);
-      const share = key.length ? key.filter(hit).length / key.length : 0;
-      if (best && share <= best.share) return;
+    alts.forEach(v => {
+      const s = against(saidAll, ans, v);
+      const verdict = decide(s);
+      if (best && (RANK[verdict] < RANK[best.v] || (RANK[verdict] === RANK[best.v] && s.cover <= best.cover))) return;
 
+      const hit = w => saidAll.some(x => same(x, w));
+      const qw = words(v.q);
+      // A point is missing when most of its weight was not said ("right
+      // Method": "right" was said, "Method" - the point - was not)
       const miss = phrases(v.a).filter(p => {
-        const pw = fresh(words(p));
-        return pw.length && pw.filter(hit).length / pw.length < 0.5;
+        const pw = words(p).filter(w => !qw.some(x => same(x, w)));
+        const all = pw.reduce((n, w) => n + weightOf(w), 0);
+        return all && pw.filter(hit).reduce((n, w) => n + weightOf(w), 0) / all < 0.6;
       }).slice(0, 4);
-      best = { share: share, miss: miss };
+      best = { v: verdict, cover: s.cover, miss: miss };
     });
 
-    return {
-      v: best.share >= RIGHT_AT ? "right" : best.share >= PART_AT ? "partial" : "wrong",
-      miss: best.miss, fb: "", byAi: false
-    };
+    return { v: best.v, miss: best.v === "right" ? [] : best.miss, fb: "", byAi: false };
   }
 
   /* The judge's reply on top of the word match. Its accuracy mark decides; a
@@ -364,15 +579,13 @@ const Quiz = (function () {
     };
   }
 
-  /* judged = marks that came back with the transcript, from the one call that
-     does both. Always resolves, never rejects. */
+  /* Marked here, against the book answer, at once - the chapter quiz never
+     asks the AI, which is kept for interview practice (Gemini's free quota
+     ran out on quiz marking). judged: marks that came with a transcript, on
+     the rare phone that can only answer by recording. Never rejects. */
   function mark(ans, q, judged) {
     const off = offline(ans, q);
-    if (judged) return Promise.resolve(withAi(off, judged));
-    if (!Judge.active()) return Promise.resolve(off);
-    // No reply from the AI: the word match stands, and the card says so
-    return Judge.evaluate(ans, q, "technical", getLang(), false)
-      .then(j => j ? withAi(off, j) : Object.assign({}, off, { aiFailed: true }));
+    return Promise.resolve(judged ? withAi(off, judged) : off);
   }
 
   /* The latest answer to a question replaces any earlier one */
@@ -420,7 +633,8 @@ const Quiz = (function () {
     } else {
       h = verdict("wrong", "❌", t("quiz.wrong"), t("quiz.wrongD"));
     }
-    h += markedBy(r, lastRetry);          // "Marked by AI" / "Marked offline" - app.js
+    // Checked here against the book; "Marked by AI" only for a recorded answer the AI marked
+    h += r.byAi ? markedBy(r, lastRetry) : '<div class="aibadge off">' + esc(t("quiz.bookBadge")) + "</div>";
 
     $("hint").className = "hint";
     $("hint").textContent = "";

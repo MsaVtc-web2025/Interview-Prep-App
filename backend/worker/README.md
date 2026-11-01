@@ -47,6 +47,43 @@ Model ids change. `gemini-flash-latest` is the default here; check the current
 list at [ai.google.dev/gemini-api/docs/models](https://ai.google.dev/gemini-api/docs/models)
 and set `GEMINI_MODEL` if you want to pin a specific version.
 
+## Groq first, Gemini behind
+
+Interview marking and voice answers go to **Groq** first (`groq.js`) and only
+fall back to **Gemini** when every Groq model is used up or failing. They are
+separate free allowances, so a class has two pools instead of one.
+
+| Step | Order tried |
+|---|---|
+| Mark a typed answer (`/`) | `llama-3.3-70b-versatile` → `openai/gpt-oss-120b` → `openai/gpt-oss-20b` → `gemini-3.1-flash-lite` → `gemini-3.6-flash` |
+| Voice answer (`/answer`, `/transcribe`) | Groq Whisper (`whisper-large-v3-turbo` → `whisper-large-v3`) writes it down, then the row above marks it; if Whisper is out, Gemini reads the recording itself |
+
+The **chapter quiz never calls the Worker**: it is checked on the phone
+against the book answer (`quiz.js`).
+
+**Quota.** A model that answers 429 (quota used up) is not asked again: it
+rests - for the provider's own delay on a per-minute limit, for half an hour
+on a per-day one - and the next model gets one go. When every model is
+resting the app is told `{"error":"ai_busy","retry_after":…}` at once, and
+the phone marks answers itself until then. Each attempt is one log line in
+`wrangler tail`, with the provider, the model and, on a 429, which limit:
+
+```
+{"via":"groq","model":"llama-3.3-70b-versatile","attempt":1,"ms":412,"result":"upstream_429","limit":"per_day","quota_id":"groq-RPD","retry_s":1200}
+```
+
+**Setup:** make a free key at [console.groq.com/keys](https://console.groq.com/keys)
+(no card) and give it to the Worker:
+
+```bash
+wrangler secret put GROQ_API_KEY
+```
+
+Without it the Worker uses Gemini alone, as before. Groq retires models from
+time to time ([its model list](https://console.groq.com/docs/models)); to
+change them without touching code, set `GROQ_MODELS` and `GROQ_STT_MODELS`
+(comma-separated) as secrets.
+
 ## The two endpoints
 
 | Path | Body | Returns |

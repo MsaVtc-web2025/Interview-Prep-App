@@ -322,7 +322,7 @@ const Dictation = (function () {
     }
 
     return fetch(DICTATION_URL, opts)
-      .then(res => (workerSeen(res) && res.ok ? res.json() : null))
+      .then(res => { Judge.noteBusy(res); return workerSeen(res) && res.ok ? res.json() : null; })
       .then(r => {
         const txt = r && typeof r.text === "string" ? r.text.replace(/\s+/g, " ").trim() : "";
         return txt;
