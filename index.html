@@ -7,6 +7,7 @@
 <title>Interview Prep</title>
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="icon" type="image/png" href="./icon-192.png">
 <style>
 :root{
   color-scheme: light;
@@ -69,21 +70,18 @@ body{
 .svi.sm{width:15px;height:15px;stroke-width:2.4}
 .svi.xs{width:15px;height:15px;stroke-width:2}
 
-/* ---------- Logo ---------- */
+/* ---------- Logo ----------
+   The Muni Seva Ashram emblem (logo.png) on a white tile */
 .logo{
   width:44px;height:44px;border-radius:14px;flex:none;
-  background:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.95);
+  background:#fff;border:1px solid rgba(255,255,255,.95);
   box-shadow:0 8px 20px rgba(40,70,150,.14);
-  color:var(--accent);display:flex;align-items:center;justify-content:center
+  display:flex;align-items:center;justify-content:center
 }
-.logo .svi{width:26px;height:26px;stroke-width:4.5;stroke-linejoin:round}
-/* The two arches carry their own colours, not currentColor */
-.logo .svi .a1{stroke:#2f5fe0}
-.logo .svi .a2{stroke:#6f8ef5}
+.logo img{width:80%;height:80%;object-fit:contain;display:block}
 .logo.lg{width:96px;height:96px;border-radius:28px;box-shadow:0 14px 34px rgba(40,70,150,.16)}
-.logo.lg .svi{width:52px;height:52px}
-.logo.sm{width:30px;height:30px;border-radius:0;background:none;border:0;box-shadow:none}
-.logo.sm .svi{width:30px;height:30px;stroke-width:5}
+.logo.sm{width:32px;height:32px;border-radius:8px;box-shadow:none;border:0}
+.logo.sm img{width:100%;height:100%}
 
 /* ---------- Top bar ---------- */
 .bar{
@@ -905,11 +903,6 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
 
 <!-- ============ Line-drawn icons - defined once, then referenced with <use> ============ -->
 <svg class="sprite" aria-hidden="true" focusable="false"><defs>
-  <!-- The app mark - two facing arches in two colours, per the design -->
-  <symbol id="i-logo" viewBox="0 0 48 48">
-    <path class="a1" d="M24 6c-6 0-10 4.4-10 9.6 0 3.4 1.7 5.7 4.4 7.4-2.7 1.7-4.4 4-4.4 7.4C14 35.6 18 40 24 40"/>
-    <path class="a2" d="M24 6c6 0 10 4.4 10 9.6 0 3.4-1.7 5.7-4.4 7.4 2.7 1.7 4.4 4 4.4 7.4C34 35.6 30 40 24 40"/>
-  </symbol>
   <!-- Settings - three sliders (a gear looks like a smudge at this size) -->
   <symbol id="i-gear" viewBox="0 0 24 24">
     <path d="M3.5 6.5h9M17 6.5h3.5M3.5 12h3.5M11.5 12h9M3.5 17.5h9M17 17.5h3.5"/>
@@ -999,7 +992,7 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
           <button data-l="hi" lang="hi">हिन्दी</button>
         </div>
       </div>
-      <div class="logo lg"><svg class="svi" aria-hidden="true"><use href="#i-logo"/></svg></div>
+      <div class="logo lg"><img src="./logo.png" alt=""></div>
       <h1 data-i18n="app.name">Interview Prep</h1>
       <p class="lead">
         <span data-i18n="splash.lead1">Practice today.</span><br>
@@ -1044,7 +1037,7 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
           <button data-l="hi" lang="hi">हिन्दी</button>
         </div>
       </div>
-      <div class="logo"><svg class="svi" aria-hidden="true"><use href="#i-logo"/></svg></div>
+      <div class="logo"><img src="./logo.png" alt=""></div>
 
       <!-- Step 1: who the student is -->
       <div id="accStepMe">
@@ -1097,7 +1090,7 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
 <div id="scWelcome" hidden>
   <div class="wrap">
     <div class="wel">
-      <div class="logo"><svg class="svi" aria-hidden="true"><use href="#i-logo"/></svg></div>
+      <div class="logo"><img src="./logo.png" alt=""></div>
       <h1 data-i18n="welcome.title">Welcome</h1>
       <p class="lead" data-i18n="welcome.lead"></p>
 
@@ -1137,7 +1130,7 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
 <!-- ============ Home - progress analysis (first tab) ============ -->
 <div id="scStats" hidden>
   <div class="bar">
-    <div class="logo sm"><svg class="svi" aria-hidden="true"><use href="#i-logo"/></svg></div>
+    <div class="logo sm"><img src="./logo.png" alt=""></div>
     <h1 data-i18n="app.name">Interview Prep</h1>
   </div>
   <div class="wrap">
@@ -1158,7 +1151,7 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
 <!-- ============ Practice - all modes (second tab) ============ -->
 <div id="scPractice" hidden>
   <div class="bar">
-    <div class="logo sm"><svg class="svi" aria-hidden="true"><use href="#i-logo"/></svg></div>
+    <div class="logo sm"><img src="./logo.png" alt=""></div>
     <h1 data-i18n="app.name">Interview Prep</h1>
   </div>
   <div class="wrap">

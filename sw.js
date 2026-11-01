@@ -1,7 +1,7 @@
 /* Service worker — caches everything so the app works with no internet.
    NOTE: bump CACHE whenever any file below changes, otherwise installed
    phones keep running the old version. */
-const CACHE = "interview-practice-v56";
+const CACHE = "interview-practice-v57";
 
 const ASSETS = [
   "./",
@@ -32,6 +32,7 @@ const ASSETS = [
   "./app.js",
   "./manifest.webmanifest",
   "./interviewer.jpg",
+  "./logo.png",
   "./icon-192.png",
   "./icon-512.png",
   "./icon-512-maskable.png"
