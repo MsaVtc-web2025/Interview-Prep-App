@@ -58,6 +58,10 @@ separate free allowances, so a class has two pools instead of one.
 | Mark a typed answer (`/`) | `llama-3.3-70b-versatile` → `openai/gpt-oss-120b` → `openai/gpt-oss-20b` → `gemini-3.1-flash-lite` → `gemini-3.6-flash` |
 | Voice answer (`/answer`, `/transcribe`) | Groq Whisper (`whisper-large-v3-turbo` → `whisper-large-v3`) writes it down, then the row above marks it; if Whisper is out, Gemini reads the recording itself |
 
+**Gujarati goes to Gemini first** - typed and spoken - because Gemini hears
+and writes Gujarati far better than Whisper and Llama (tried live,
+2026-11-01); Groq is its backup. English and Hindi go to Groq first.
+
 The **chapter quiz never calls the Worker**: it is checked on the phone
 against the book answer (`quiz.js`).
 

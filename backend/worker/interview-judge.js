@@ -214,8 +214,10 @@ function logTry(info, r) {
 }
 
 async function markAnswer(env, body, budgetMs) {
-  const stack = groqChatModels(env).map(m => ({ via: "groq", m: m }))
-    .concat(geminiModels(env).map(m => ({ via: "gemini", m: m })));
+  const groq = groqChatModels(env).map(m => ({ via: "groq", m: m }));
+  const gem = geminiModels(env).map(m => ({ via: "gemini", m: m }));
+  // Gemini reads and writes Gujarati better; English and Hindi go to Groq first
+  const stack = body.lang === "gu" ? gem.concat(groq) : groq.concat(gem);
   const all = stack.map(x => x.m);
   const live = stack.filter(x => !rests(x.m));
   if (!live.length) return { out: null, busy: true, all: all, lastErr: "ai_busy" };
@@ -633,8 +635,9 @@ export default {
         return fixed;
       };
 
-      /* 1. Groq: Whisper writes the recording down, then the marking stack
-            marks the words - the same marking a typed answer gets. */
+      /* Groq: Whisper writes the recording down, then the marking stack
+         marks the words - the same marking a typed answer gets. */
+      const viaGroq = async () => {
       for (const model of stt.filter(m => !rests(m))) {
         const cap = Math.min(AUDIO_ATTEMPT_MS, left());
         if (cap < 4000) break;
@@ -654,9 +657,13 @@ export default {
         if (mk.busy) out.busy_for = busyFor(mk.all);
         return json(out, 200, head);
       }
+      return null;
+      };
 
-      /* 2. Gemini reads the recording itself (and marks it, on /answer). Its
-            free tier sheds load with 503, so the next model is tried too. */
+      /* Gemini reads the recording itself (and marks it, on /answer). Its
+         free tier sheds load with 503, so the next model is tried too. */
+      let lastErr = "no_time";
+      const viaGemini = async () => {
       const run = (m, cap) => isAnswer
         ? answerFromAudio(m, env.GEMINI_API_KEY, body, cap)
         : transcribe(m, env.GEMINI_API_KEY, body, cap);
@@ -672,10 +679,20 @@ export default {
         if (r.ok || !r.retry) break;
       }
       if (r && r.ok && r.data) r.data.text = await fixLetters(r.data.text);
-
       if (r && r.ok) return json(r.data, 200, head);
+      if (r) lastErr = r.error;
+      return null;
+      };
+
+      /* Gujarati speech: Gemini first - it hears Gujarati far better than
+         Whisper (tried live 2026-11-01). English and Hindi: Groq first. Each
+         is the other's backup. */
+      for (const step of lg === "gu" ? [viaGemini, viaGroq] : [viaGroq, viaGemini]) {
+        const res = await step();
+        if (res) return res;
+      }
       if (all.every(rests)) return aiBusy(all, head);
-      return json({ error: (r && r.error) || "no_time" }, 502, head);
+      return json({ error: lastErr }, 502, head);
     }
 
     if (!body || typeof body.question !== "string" || typeof body.answer !== "string") {
