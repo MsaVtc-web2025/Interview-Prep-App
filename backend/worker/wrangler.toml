@@ -6,6 +6,11 @@
 #   wrangler secret put GEMINI_API_KEY
 #   wrangler secret put ALLOWED_ORIGINS     <- before sharing the app link
 #
+# Access codes and results (../supabase/README.md) - all three, or none:
+#   wrangler secret put SUPABASE_URL
+#   wrangler secret put SUPABASE_SERVICE_KEY
+#   wrangler secret put ACCESS_SECRET
+#
 # NEVER put the API key in this file. Secrets set with `wrangler secret put`
 # are encrypted and never appear here, in the dashboard, or in git. A key in
 # a [vars] block would be committed in plain text.

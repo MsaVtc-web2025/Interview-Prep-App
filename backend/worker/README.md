@@ -53,6 +53,13 @@ and set `GEMINI_MODEL` if you want to pin a specific version.
 |---|---|---|
 | `/` | the question and the student's answer, as text | the six scores and advice |
 | `/transcribe` | a recording of the student answering | `{text}` |
+| `/access` | a student's access code | a token for that phone (`students.js`) |
+| `/me` | (the token) | is this phone still allowed? |
+| `/progress` | (the token) chapter quiz attempts and interview scores | `{ok}` — saved in Supabase |
+
+The last three, and the access check on the first two, are off until the
+Supabase secrets are set — see [`../supabase/README.md`](../supabase/README.md).
+Once they are, `/` and `/transcribe` answer only a phone with a valid token.
 
 `/transcribe` exists because Android will not give a web page a microphone that
 stays open across a whole answer. `dictation.js` records the answer in one piece

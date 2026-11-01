@@ -496,9 +496,25 @@ const Quiz = (function () {
     s[run.ch.id] = {
       ts: Date.now(), n: n, cnt: cnt, pct: pct,
       best: Math.max(pct, (old && old.best) || 0),
+      tries: ((old && old.tries) || (old ? 1 : 0)) + 1,
       entries: list
     };
+
+    /* The attempt for the institute, sent by access.js - counts only, no
+       answers. Stamped with the student who did it. */
+    if (Access.enabled() && Access.sid()) {
+      if (!Array.isArray(state.quizLog)) state.quizLog = [];
+      state.quizLog.push({
+        cid: newCid(), sid: Access.sid(), ts: Date.now(),
+        course: run.cid, chapter: run.ch.id, no: run.ch.no,
+        title: (run.ch.titles && run.ch.titles.en) || run.ch.title,
+        total: n, answered: cnt.right + cnt.partial + cnt.wrong,
+        right: cnt.right, partial: cnt.partial, wrong: cnt.wrong, skipped: cnt.skip, pct: pct,
+        lang: getLang()
+      });
+    }
     save();
+    Access.flush();
     return { cid: run.cid, chId: run.ch.id };
   }
 

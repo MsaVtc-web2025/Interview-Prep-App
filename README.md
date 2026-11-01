@@ -330,6 +330,8 @@ screen for the last 20 seconds.
 | `speech.js` | Speaking and listening (Web Speech API) |
 | `dictation.js` | Optional continuous recording, transcribed by the Worker |
 | `judge.js` | AI evaluation via the Worker |
+| `access.js` | Access codes: the code screen, and sending scores (never answers) to the institute — off while `ACCESS_URL` is empty |
+| `admin.html`, `admin.js` | The instructors' page: students, access codes, results by chapter — see `backend/supabase/README.md` |
 | `avatar.js` | The on-screen interviewer (photo + status badge) |
 | `interviewer.jpg` | The interviewer's photo (480×480 square) |
 | `app.js` | App logic |

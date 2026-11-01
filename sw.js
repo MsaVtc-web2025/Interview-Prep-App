@@ -1,7 +1,7 @@
 /* Service worker — caches everything so the app works with no internet.
    NOTE: bump CACHE whenever any file below changes, otherwise installed
    phones keep running the old version. */
-const CACHE = "interview-practice-v54";
+const CACHE = "interview-practice-v55";
 
 const ASSETS = [
   "./",
@@ -24,6 +24,7 @@ const ASSETS = [
   "./stats.js",
   "./vendor/pocketbase.umd.js",
   "./sync.js",
+  "./access.js",
   "./judge.js",
   "./speech.js",
   "./dictation.js",
@@ -58,6 +59,10 @@ self.addEventListener("activate", ev => {
 
 self.addEventListener("fetch", ev => {
   if (ev.request.method !== "GET") return;
+
+  /* The instructors' admin page is not part of the app: always from the
+     network, never a stale copy, never the app in its place when offline. */
+  if (/\/admin(\.html|\.js)?$/.test(new URL(ev.request.url).pathname)) return;
 
   /* App shell: network first, so a new version reaches students as soon as
      they open the app online. Falls back to cache when offline. */

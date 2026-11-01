@@ -240,7 +240,7 @@ const Judge = (function () {
     try { ctrl = new AbortController(); } catch (e) { ctrl = null; }
     const opts = {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: workerHeaders(),
       body: JSON.stringify(body)
     };
     if (ctrl) {
@@ -249,7 +249,7 @@ const Judge = (function () {
     }
 
     return fetch(audioUrl(), opts)
-      .then(res => (res && res.ok ? res.json() : null))
+      .then(res => (workerSeen(res) && res.ok ? res.json() : null))
       .then(raw => {
         const r = clean(raw);
         if (!r) return null;
@@ -275,14 +275,14 @@ const Judge = (function () {
 
     const opts = {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: workerHeaders(),
       body: JSON.stringify(payload_(answer, question, mode, lang, needsEnglish))
     };
     if (ctrl) opts.signal = ctrl.signal;
     if (ctrl) timer = setTimeout(() => { try { ctrl.abort(); } catch (e) {} }, TIMEOUT_MS);
 
     return fetch(JUDGE_URL, opts)
-      .then(res => (res && res.ok ? res.json() : null))
+      .then(res => (workerSeen(res) && res.ok ? res.json() : null))
       .then(raw => {
         const r = clean(raw);
         if (r) cacheSet(key, r);

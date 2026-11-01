@@ -56,8 +56,9 @@ const GOOGLE_CLIENT_ID = "604155826405-15oddjk71jr042kbe4bk3j02kdgt547e.apps.goo
    beginners, and every new student is one. Saved settings keep their choice. */
 const DEFAULTS = { hands: false, ask: true, speakFb: true, rate: 0.75, silence: 3000, lang: "en", ai: true, dflt2: true, track: "", pmode: "chapter" };
 
-/* quiz = Chapter Quiz results, apart from the interview history (see quiz.js) */
-let state = { settings: Object.assign({}, DEFAULTS), courses: {}, quiz: {}, user: null };
+/* quiz = Chapter Quiz results, apart from the interview history (see quiz.js).
+   quizLog = finished chapter quizzes waiting to be sent to the institute (access.js). */
+let state = { settings: Object.assign({}, DEFAULTS), courses: {}, quiz: {}, quizLog: [], user: null };
 
 function loadState() {
   try {
@@ -76,6 +77,7 @@ function loadState() {
         }
         state.courses = p.courses && typeof p.courses === "object" ? p.courses : {};
         state.quiz = p.quiz && typeof p.quiz === "object" ? p.quiz : {};
+        state.quizLog = Array.isArray(p.quizLog) ? p.quizLog : [];
         state.user = (p.user && typeof p.user === "object") ? p.user : null;
         return;
       }
@@ -335,7 +337,7 @@ function qIsGuOnly(q) {
 /* The language picker appears twice - first thing on the intro screen, and in
    Profile. Both are painted together. aria-pressed tells a screen reader which
    one is chosen. */
-const LANG_PICKERS = ["langSeg0", "langSeg2"];
+const LANG_PICKERS = ["langSeg0", "langSeg2", "langSeg3"];
 
 function paintLang() {
   LANG_PICKERS.forEach(id => {
@@ -386,6 +388,7 @@ function catLabel(q) { return q.quiz ? q.cat : tCat(q.cat); }
 /* ---------------- Switching screens ---------------- */
 
 const SC_ID = {
+  access: "scAccess",
   splash: "scSplash", welcome: "scWelcome", stats: "scStats", practice: "scPractice",
   brief: "scBrief", run: "scRun", profile: "scProfile", help: "scHelp",
   chapters: "scChapters", qreport: "scQuizReport", summary: "scSummary"
@@ -396,6 +399,8 @@ const TABS = ["stats", "practice", "profile"];
 let curScreen = "splash";        // which screen is open - used by the back button
 
 function show(which) {
+  // Until this phone has an access code, the code screen is the only screen
+  if (which !== "access" && !Access.allowed()) which = "access";
   Object.keys(SC_ID).forEach(s => { $(SC_ID[s]).hidden = s !== which; });
   curScreen = which;
   armBack();                  // keep the phone's back button inside the app
@@ -445,6 +450,7 @@ function goTab(tab) {
 /* Where back goes from each inner screen - exactly what that screen's own back
    button does, so the two behave identically. */
 const BACK_TO = {
+  access:  null,                                                  // nothing behind it
   splash:  null,                                                  // the very first screen
   welcome: () => { show(state.user ? "practice" : "splash"); },
   brief:   () => leaveCourse(),      // same as $("btnBriefBack")
@@ -758,7 +764,8 @@ function newRound(c, only) {
       const x = order[i]; order[i] = order[j]; order[j] = x;
     }
   }
-  return { order: order, pos: 0, done: {}, skipped: [], finished: false };
+  // id: the answers of one mock interview share it, so the institute can count rounds
+  return { id: newCid(), order: order, pos: 0, done: {}, skipped: [], finished: false };
 }
 
 /* The round in progress for this course, or null. One that refers to
@@ -1277,6 +1284,7 @@ function submit(text, judged) {
         entry = Object.assign({
           // The question id is a number but used as an identifier - store it as text
           ts: Date.now(), cid: newCid(), course: c.id,
+          sid: Access.sid(), rid: (openRound(c) || {}).id || "",
           qid: q.id == null ? "" : String(q.id),
           q: q.q, cat: q.cat, answer: ans, secs: secs
         }, fields);
@@ -1284,6 +1292,7 @@ function submit(text, judged) {
       }
       save();
       Sync.flush();                  // does nothing when backup is off
+      Access.flush();                // the scores to the institute - nothing when codes are off
       roundRecord(q, r);
 
       showResult(r, r.aiFailed ? askAi : null);
@@ -1595,6 +1604,7 @@ function paintSettings() {
   Stats.renderProfileStats($("profStats"));
   paintAi();
   paintSync();
+  paintAccess();
   $("swHands").classList.toggle("on", !!s.hands);
   $("swAsk").classList.toggle("on", !!s.ask);
   $("swFb").classList.toggle("on", !!s.speakFb);
@@ -1654,6 +1664,146 @@ function paintVoicePick() {
   $("voicePickD").textContent = !list.length ? t("diag.fbNo")
     : t("set.voicePickD", { name: auto ? voiceLabel(auto) : "—" });
 }
+
+/* ---------------- Access code (access.js) ----------------
+
+   The code screen, and the student this phone is signed in as in Profile. */
+
+const ACC_ERRORS = ["need_first", "need_last", "bad_mobile", "empty", "bad_code", "inactive", "expired", "code_changed", "removed",
+  "no_access", "offline", "server", "too_many_tries", "access_unavailable"];
+
+function accError(why) {
+  return t("acc.err." + (ACC_ERRORS.indexOf(why) >= 0 ? why : "server"));
+}
+
+/* why: the reason the phone was sent here ("" on first opening) */
+function openAccess(why) {
+  Speech.stopAll();
+  if (Dictation.active()) Dictation.abort();
+  $("accMsg").hidden = !why;
+  $("accMsg").textContent = why ? accError(why) : "";
+  $("btnAccess").disabled = false;
+  const me = Access.lastDetails();
+  $("accFirst").value = me.first || "";
+  $("accLast").value = me.last || "";
+  $("accMobile").value = me.mobile || "";
+  accStep("me");
+  show("access");
+}
+
+/* The code screen has two steps: the student's name and mobile number first,
+   then the access code at the end */
+function accStep(which) {
+  $("accStepMe").hidden = which !== "me";
+  $("accStepCode").hidden = which !== "code";
+  window.scrollTo(0, 0);
+}
+
+function accShowError(why) {
+  $("accMsg").textContent = accError(why);
+  $("accMsg").hidden = false;
+}
+
+/* Step 1 -> step 2, once the name and mobile number look right */
+function accNext() {
+  const me = Access.cleanDetails({ first: $("accFirst").value, last: $("accLast").value, mobile: $("accMobile").value });
+  if (me.error) { accShowError(me.error); $(ACC_BOX[me.error]).focus(); return; }
+  $("accMsg").hidden = true;
+  accStep("code");
+  $("accCode").focus();
+}
+
+/* The box a wrong entry belongs to - focused, so the student sees where */
+const ACC_BOX = { need_first: "accFirst", need_last: "accLast", bad_mobile: "accMobile" };
+
+function submitAccess() {
+  const b = $("btnAccess");
+  if (b.disabled) return;
+  b.disabled = true;
+  b.textContent = t("acc.checking");
+  $("accMsg").hidden = true;
+  const details = { first: $("accFirst").value, last: $("accLast").value, mobile: $("accMobile").value };
+  Access.enter($("accCode").value, details).then(r => {
+    b.disabled = false;
+    b.textContent = t("btn.continue");
+    if (!r.ok) {
+      accShowError(r.error);
+      if (ACC_BOX[r.error]) accStep("me");          // a detail is wrong - back to step 1
+      $(ACC_BOX[r.error] || "accCode").focus();
+      return;
+    }
+    $("accCode").value = "";
+    setUser(r.me.first + " " + r.me.last, "code");
+    // The trade the institute enrolled them in comes first on Practice
+    if (r.student.trade && getCourse(r.student.trade)) state.settings.track = r.student.trade;
+    save();
+    toast(t("acc.welcome", { name: firstName() }));
+    goTab("practice");
+    Access.flush();
+  });
+}
+
+function paintAccess() {
+  const on = Access.enabled() && Access.allowed();
+  $("accWrap").hidden = !on;
+  $("accAbout").hidden = !Access.enabled();
+  if (!on) return;
+  const st = Access.student() || {};
+  $("accWho").textContent = st.name || "—";
+  $("accState").textContent = st.batch || "";
+  const n = Access.unsent();
+  $("accDetail").textContent = n ? t("acc.waiting", { n: n }) : t("acc.allSent");
+}
+
+/* A phone shared by several students: send this student's results, clear the
+   phone's progress (it is theirs, and it is safe at the institute), and ask
+   the next student for their own code. */
+function switchStudent() {
+  const name = (Access.student() || {}).name || "";
+  Access.flush().then(() => {
+    const n = Access.unsent();
+    return askDialog(n
+      ? { title: t("acc.switchT"), body: t("acc.switchUnsent", { n: n, name: name }), yes: t("acc.switch"), danger: true }
+      : { title: t("acc.switchT"), body: t("acc.switchB", { name: name }), yes: t("acc.switch") });
+  }).then(ok => {
+    if (!ok) return;
+    Access.signOut(true);
+    state.courses = {};
+    state.quiz = {};
+    state.quizLog = [];
+    state.user = null;
+    save();
+    course = null;
+    renderDash();
+    $("accCode").value = "";
+    openAccess("");
+  });
+}
+
+$("btnAccess").addEventListener("click", submitAccess);
+$("accCode").addEventListener("keydown", ev => {
+  if (ev.key === "Enter") { ev.preventDefault(); submitAccess(); }
+});
+// Enter in a box moves on to the next one; in the mobile box, to the code step
+[["accFirst", "accLast"], ["accLast", "accMobile"]].forEach(p =>
+  $(p[0]).addEventListener("keydown", ev => {
+    if (ev.key === "Enter") { ev.preventDefault(); $(p[1]).focus(); }
+  }));
+$("accMobile").addEventListener("keydown", ev => {
+  if (ev.key === "Enter") { ev.preventDefault(); accNext(); }
+});
+$("btnAccNext").addEventListener("click", accNext);
+$("btnAccBack").addEventListener("click", () => { $("accMsg").hidden = true; accStep("me"); $("accFirst").focus(); });
+$("btnAccSend").addEventListener("click", () => {
+  Access.flush().then(paintAccess);
+});
+$("btnAccSwitch").addEventListener("click", switchStudent);
+
+/* The institute changed or turned off the code, or removed the student */
+Access.onLocked(why => {
+  if (Quiz.on()) Quiz.drop();
+  openAccess(why);
+});
 
 /* ---------------- Progress backup ----------------
 
@@ -2142,12 +2292,18 @@ renderDash();
 /* No name yet: introduce the app first. Name known: show progress if they have
    practised, otherwise go straight to the practice tab (a course list is more
    use than an empty chart). */
-if (!state.user) show("splash");
+if (!Access.allowed()) openAccess("");
+else if (!state.user) show("splash");
 else show(allHistory().length ? "stats" : "practice");
 
 /* Send any pending progress when the app opens - a no-op when backup is off.
-   Not right at startup but slightly after: let the first screen paint. */
-setTimeout(() => { try { Sync.flush(); } catch (e) {} }, 2500);
+   Not right at startup but slightly after: let the first screen paint. Then
+   ask the institute whether this phone is still allowed, and send it the
+   results it has not had yet. */
+setTimeout(() => {
+  try { Sync.flush(); } catch (e) {}
+  Access.recheck().then(() => Access.flush()).catch(() => {});
+}, 2500);
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {

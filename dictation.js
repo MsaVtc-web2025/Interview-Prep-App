@@ -313,7 +313,7 @@ const Dictation = (function () {
     try { ctrl = new AbortController(); } catch (e) { ctrl = null; }
     const opts = {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: workerHeaders(),
       body: JSON.stringify(body)
     };
     if (ctrl) {
@@ -322,7 +322,7 @@ const Dictation = (function () {
     }
 
     return fetch(DICTATION_URL, opts)
-      .then(res => (res && res.ok ? res.json() : null))
+      .then(res => (workerSeen(res) && res.ok ? res.json() : null))
       .then(r => {
         const txt = r && typeof r.text === "string" ? r.text.replace(/\s+/g, " ").trim() : "";
         return txt;

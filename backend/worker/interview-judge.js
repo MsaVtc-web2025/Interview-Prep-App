@@ -14,8 +14,14 @@
  * recording is transcribed and dropped - it is never stored, logged, or passed
  * anywhere else.
  *
+ * Once Supabase is set up (students.js), every one of those calls must carry a
+ * student's access token, and /access, /me and /progress handle the codes and
+ * the scores the app sends in.
+ *
  * Deploy: see README.md in this folder.
  */
+
+import { accessOn, requireStudent, studentRoute, withinDailyLimit } from "./students.js";
 
 const CRITERIA = ["communication", "sentences", "thought", "speechGrammar", "accuracy", "coherence"];
 
@@ -237,7 +243,7 @@ function buildPrompt(b) {
 function cors(origin, allowed) {
   const h = {
     "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
     "Access-Control-Max-Age": "86400"
   };
   // With ALLOWED_ORIGINS unset, allow any origin — convenient while testing,
@@ -453,7 +459,7 @@ async function answerFromAudio(model, key, b, capMs) {
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const allowed = String(env.ALLOWED_ORIGINS || "")
       .split(",").map(s => s.trim()).filter(Boolean);
     const origin = request.headers.get("Origin") || "";
@@ -465,13 +471,26 @@ export default {
     // An origin that is configured but does not match is refused outright.
     if (allowed.length && allowed.indexOf(origin) < 0) return json({ error: "bad_origin" }, 403, head);
 
+    const path = new URL(request.url).pathname.replace(/\/+$/, "");
+
+    // Access codes and scores - students.js
+    if (/\/(access|me|progress)$/.test(path)) return studentRoute(path, request, env, ctx, head, json);
+
     if (!env.GEMINI_API_KEY) return json({ error: "not_configured" }, 500, head);
+
+    /* With Supabase set up, only a student with a valid access code gets AI
+       marking or dictation - a shared link alone gets nothing from here. */
+    let student = null;
+    if (accessOn(env)) {
+      const who = await requireStudent(request, env);
+      if (!who.ok) return json({ error: who.error }, who.status, head);
+      student = who.student;
+    }
 
     /* Audio is orders of magnitude bigger than an answer, so the transcription
        path is routed and size-checked before the text one. 8MB of base64 is
        about four minutes of the 16kHz mono WAV dictation.js sends, comfortably
        past its own MAX_SECONDS ceiling. */
-    const path = new URL(request.url).pathname.replace(/\/+$/, "");
     const isAnswer = path.endsWith("/answer");          // audio in, transcript AND marks out
     const isAudio = isAnswer || path.endsWith("/transcribe");
 
@@ -488,6 +507,7 @@ export default {
       if (!body || typeof body.audio !== "string" || !body.audio) {
         return json({ error: "bad_body" }, 400, head);
       }
+      if (student && !(await withinDailyLimit(env, student))) return json({ error: "daily_limit" }, 429, head);
 
       /* Gemini's free tier sheds load with 503 often enough that measuring this
          endpoint hit it twice in five calls. On the text path a 503 costs a
@@ -545,6 +565,7 @@ export default {
       return json({ error: "bad_body" }, 400, head);
     }
     if (!body.answer.trim()) return json({ error: "empty_answer" }, 400, head);
+    if (student && !(await withinDailyLimit(env, student))) return json({ error: "daily_limit" }, 429, head);
 
     /* Optional per-day cap, per IP. Only runs if you bind a KV namespace called
        RATE. Without it there is no limit here and Gemini's own free-tier quota

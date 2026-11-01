@@ -217,6 +217,7 @@ h2.sec{font-size:17px;margin:24px 0 10px;color:var(--ink);font-weight:700}
   background:#fbfcfe url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%236b7590' stroke-width='2'/%3E%3C/svg%3E") no-repeat right 15px center
 }
 .wel .fld + .fld{margin-top:18px}
+.wel .accnames{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .wel input:focus,.wel select:focus{outline:2px solid rgba(47,95,224,.35);outline-offset:1px;border-color:var(--accent)}
 .wel .why{font-size:12.5px;color:var(--muted);margin:11px 2px 0;line-height:1.5}
 .wel .or{
@@ -1029,6 +1030,69 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
   </div>
 </div>
 
+<!-- ============ Access code screen ============
+     Shown instead of everything else until the phone has a code from MSA-VTC
+     (access.js). The language comes first here too. -->
+<div id="scAccess" hidden>
+  <div class="wrap">
+    <div class="wel">
+      <div class="langfirst">
+        <p class="cap">Language · ભાષા · भाषा</p>
+        <div class="langbig" id="langSeg3" role="group" aria-label="Language">
+          <button data-l="en" lang="en">English</button>
+          <button data-l="gu" lang="gu">ગુજરાતી</button>
+          <button data-l="hi" lang="hi">हिन्दी</button>
+        </div>
+      </div>
+      <div class="logo"><svg class="svi" aria-hidden="true"><use href="#i-logo"/></svg></div>
+
+      <!-- Step 1: who the student is -->
+      <div id="accStepMe">
+      <h1 data-i18n="acc.meTitle">Your details</h1>
+      <p class="lead" data-i18n="acc.meLead"></p>
+
+      <div class="fld accnames">
+        <div>
+          <label class="lab" for="accFirst" data-i18n="acc.first">First name</label>
+          <input id="accFirst" type="text" autocomplete="given-name" maxlength="40" enterkeyhint="next">
+        </div>
+        <div>
+          <label class="lab" for="accLast" data-i18n="acc.last">Last name</label>
+          <input id="accLast" type="text" autocomplete="family-name" maxlength="40" enterkeyhint="next">
+        </div>
+      </div>
+      <div class="fld">
+        <label class="lab" for="accMobile" data-i18n="acc.mobile">Mobile number</label>
+        <input id="accMobile" type="tel" inputmode="tel" autocomplete="tel-national" maxlength="16"
+               enterkeyhint="next" data-i18n-ph="acc.mobilePh" placeholder="10-digit number">
+        <p class="why" data-i18n="acc.privacy"></p>
+      </div>
+      <div class="stack" style="margin-top:18px">
+        <button class="act" id="btnAccNext" data-i18n="acc.next">Next</button>
+      </div>
+      </div>
+
+      <!-- Step 2, at the end: the access code -->
+      <div id="accStepCode" hidden>
+      <h1 data-i18n="acc.title">Enter your access code</h1>
+      <p class="lead" data-i18n="acc.lead"></p>
+      <div class="fld">
+        <label class="lab" for="accCode" data-i18n="acc.label">Access code</label>
+        <input id="accCode" type="text" autocomplete="off" autocapitalize="characters"
+               spellcheck="false" enterkeyhint="go" maxlength="24" placeholder="ABCD-EFGH">
+      </div>
+      <div class="stack" style="margin-top:18px">
+        <button class="act" id="btnAccess" data-i18n="btn.continue">Continue</button>
+        <button class="mini" id="btnAccBack" data-i18n="acc.back">Change my details</button>
+      </div>
+      </div>
+
+      <p class="hint warn" id="accMsg" role="alert" hidden></p>
+      <p class="why" style="text-align:center;margin-top:22px">MSA-VTC · Muniseva Ashram Vocational Training Centre</p>
+    </div>
+  </div>
+</div>
+
 <!-- ============ Name entry screen ============ -->
 <div id="scWelcome" hidden>
   <div class="wrap">
@@ -1443,6 +1507,29 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
       </div>
     </div>
 
+    <!-- The student this phone is signed in as (access.js) -->
+    <div id="accWrap" hidden>
+      <h2 class="grp" data-i18n="acc.grp">Institute</h2>
+      <div class="group">
+        <details class="lrow">
+          <summary class="lhead">
+            <span class="li blue"><svg class="svi" aria-hidden="true"><use href="#i-user"/></svg></span>
+            <span class="lt" id="accWho">—</span>
+            <span class="lv" id="accState">—</span>
+            <svg class="svi sm chev" aria-hidden="true"><use href="#i-next"/></svg>
+          </summary>
+          <div class="lbody">
+            <p class="sub" data-i18n="acc.profileD"></p>
+            <p class="sub" id="accDetail">—</p>
+            <div class="stack">
+              <button class="act ghost" id="btnAccSend" data-i18n="acc.sendNow">Send results now</button>
+              <button class="mini" id="btnAccSwitch" data-i18n="acc.switch">Switch student</button>
+            </div>
+          </div>
+        </details>
+      </div>
+    </div>
+
     <div id="syncWrap" hidden>
       <h2 class="grp" data-i18n="sync.grp">Progress backup</h2>
       <div class="group">
@@ -1487,6 +1574,7 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
         <div class="lbody">
           <p class="verline" id="setVer">—</p>
           <p class="sub" data-i18n="set.aboutD"></p>
+          <p class="sub" id="accAbout" hidden data-i18n="acc.about"></p>
           <div class="t" style="font-weight:700;font-size:14px" data-i18n="set.diagTitle">Device check</div>
           <div id="setDiag" class="diag"></div>
         </div>
@@ -1541,6 +1629,7 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
 <script src="./stats.js"></script>
 <script src="./vendor/pocketbase.umd.js"></script>
 <script src="./sync.js"></script>
+<script src="./access.js"></script>
 <script src="./judge.js"></script>
 <script src="./speech.js"></script>
 <script src="./dictation.js"></script>
