@@ -599,6 +599,9 @@ const Speech = (function () {
       const m = ev && ev.error ? String(ev.error) : "unknown";
       // These two are routine - they arrive while the student thinks, not errors
       if (m === "no-speech" || m === "aborted") return;
+      /* A dropped connection to the recognition service is often momentary:
+         onend restarts the mic. Only a run of them gives up. */
+      if (m === "network" && restarts < 5) return;
       fail(m);
     };
 

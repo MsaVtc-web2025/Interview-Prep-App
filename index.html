@@ -817,7 +817,25 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
 .box ul{margin:6px 0 0;padding-inline-start:18px}
 .box li{margin-bottom:4px}
 
-/* The thumbs up - pops in, wobbles, floats away */
+/* Chapter quiz answer modes */
+.seg.qmode button{font-size:12.5px;line-height:1.2}
+.qmodeD{font-size:13px;color:var(--muted);margin:8px 2px 14px;line-height:1.45}
+.qmbadge{background:#e6f6ee;color:var(--good);font-weight:700;white-space:nowrap}
+.mcq{display:flex;flex-direction:column;gap:9px;margin-top:6px}
+.mcq button{
+  text-align:left;border:1.5px solid var(--line);background:#fff;border-radius:14px;
+  padding:12px 14px;min-height:48px;font-size:15px;line-height:1.4;color:var(--ink);
+  display:flex;gap:10px;align-items:flex-start
+}
+.mcq button .k{flex:none;width:26px;height:26px;border-radius:50%;background:#eef2fa;color:var(--accent-d);
+  font-weight:750;font-size:13px;display:flex;align-items:center;justify-content:center}
+.mcq button:disabled{opacity:1;cursor:default}
+.mcq button.right{border-color:var(--good);background:var(--goodtint)}
+.mcq button.right .k{background:var(--good);color:#fff}
+.mcq button.wrong{border-color:var(--low);background:var(--lowtint)}
+.mcq button.wrong .k{background:var(--low);color:#fff}
+
+/* The thumbs up (green) or down (red) - pops in, wobbles, floats away */
 .cheer{position:fixed;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;pointer-events:none}
 .cheer .thumb{
   width:150px;height:150px;border-radius:50%;position:relative;
@@ -829,6 +847,8 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
   content:"";position:absolute;inset:-14px;border-radius:50%;
   border:4px solid rgba(34,160,107,.55);opacity:0
 }
+.cheer .thumb.down{background:radial-gradient(circle at 35% 30%,#f2665c,#c0281d);box-shadow:0 18px 44px rgba(192,40,29,.38)}
+.cheer .thumb.down::after{border-color:rgba(214,58,47,.55)}
 .cheer.on .thumb{animation:thumb 1.6s cubic-bezier(.2,1.3,.4,1) both}
 .cheer.on .thumb::after{animation:burst .9s ease-out .15s both}
 @keyframes thumb{
@@ -861,6 +881,9 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
 .dlgbtns{display:flex;gap:10px}
 .dlgbtns .act{flex:1;min-height:48px}
 .act.erase{background:var(--rec);box-shadow:none}
+
+/* The ratings sit below the advice and model answer on the result card */
+.ratings{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
 
 /* Report card */
 .repsum{text-align:center;padding:20px 16px}
@@ -1189,6 +1212,13 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
         <p id="chapLead"></p>
       </div>
     </div>
+    <!-- How the student answers this trade's chapters (state.settings.qmode) -->
+    <div class="seg qmode" id="qmodeSeg" role="group" data-i18n-aria="qmode.label" aria-label="How to answer">
+      <button data-q="normal"><span aria-hidden="true">🎤</span> <span data-i18n="qmode.normal">Speak or type</span></button>
+      <button data-q="hands"><span aria-hidden="true">🎙</span> <span data-i18n="qmode.hands">Hands-free</span></button>
+      <button data-q="mcq"><span aria-hidden="true">☑</span> <span data-i18n="qmode.mcq">Multiple choice</span></button>
+    </div>
+    <p class="qmodeD" id="qmodeD"></p>
     <div id="chapList"></div>
   </div>
 </div>
@@ -1268,6 +1298,7 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
       <svg class="svi" aria-hidden="true"><use href="#i-back"/></svg>
     </button>
     <h1 id="runName" class="mid">—</h1>
+    <span class="pill qmbadge" id="qmBadge" hidden></span>
     <span class="pill" id="runProg">0/0</span>
   </div>
 
@@ -1324,6 +1355,8 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
           <button class="act" id="btnCheck" data-i18n="btn.check">Check my answer</button>
         </div>
       </div>
+      <!-- Multiple choice (chapter quiz): four answers to tap, no mic needed -->
+      <div class="mcq" id="mcqBox" hidden></div>
       <div class="hint" id="hint" role="status" aria-live="polite"></div>
       <div class="stack" style="margin-top:12px">
         <button class="act" id="btnAct" data-i18n="btn.answer">🎤 Answer</button>

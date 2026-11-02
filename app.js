@@ -54,7 +54,7 @@ const GOOGLE_CLIENT_ID = "604155826405-15oddjk71jr042kbe4bk3j02kdgt547e.apps.goo
    counts words, and most students never open the settings at all. */
 /* rate 0.75 ("Slow"): the setting's own hint says to keep it on Slow for
    beginners, and every new student is one. Saved settings keep their choice. */
-const DEFAULTS = { hands: false, ask: true, speakFb: true, rate: 0.75, silence: 3000, lang: "en", ai: true, dflt2: true, track: "", pmode: "chapter" };
+const DEFAULTS = { hands: false, ask: true, speakFb: true, rate: 0.75, silence: 3000, lang: "en", ai: true, dflt2: true, track: "", pmode: "chapter", qmode: "normal" };
 
 /* quiz = Chapter Quiz results, apart from the interview history (see quiz.js).
    quizLog = finished chapter quizzes waiting to be sent to the institute (access.js). */
@@ -688,11 +688,81 @@ function resumeInterview() {
 /* A chapter of the book, from the chapter list or "Try again" on the report
    card. It opens straight on the first question - the student picked the
    chapter themselves, so there is nothing to brief. */
+/* ---------------- Chapter quiz answer modes ----------------
+   normal - speak or type, the mic stays open until the student taps
+   hands  - the mic opens after the question, a pause ends the answer, and
+            the next question follows by itself
+   mcq    - four answers to tap: for a phone whose mic does not work well */
+const QMODES = ["normal", "hands", "mcq"];
+function quizMode() { return Quiz.on() && QMODES.indexOf(state.settings.qmode) >= 0 ? state.settings.qmode : "normal"; }
+
+function paintQuizModes() {
+  const m = QMODES.indexOf(state.settings.qmode) >= 0 ? state.settings.qmode : "normal";
+  Array.prototype.forEach.call($("qmodeSeg").children, b => {
+    const on = b.getAttribute("data-q") === m;
+    b.classList.toggle("on", on);
+    b.setAttribute("aria-pressed", on ? "true" : "false");
+  });
+  $("qmodeD").textContent = t("qmode." + m + "D");
+}
+
+/* The badge on the quiz screen, and which parts of the answer card show */
+function paintQuizModeUi() {
+  const m = quizMode();
+  $("qmBadge").hidden = m === "normal";
+  $("qmBadge").textContent = m === "hands" ? "🎙 " + t("qmode.hands") : m === "mcq" ? "☑ " + t("qmode.mcq") : "";
+  const mcq = m === "mcq";
+  $("inModeSeg").hidden = mcq || m === "hands";
+  $("ansLabel").hidden = mcq;
+  $("heard").hidden = mcq || inputMode === "type";
+  $("typeWrap").hidden = mcq || inputMode !== "type";
+  $("btnClear").parentNode.hidden = mcq;
+  $("mcqBox").hidden = !mcq;
+}
+
+/* Multiple choice: the four answers for the question on screen */
+function paintMcq() {
+  const box = $("mcqBox");
+  if (quizMode() !== "mcq") { box.innerHTML = ""; return; }
+  const list = Quiz.choices();
+  box.innerHTML = list.map((c, i) =>
+    '<button data-i="' + i + '"><span class="k">' + "ABCD"[i] + '</span><span class="' + (current.qlang === "en" ? "" : "guscript") + '">' +
+    esc(c.text) + "</span></button>").join("");
+  box.__list = list;
+}
+
+function chooseMcq(i) {
+  const box = $("mcqBox"), list = box.__list;
+  if (!list || !list[i] || phase === "feedback" || phase === "scoring") return;
+  Speech.cancelSpeech();
+  const q = current, pick = list[i];
+  Array.prototype.forEach.call(box.children, (b, j) => {
+    b.disabled = true;
+    if (list[j].right) b.classList.add("right");
+    else if (j === i) b.classList.add("wrong");
+  });
+  const r = { v: pick.right ? "right" : "wrong", miss: [], fb: "", byAi: false };
+  Quiz.record(q, pick.full, r);
+  Quiz.showResult(r);
+  setPhase("feedback");
+  Quiz.speak(r);
+}
+
+/* Hands-free: after the verdict (and what is missing, if it is read out),
+   on to the next question without a tap */
+function handsFreeNext(q, spoken) {
+  if (quizMode() !== "hands") return;
+  Promise.resolve(spoken).then(() => setTimeout(() => {
+    if (Quiz.on() && current === q && phase === "feedback") $("btnAct").click();
+  }, 2200));
+}
+
 function startChapterQuiz(cid, chId) {
   const c = getCourse(cid);
   if (!c || !Quiz.begin(cid, chId)) return;
   Speech.prime();                 // a user tap - TTS has to be woken right here
   course = c;
+  if (state.settings.qmode === "hands") setInputMode("speak");    // hands-free is spoken
   openRun();
 }
 
@@ -710,6 +780,7 @@ function openRun() {
    about this quiz at all. */
 function paintRunHead() {
   const quiz = Quiz.on();
+  paintQuizModeUi();
   $("runName").textContent = tCourse(course, "name") + (quiz ? " · " + Quiz.title() : "");
   $("skipLbl").textContent = t(quiz ? "quiz.skip" : "btn.skip");
   $("runStats").hidden = quiz;
@@ -815,6 +886,7 @@ function pickQuestion(advance) {
 
   $("qcat").textContent = catLabel(current);
   paintQuestionText();
+  paintMcq();
   $("heard").textContent = "";
   $("ans").value = "";
   $("result").hidden = true;
@@ -992,7 +1064,8 @@ function afterAsking(spoken) {
      nothing closes it in between. Hands-free mode no longer decides whether the
      mic opens, only whether a silence submits the answer by itself. A student
      who chose to type gets no mic at all. */
-  if (inputMode === "speak" && canListen()) beginListen();
+  if (quizMode() === "mcq") setPhase("ready");          // the answer is a tap
+  else if (inputMode === "speak" && canListen()) beginListen();
   else setPhase("ready");
 }
 
@@ -1098,7 +1171,10 @@ function beginListen(seed) {
     seed: seed || "",
     // 0 = never submit on a silence; the mic stays open until the student
     // presses the button. Hands-free mode is the opt-in that changes that.
-    silenceMs: state.settings.hands ? state.settings.silence : 0,
+    // A silence submits the answer in hands-free - the Profile setting for the
+    // interview, the Hands-free mode for the chapter quiz. Otherwise the
+    // student taps the button when they have finished.
+    silenceMs: (Quiz.on() ? quizMode() === "hands" : state.settings.hands) ? state.settings.silence : 0,
     onStart: () => { micLive(true); armMicWatch(); },
     onInterim: txt => { $("heard").textContent = txt; if (txt.trim()) clearMicWatch(); },
     onSilence: txt => { $("heard").textContent = txt; submit(txt); },
@@ -1158,6 +1234,13 @@ function armMicWatch() {
   micWatch = setTimeout(() => {
     micWatch = null;
     if (phase !== "listening" || $("heard").textContent.trim()) return;
+    /* Chapter quiz: a student thinking before they answer is not a broken
+       mic. The mic stays on until they tap the button - only a note. */
+    if (Quiz.on()) {
+      $("hint").className = "hint";
+      $("hint").textContent = t("quiz.stillListening");
+      return;
+    }
     $("hint").className = "hint warn";
     $("hint").textContent = t("err.mic.silent");
     showTypeFallback(null);
@@ -1403,12 +1486,13 @@ function markQuiz(ans, judged) {
       markQuiz(ans);
     } : null);
     setPhase("feedback");
-    Quiz.speak(r);
+    handsFreeNext(q, Quiz.speak(r));
   });
 }
 
-/* Speak a short summary in the current language - not everything, only what is
-   useful. */
+/* Speak the feedback in the current language - the safety point missed and
+   the advice. The score is not read out: it is on the card, and hearing
+   "5 out of 10" first is what a student remembers instead of the correction. */
 /* The number as it is spoken. toFixed(1) always gives "4.0", which a voice reads
    as "four point zero" - wrong to the ear. Drop the decimal on a whole number;
    leave something like "4.2" alone. */
@@ -1422,11 +1506,12 @@ function speakFeedback(r) {
   const voice = LANG_VOICE[getLang()] || "en";
   if (!state.settings.speakFb || !Speech.hasVoice(voice)) return;
 
-  let msg = t("fb.spoken", { v: sayScore(r.overall) });
+  let msg = "";
   if (r.missingMust && r.missingMust.length) {
     msg += t("fb.spokenSafety", { list: r.missingMust.map(tMust).join(", ") });
   }
-  msg += r.advice;
+  msg += r.advice || "";
+  if (!msg.trim()) { Avatar.setState("idle"); return; }
 
   Speech.speak(msg, { lang: voice, rate: state.settings.rate }).then(() => {
     if (phase === "feedback") Avatar.setState("idle");
@@ -1467,7 +1552,8 @@ function setPhase(p) {
   b.className = "act" + (u.rec ? " rec" : "");
   b.disabled = p === "scoring";
   // While typing, "Check my answer" is the button; this one returns for "Next"
-  b.hidden = typing && (p === "ready" || p === "asking" || p === "listening");
+  b.hidden = (typing && (p === "ready" || p === "asking" || p === "listening")) ||
+    (quizMode() === "mcq" && p !== "feedback");               // multiple choice: tap an answer
   if (p === "ready" || p === "asking") { $("hint").className = "hint"; $("hint").textContent = ""; }
 }
 
@@ -1475,11 +1561,13 @@ function setPhase(p) {
 
 /* onRetry: given when the AI did not answer - the card then says so and
    offers to try the AI again. */
+/* The card reads top to bottom as the student needs it: who marked it, the
+   advice and corrections, the model answer - and the ratings below them. */
 function showResult(r, onRetry) {
   const C = 2 * Math.PI * 33;
   const off = C * (1 - r.overall / 10);
 
-  let h = '<div class="score">' +
+  let ratings = '<div class="score">' +
     '<div class="ring"><svg viewBox="0 0 74 74">' +
       '<circle class="bgc" cx="37" cy="37" r="33"/>' +
       '<circle class="fgc" cx="37" cy="37" r="33" stroke="' + colorFor(r.overall) + '" ' +
@@ -1490,6 +1578,10 @@ function showResult(r, onRetry) {
         cat: tCat(current.cat), w: r.stats.words, c: r.stats.coverage
       })) + "</div></div></div>";
 
+  /* Who marked it, on every result - the student should know. Offline
+     marking only counts key words, and says so. */
+  let h = markedBy(r, onRetry);
+
   if (r.missingMust && r.missingMust.length) {
     h += '<div class="box safe"><b>' + esc(t("res.safety")) + "</b><ul>" +
       r.missingMust.map(m => "<li>" + esc(tMust(m)) + "</li>").join("") +
@@ -1497,27 +1589,22 @@ function showResult(r, onRetry) {
       esc(t("res.safetyNote", { max: 6 })) + "</div></div>";
   }
 
-  h += '<div style="margin-top:2px">';
+  ratings += '<div style="margin-top:2px">';
   CRITERIA.forEach(c => {
     const v = r.scores[c.key];
-    h += '<div class="crit"><div class="cline">' +
+    ratings += '<div class="crit"><div class="cline">' +
       '<span class="cname">' + esc(criterionLabel(c, r.mode, r.process)) + "</span>" +
       '<span class="bar2"><i style="width:' + (v * 10) + "%;background:" + colorFor(v) + '"></i></span>' +
       '<span class="cnum" style="color:' + colorFor(v) + '">' + v.toFixed(1) + "</span></div>" +
       '<div class="cnote">' + esc(r.notes[c.key]) + "</div></div>";
   });
-  h += "</div>";
+  ratings += "</div>";
 
+  h += '<div class="box adv"><b>' + esc(t("res.advice")) + "</b>" + esc(r.advice) + "</div>";
   if (r.grammar && r.grammar.length) {
     h += '<div class="box gerr"><b>' + esc(t("res.grammar")) + "</b><ul>" +
       r.grammar.map(g => "<li>" + esc(g) + "</li>").join("") + "</ul></div>";
   }
-
-  /* Who marked it, on every result - the student should know. Offline
-     marking only counts key words, and says so. */
-  h += markedBy(r, onRetry);
-
-  h += '<div class="box adv"><b>' + esc(t("res.advice")) + "</b>" + esc(r.advice) + "</div>";
   if (r.tip) h += '<div class="box tip"><b>' + esc(t("res.tip")) + '</b><span class="' +
     (qIsGuOnly(current) ? "guscript" : "") + '">' + esc(qField(current, "tip")) + "</span></div>";
 
@@ -1532,6 +1619,8 @@ function showResult(r, onRetry) {
     '<p class="en" id="modelEn">' + esc(current.en) + "</p>" +
     '<div class="row" style="margin-top:10px;justify-content:flex-start">' +
     '<button class="mini" id="btnHear">' + esc(t("btn.hearModel")) + "</button></div></details>";
+
+  h += '<div class="ratings">' + ratings + "</div>";
 
   $("result").hidden = false;
   $("result").innerHTML = h;
@@ -1788,6 +1877,18 @@ function switchStudent() {
     openAccess("");
   });
 }
+
+$("qmodeSeg").addEventListener("click", ev => {
+  const b = ev.target.closest("button[data-q]");
+  if (!b) return;
+  state.settings.qmode = b.getAttribute("data-q");
+  save();
+  paintQuizModes();
+});
+$("mcqBox").addEventListener("click", ev => {
+  const b = ev.target.closest("button[data-i]");
+  if (b) chooseMcq(+b.getAttribute("data-i"));
+});
 
 $("btnAccess").addEventListener("click", submitAccess);
 $("accCode").addEventListener("keydown", ev => {

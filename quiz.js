@@ -138,6 +138,7 @@ const Quiz = (function () {
     const chs = getChapters(c.id), saved = store(c.id);
     $("chapIcon").textContent = c.icon;
     $("chapName").textContent = tCourse(c, "name");
+    paintQuizModes();                  // app.js
     // Questions not translated yet are asked in Gujarati - say so up front
     $("chapLead").textContent = t("quiz.chLead", { n: chs.length }) +
       (untranslated(chs, getLang()) ? " " + t("quiz.bookGu") : "");
@@ -194,6 +195,40 @@ const Quiz = (function () {
 
   /* The current question again - in the new language, after a change */
   function current() { return question(run.idx); }
+
+  /* Multiple choice: the book answer and three answers to other questions of
+     the same chapter, in the language the question is shown in. The three
+     are the closest in length, so the right one does not stand out by size,
+     and none that the checker would pass as right for this question. The
+     order is shuffled the same way every time for a question. */
+  function choices() {
+    const b = run.ch.qs[run.idx];
+    const mine = version(b, getLang());
+    const q = question(run.idx);
+    const flat = s => norm(s).replace(/\s/g, "");
+    const clip = s => {
+      const t = String(s).replace(/^[•\s]+/, "").replace(/\s*\n\s*[•]?\s*/g, "; ").trim();
+      return t.length > 220 ? t.slice(0, 217).trim() + "…" : t;
+    };
+    let seed = (run.idx + 1) * 7919 + run.ch.id.length * 104729;
+    const rnd = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+
+    const seen = new Set([flat(mine.a)]);
+    const pool = run.ch.qs.map((x, j) => j === run.idx ? null : version(x, getLang()))
+      .filter(v => v && v.lang === mine.lang)
+      .sort((x, y) => Math.abs(x.a.length - mine.a.length) - Math.abs(y.a.length - mine.a.length));
+    const others = [];
+    for (const v of pool) {
+      if (others.length >= 3) break;
+      const f = flat(v.a);
+      if (seen.has(f) || offline(v.a, q).v !== "wrong") continue;   // never a second right answer
+      seen.add(f);
+      others.push(v.a);
+    }
+    const list = [{ text: clip(mine.a), right: true, full: mine.a }].concat(others.map(a => ({ text: clip(a), right: false, full: a })));
+    for (let i = list.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); const x = list[i]; list[i] = list[j]; list[j] = x; }
+    return list;
+  }
 
   /* The first question, the next one, or (advance false) the same one again */
   function next(advance) {
@@ -642,14 +677,19 @@ const Quiz = (function () {
     $("result").innerHTML = h;
     if (lastRetry && $("btnAiRetry")) $("btnAiRetry").addEventListener("click", lastRetry);
     if (quiet) return;
-    if (r.v === "right") cheer();
+    if (r.v === "right") cheer(true);
+    if (r.v === "wrong") cheer(false);
     revealResult();
   }
 
   /* The big thumbs up. Off the page again by itself; it never blocks a tap. */
-  function cheer() {
+  /* up: the green thumbs up; otherwise the red thumbs down */
+  function cheer(up) {
     const el = $("cheer");
     if (!el) return;
+    const thumb = el.querySelector(".thumb");
+    thumb.textContent = up ? "👍" : "👎";
+    thumb.classList.toggle("down", !up);
     el.hidden = false;
     el.classList.remove("on");
     void el.offsetWidth;               // restart the animation on a second right answer
@@ -669,7 +709,9 @@ const Quiz = (function () {
      closest to, and are read only when the voice can read that script. */
   function speak(r) {
     const voice = LANG_VOICE[getLang()] || "en";
-    if (!state.settings.speakFb || !Speech.hasVoice(voice)) { Avatar.setState("idle"); return; }
+    /* Right and wrong are said by the thumbs up and down alone - only a
+       partly right answer is spoken, because it says what is missing */
+    if (r.v !== "partial" || !state.settings.speakFb || !Speech.hasVoice(voice)) { Avatar.setState("idle"); return Promise.resolve(); }
 
     let msg = t(r.v === "right" ? "quiz.sayRight" : r.v === "partial" ? "quiz.sayPartial" : "quiz.sayWrong");
     if (r.v === "partial") {
@@ -678,7 +720,7 @@ const Quiz = (function () {
         msg += " " + t("quiz.missing") + " " + r.miss.join(". ");
       }
     }
-    Speech.speak(msg, { lang: voice, rate: state.settings.rate }).then(() => {
+    return Speech.speak(msg, { lang: voice, rate: state.settings.rate }).then(() => {
       if (phase === "feedback") Avatar.setState("idle");
     });
   }
@@ -817,7 +859,7 @@ const Quiz = (function () {
   function backToChapters() { openChapters(rep ? rep.cid : listCid); }
 
   return {
-    on, begin, next, current, progress, atLast, title,
+    on, begin, next, current, choices, progress, atLast, title,
     mark, record, skip, showResult, speak, relocalize, finish,
     renderTrades, openChapters, renderChapters, openReport, renderReport,
     again, backToChapters, drop
