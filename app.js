@@ -690,10 +690,10 @@ function resumeInterview() {
    chapter themselves, so there is nothing to brief. */
 /* ---------------- Chapter quiz answer modes ----------------
    normal - speak or type, the mic stays open until the student taps
-   hands  - the mic opens after the question, a pause ends the answer, and
-            the next question follows by itself
-   mcq    - four answers to tap: for a phone whose mic does not work well */
-const QMODES = ["normal", "hands", "mcq"];
+   mcq    - four answers to tap: for a phone whose mic does not work well
+   (A hands-free mode was tried and taken out, 2026-11-02; a saved "hands"
+   reads as normal.) */
+const QMODES = ["normal", "mcq"];
 function quizMode() { return Quiz.on() && QMODES.indexOf(state.settings.qmode) >= 0 ? state.settings.qmode : "normal"; }
 
 function paintQuizModes() {
@@ -710,9 +710,9 @@ function paintQuizModes() {
 function paintQuizModeUi() {
   const m = quizMode();
   $("qmBadge").hidden = m === "normal";
-  $("qmBadge").textContent = m === "hands" ? "🎙 " + t("qmode.hands") : m === "mcq" ? "☑ " + t("qmode.mcq") : "";
+  $("qmBadge").textContent = m === "mcq" ? "☑ " + t("qmode.mcq") : "";
   const mcq = m === "mcq";
-  $("inModeSeg").hidden = mcq || m === "hands";
+  $("inModeSeg").hidden = mcq;
   $("ansLabel").hidden = mcq;
   $("heard").hidden = mcq || inputMode === "type";
   $("typeWrap").hidden = mcq || inputMode !== "type";
@@ -748,21 +748,11 @@ function chooseMcq(i) {
   Quiz.speak(r);
 }
 
-/* Hands-free: after the verdict (and what is missing, if it is read out),
-   on to the next question without a tap */
-function handsFreeNext(q, spoken) {
-  if (quizMode() !== "hands") return;
-  Promise.resolve(spoken).then(() => setTimeout(() => {
-    if (Quiz.on() && current === q && phase === "feedback") $("btnAct").click();
-  }, 2200));
-}
-
 function startChapterQuiz(cid, chId) {
   const c = getCourse(cid);
   if (!c || !Quiz.begin(cid, chId)) return;
   Speech.prime();                 // a user tap - TTS has to be woken right here
   course = c;
-  if (state.settings.qmode === "hands") setInputMode("speak");    // hands-free is spoken
   openRun();
 }
 
@@ -891,9 +881,11 @@ function pickQuestion(advance) {
   $("ans").value = "";
   $("result").hidden = true;
   $("result").innerHTML = "";
-  // Speak or type stays as the student left it (setInputMode)
-  $("heard").hidden = inputMode === "type";
-  $("typeWrap").hidden = inputMode !== "type";
+  // Speak or type stays as the student left it (setInputMode); multiple
+  // choice has neither box
+  const mcq = quizMode() === "mcq";
+  $("heard").hidden = mcq || inputMode === "type";
+  $("typeWrap").hidden = mcq || inputMode !== "type";
   lastResult = null;
 
   paintAnswerLabels();
@@ -1171,10 +1163,9 @@ function beginListen(seed) {
     seed: seed || "",
     // 0 = never submit on a silence; the mic stays open until the student
     // presses the button. Hands-free mode is the opt-in that changes that.
-    // A silence submits the answer in hands-free - the Profile setting for the
-    // interview, the Hands-free mode for the chapter quiz. Otherwise the
-    // student taps the button when they have finished.
-    silenceMs: (Quiz.on() ? quizMode() === "hands" : state.settings.hands) ? state.settings.silence : 0,
+    // Hands-free (Profile) submits on a silence - never in the chapter quiz,
+    // where the student taps the button when they have finished
+    silenceMs: state.settings.hands && !Quiz.on() ? state.settings.silence : 0,
     onStart: () => { micLive(true); armMicWatch(); },
     onInterim: txt => { $("heard").textContent = txt; if (txt.trim()) clearMicWatch(); },
     onSilence: txt => { $("heard").textContent = txt; submit(txt); },
@@ -1305,8 +1296,9 @@ function setInputMode(m, keepHint) {
   } else if ($("ans").value.trim()) {
     $("heard").textContent = $("ans").value.trim();
   }
-  $("heard").hidden = typing;
-  $("typeWrap").hidden = !typing;
+  const mcq = quizMode() === "mcq";
+  $("heard").hidden = mcq || typing;
+  $("typeWrap").hidden = mcq || !typing;
   const hint = { cls: $("hint").className, txt: $("hint").textContent };
   if (phase === "listening" || phase === "asking") setPhase("ready");
   else setPhase(phase === "idle" ? "ready" : phase);
@@ -1486,7 +1478,7 @@ function markQuiz(ans, judged) {
       markQuiz(ans);
     } : null);
     setPhase("feedback");
-    handsFreeNext(q, Quiz.speak(r));
+    Quiz.speak(r);
   });
 }
 

@@ -44,6 +44,21 @@ function registerChapters(courseId, list) {
 
 function getChapters(courseId) { return CHAPTERS[courseId] || []; }
 
+/* Multiple-choice wrong options, written for each book question - the
+   mcq-*.js files. { chapterId: [ { gu: [3], en: [3], hi: [3] } per question,
+   in the chapter's question order ] }. A question with none falls back to
+   answers of other questions (quiz.js choices()). */
+const MCQ = Object.create(null);
+
+function registerMcq(courseId, byChapter) {
+  if (courseId && byChapter && typeof byChapter === "object") MCQ[courseId] = byChapter;
+}
+
+function getMcq(courseId, chId, i) {
+  const ch = MCQ[courseId] && MCQ[courseId][chId];
+  return (ch && ch[i]) || null;
+}
+
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { COURSES, COURSE_BY_ID, registerCourse, getCourse, CHAPTERS, registerChapters, getChapters };
+  module.exports = { COURSES, COURSE_BY_ID, registerCourse, getCourse, CHAPTERS, registerChapters, getChapters, MCQ, registerMcq, getMcq };
 }

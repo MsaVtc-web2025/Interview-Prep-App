@@ -196,10 +196,11 @@ const Quiz = (function () {
   /* The current question again - in the new language, after a change */
   function current() { return question(run.idx); }
 
-  /* Multiple choice: the book answer and three answers to other questions of
-     the same chapter, in the language the question is shown in. The three
-     are the closest in length, so the right one does not stand out by size,
-     and none that the checker would pass as right for this question. The
+  /* Multiple choice: the book answer and three wrong ones, in the language
+     the question is shown in. The wrong ones are those written for the
+     question (mcq-*.js): the same kind of answer, so the right one cannot be
+     guessed. Without them, answers to other questions of the chapter - the
+     closest in length, and none that the checker would pass as right. The
      order is shuffled the same way every time for a question. */
   function choices() {
     const b = run.ch.qs[run.idx];
@@ -214,10 +215,14 @@ const Quiz = (function () {
     const rnd = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
 
     const seen = new Set([flat(mine.a)]);
-    const pool = run.ch.qs.map((x, j) => j === run.idx ? null : version(x, getLang()))
+    // The written wrong options for this question, when there are some
+    const own = getMcq(run.cid, run.ch.id, run.idx);
+    const mineOwn = own && Array.isArray(own[mine.lang]) ? own[mine.lang].filter(a => a && !seen.has(flat(a))) : [];
+    const pool = mineOwn.length >= 3 ? [] : run.ch.qs.map((x, j) => j === run.idx ? null : version(x, getLang()))
       .filter(v => v && v.lang === mine.lang)
       .sort((x, y) => Math.abs(x.a.length - mine.a.length) - Math.abs(y.a.length - mine.a.length));
-    const others = [];
+    const others = mineOwn.slice(0, 3);
+    others.forEach(a => seen.add(flat(a)));
     for (const v of pool) {
       if (others.length >= 3) break;
       const f = flat(v.a);
@@ -682,6 +687,44 @@ const Quiz = (function () {
     revealResult();
   }
 
+  /* The sound with the thumb, made on the phone (no file, works offline):
+     right - three quick notes up (C6 E6 G6); wrong - two low falling notes. */
+  let audio = null;
+  function tone(f, at, len, type, vol, cutoff) {
+    const a = audio, t0 = a.currentTime + at;
+    const o = a.createOscillator(), g = a.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(f, t0);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol, t0 + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + len);
+    o.connect(g);
+    if (cutoff) {                        // soften the square wave's buzz
+      const lp = a.createBiquadFilter();
+      lp.type = "lowpass";
+      lp.frequency.value = cutoff;
+      g.connect(lp).connect(a.destination);
+    } else g.connect(a.destination);
+    o.start(t0);
+    o.stop(t0 + len + 0.05);
+  }
+  function chime(up) {
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      audio = audio || new AC();
+      if (audio.state === "suspended") audio.resume();
+      if (up) {
+        tone(1046.5, 0, 0.12, "sine", 0.3);
+        tone(1318.5, 0.08, 0.12, "sine", 0.3);
+        tone(1568, 0.16, 0.34, "sine", 0.32);
+      } else {
+        tone(311, 0, 0.16, "square", 0.12, 1200);
+        tone(233, 0.13, 0.3, "square", 0.12, 1000);
+      }
+    } catch (e) { /* no sound is fine */ }
+  }
+
   /* The big thumbs up. Off the page again by itself; it never blocks a tap. */
   /* up: the green thumbs up; otherwise the red thumbs down */
   function cheer(up) {
@@ -690,6 +733,7 @@ const Quiz = (function () {
     const thumb = el.querySelector(".thumb");
     thumb.textContent = up ? "👍" : "👎";
     thumb.classList.toggle("down", !up);
+    chime(up);
     el.hidden = false;
     el.classList.remove("on");
     void el.offsetWidth;               // restart the animation on a second right answer

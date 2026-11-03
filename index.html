@@ -1215,7 +1215,6 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
     <!-- How the student answers this trade's chapters (state.settings.qmode) -->
     <div class="seg qmode" id="qmodeSeg" role="group" data-i18n-aria="qmode.label" aria-label="How to answer">
       <button data-q="normal"><span aria-hidden="true">🎤</span> <span data-i18n="qmode.normal">Speak or type</span></button>
-      <button data-q="hands"><span aria-hidden="true">🎙</span> <span data-i18n="qmode.hands">Hands-free</span></button>
       <button data-q="mcq"><span aria-hidden="true">☑</span> <span data-i18n="qmode.mcq">Multiple choice</span></button>
     </div>
     <p class="qmodeD" id="qmodeD"></p>
@@ -1651,6 +1650,8 @@ body.tabs .toast{bottom:calc(102px + env(safe-area-inset-bottom))}
 <script src="./bank-welding.js"></script>
 <script src="./chapters-cnc.js"></script>
 <script src="./chapters-nursing.js"></script>
+<script src="./mcq-cnc.js"></script>
+<script src="./mcq-nursing.js"></script>
 <script src="./scoring.js"></script>
 <script src="./stats.js"></script>
 <script src="./vendor/pocketbase.umd.js"></script>
