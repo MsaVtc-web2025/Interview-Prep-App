@@ -211,7 +211,11 @@ const Quiz = (function () {
       const t = String(s).replace(/^[•\s]+/, "").replace(/\s*\n\s*[•]?\s*/g, "; ").trim();
       return t.length > 220 ? t.slice(0, 217).trim() + "…" : t;
     };
-    let seed = (run.idx + 1) * 7919 + run.ch.id.length * 104729;
+    // Seeded by the course, the chapter and the question, so the right
+    // letter does not repeat from one chapter to the next
+    let seed = 0;
+    for (const ch of run.cid + "/" + run.ch.id) seed = (seed * 31 + ch.charCodeAt(0)) | 0;
+    seed = (seed ^ ((run.idx + 1) * 7919)) & 0x7fffffff;
     const rnd = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
 
     const seen = new Set([flat(mine.a)]);
@@ -703,7 +707,8 @@ const Quiz = (function () {
       const lp = a.createBiquadFilter();
       lp.type = "lowpass";
       lp.frequency.value = cutoff;
-      g.connect(lp).connect(a.destination);
+      g.connect(lp);
+      lp.connect(a.destination);             // not chained: old Safari returns nothing
     } else g.connect(a.destination);
     o.start(t0);
     o.stop(t0 + len + 0.05);
@@ -713,7 +718,7 @@ const Quiz = (function () {
       const AC = window.AudioContext || window.webkitAudioContext;
       if (!AC) return;
       audio = audio || new AC();
-      if (audio.state === "suspended") audio.resume();
+      if (audio.state !== "running") audio.resume();   // "suspended", or "interrupted" on iPhone
       if (up) {
         tone(1046.5, 0, 0.12, "sine", 0.3);
         tone(1318.5, 0.08, 0.12, "sine", 0.3);

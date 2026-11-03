@@ -726,7 +726,7 @@ function paintMcq() {
   if (quizMode() !== "mcq") { box.innerHTML = ""; return; }
   const list = Quiz.choices();
   box.innerHTML = list.map((c, i) =>
-    '<button data-i="' + i + '"><span class="k">' + "ABCD"[i] + '</span><span class="' + (current.qlang === "en" ? "" : "guscript") + '">' +
+    '<button data-i="' + i + '"><span class="k">' + "ABCD"[i] + '</span><span class="' + (current.qlang === "gu" ? "guscript" : "") + '">' +   // same font as the question
     esc(c.text) + "</span></button>").join("");
   box.__list = list;
 }
@@ -1053,9 +1053,8 @@ function afterAsking(spoken) {
 
   /* The question has been asked, so open the mic and leave it open. The student
      talks when they are ready and presses the button when they are done -
-     nothing closes it in between. Hands-free mode no longer decides whether the
-     mic opens, only whether a silence submits the answer by itself. A student
-     who chose to type gets no mic at all. */
+     nothing closes it in between, not even a long pause. A student who chose
+     to type, or multiple choice, gets no mic at all. */
   if (quizMode() === "mcq") setPhase("ready");          // the answer is a tap
   else if (inputMode === "speak" && canListen()) beginListen();
   else setPhase("ready");
@@ -1147,6 +1146,9 @@ function phoneListens() {
 }
 
 function beginListen(seed) {
+  // Multiple choice is answered with a tap - never a mic, whatever path
+  // (Hear it again, coming back to the app, any language) gets here
+  if (quizMode() === "mcq") { Speech.stopListen(true); setPhase("ready"); return; }
   if (Dictation.enabled() && navigator.onLine !== false && !phoneListens()) return beginDictation(seed);
   if (!Speech.micSupported()) {
     setPhase("ready");
@@ -1162,10 +1164,9 @@ function beginListen(seed) {
     lang: answerLang() + "-IN",
     seed: seed || "",
     // 0 = never submit on a silence; the mic stays open until the student
-    // presses the button. Hands-free mode is the opt-in that changes that.
-    // Hands-free (Profile) submits on a silence - never in the chapter quiz,
-    // where the student taps the button when they have finished
-    silenceMs: state.settings.hands && !Quiz.on() ? state.settings.silence : 0,
+    // presses the button. (Hands-free, which ended the answer on a pause,
+    // was taken out of Profile 2026-11-03.)
+    silenceMs: 0,
     onStart: () => { micLive(true); armMicWatch(); },
     onInterim: txt => { $("heard").textContent = txt; if (txt.trim()) clearMicWatch(); },
     onSilence: txt => { $("heard").textContent = txt; submit(txt); },
@@ -1338,13 +1339,16 @@ function submit(text, judged) {
   // The chapter quiz is checked against the book on the phone: show it at once
   if (Quiz.on()) { markQuiz(ans, judged); return; }
 
-  // Scoring is instant; a short pause so the avatar is seen to think
+  // Scoring is instant; a short pause so the avatar is seen to think. The
+  // question is taken now: a skip or Back during the pause must not mark this
+  // answer against the next question (or crash on a closed course).
+  const q = current, c = course;      // so we can tell if the student moved on
   setTimeout(() => {
+    if (current !== q || course !== c) return;
 
     // The offline score is always computed first, even with AI on. It is the
     // base, and it is what shows if the AI never arrives.
-    const offline = scoreAnswer(ans, current, course.mode, qNeedsEnglish(current), course.id);
-    const q = current, c = course;      // so we can tell if the student moved on
+    const offline = scoreAnswer(ans, q, c.mode, qNeedsEnglish(q), c.id);
 
     let entry = null;                 // this answer's history row, once saved
 
@@ -1364,8 +1368,10 @@ function submit(text, judged) {
         words: r.stats.words, coverage: r.stats.coverage,
         weakest: r.weakest, missed: r.missingMust, byAi: !!r.byAi
       };
-      if (entry) Object.assign(entry, fields);
-      else {
+      if (entry) {
+        Object.assign(entry, fields);
+        delete entry.sent;             // send it again: the institute gets the AI mark too
+      } else {
         entry = Object.assign({
           // The question id is a number but used as an identifier - store it as text
           ts: Date.now(), cid: newCid(), course: c.id,
@@ -1535,7 +1541,9 @@ function setPhase(p) {
   const typing = inputMode === "type";
   Avatar.setState(u.av);
   /* Typing: "tap Answer" would be wrong - there is no mic to answer with. */
-  $("status").textContent = t(typing && p === "ready" ? (micOff ? "status.micOff" : "status.typeReady") : u.st);
+  const mcqTap = quizMode() === "mcq" && p === "ready";        // multiple choice: no Answer button
+  $("status").textContent = t(mcqTap ? "status.mcqReady"
+    : typing && p === "ready" ? (micOff ? "status.micOff" : "status.typeReady") : u.st);
   $("status").className = "status " + u.cls;
   const b = $("btnAct");
   // After the last question of a sequential course: "Finish", not "Next question"
@@ -1695,22 +1703,14 @@ function paintSettings() {
   paintAi();
   paintSync();
   paintAccess();
-  $("swHands").classList.toggle("on", !!s.hands);
   $("swAsk").classList.toggle("on", !!s.ask);
   $("swFb").classList.toggle("on", !!s.speakFb);
-  $("swHands").setAttribute("aria-checked", !!s.hands);
   $("swAsk").setAttribute("aria-checked", !!s.ask);
   $("swFb").setAttribute("aria-checked", !!s.speakFb);
 
   // aria-pressed: a screen reader hears which option is chosen
   Array.prototype.forEach.call($("segRate").children, b => {
     const on = Math.abs(parseFloat(b.dataset.r) - s.rate) < 0.02;
-    b.classList.toggle("on", on);
-    b.setAttribute("aria-pressed", on ? "true" : "false");
-  });
-  Array.prototype.forEach.call($("segSil").children, b => {
-    const on = parseInt(b.dataset.s, 10) === s.silence;
-    b.textContent = t("set.sec", { n: parseInt(b.dataset.s, 10) / 1000 });
     b.classList.toggle("on", on);
     b.setAttribute("aria-pressed", on ? "true" : "false");
   });
@@ -2001,12 +2001,6 @@ function toggle(key, el) {
   state.settings[key] = !state.settings[key];
   save();
   paintSettings();
-  if (key === "hands" && phase === "listening") {
-    /* Hands-free only decides whether a silence submits the answer, and that is
-       fixed when listen() is called - so restart to pick the new setting up.
-       The mic stays open either way; closing it here used to end the answer. */
-    beginListen($("heard").textContent);
-  }
 }
 
 /* ---------------- Confirmation dialog ----------------
@@ -2101,7 +2095,6 @@ $("btnSyncErase").addEventListener("click", () => {
   });
 });
 
-$("swHands").addEventListener("click", () => toggle("hands"));
 $("swAsk").addEventListener("click", () => toggle("ask"));
 $("swFb").addEventListener("click", () => toggle("speakFb"));
 
@@ -2120,8 +2113,6 @@ $("btnVoiceTest").addEventListener("click", () => {
 
 Array.prototype.forEach.call($("segRate").children, b =>
   b.addEventListener("click", () => { state.settings.rate = parseFloat(b.dataset.r); save(); paintSettings(); }));
-Array.prototype.forEach.call($("segSil").children, b =>
-  b.addEventListener("click", () => { state.settings.silence = parseInt(b.dataset.s, 10); save(); paintSettings(); }));
 
 /* Both language pickers - on the intro screen and in Profile */
 LANG_PICKERS.forEach(id =>
@@ -2222,6 +2213,15 @@ $("btnRepBack").addEventListener("click", () => Quiz.backToChapters());
 $("btnRepAgain").addEventListener("click", () => Quiz.again());
 $("btnRepDone").addEventListener("click", () => Quiz.backToChapters());
 $("btnRepeat").addEventListener("click", () => {
+  /* After the answer is marked, and in multiple choice (no mic to open after),
+     only read the question again: the result, the four options and the Next
+     button stay as they are. Going back to "asking" there hid Next and left
+     the options locked - the student was stuck. */
+  if (phase === "feedback" || quizMode() === "mcq") {
+    Speech.cancelSpeech();
+    sayQuestion(++askGen);
+    return;
+  }
   Speech.stopListen(true);
   setPhase("asking");
   /* Through sayQuestion, on the same generation counter as askQuestion. Repeating
@@ -2314,7 +2314,11 @@ Array.prototype.forEach.call($("inModeSeg").children, b =>
     if (m === "type") $("ans").focus();
   }));
 
-$("btnCheck").addEventListener("click", () => submit($("ans").value));
+// Once: a second tap while marking, or on the result, would save the answer twice
+$("btnCheck").addEventListener("click", () => {
+  if (phase === "scoring" || phase === "feedback") return;
+  submit($("ans").value);
+});
 
 /* ---------------- When a new version arrives ----------------
    sw.js serves scripts from the cache, so even once a new service worker takes

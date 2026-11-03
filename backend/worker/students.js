@@ -202,11 +202,19 @@ function personalCode() {
   return Array.from(a, n => ALPHABET[n % ALPHABET.length]).join("");
 }
 
-/* The student behind a sign-up code: the one who signed up before with this
-   mobile number and first name, or a new record of their own. */
+/* The student who signed up before with this mobile number and first name.
+   The number may be in `mobile` (typed at sign-in) or only in `phone` (a
+   student the institute added who has not signed in yet) - either is the
+   same person, not a second record. */
+async function findStudent(env, me) {
+  const found = await rows(await sb(env, "students?or=(mobile.eq." + me.mobile + ",phone.eq." + me.mobile + ")&select=" + FIELDS + ",first_name"));
+  const first = me.first.toLowerCase();
+  return found.filter(st => String(st.first_name || String(st.name || "").split(" ")[0]).toLowerCase() === first)[0] || null;
+}
+
+/* The student behind a sign-up code: the one found above, or a new record */
 async function joinWithSignupCode(env, sc, me) {
-  const found = await rows(await sb(env, "students?mobile=eq." + me.mobile + "&select=" + FIELDS + ",first_name"));
-  const same = found.filter(st => String(st.first_name || "").toLowerCase() === me.first.toLowerCase())[0];
+  const same = await findStudent(env, me);
   if (same) return same;
 
   for (let i = 0; i < 5; i++) {                  // a clash with an existing code is retried
@@ -226,7 +234,8 @@ async function joinWithSignupCode(env, sc, me) {
 
 /* ---- Wrong-code throttle --------------------------------------------- */
 
-const tries = new Map();                      // ip -> {from, n}
+const tries = new Map();                      // ip + device -> {from, n}: a class on
+                                              // one Wi-Fi is not locked out by one student
 
 function throttled(ip) {
   const now = Date.now();
@@ -270,10 +279,14 @@ function interviewRow(sid, e) {
   };
 }
 
+/* A resend of a row already there is ignored - except an interview answer,
+   which is sent again when a retried AI mark replaces the offline one, so it
+   is updated in place (still one row per answer). */
 async function insert(env, table, list) {
   if (!list.length) return 0;
+  const merge = table === "interview_answers" ? "merge-duplicates" : "ignore-duplicates";
   const res = await sb(env, table + "?on_conflict=student_id,client_id", {
-    method: "POST", headers: { Prefer: "resolution=ignore-duplicates,return=minimal" },
+    method: "POST", headers: { Prefer: "resolution=" + merge + ",return=minimal" },
     body: JSON.stringify(list)
   });
   if (!res.ok) throw new Error("supabase_" + res.status);
@@ -297,10 +310,10 @@ export async function studentRoute(path, request, env, ctx, head, json) {
   const later = p => { if (ctx && ctx.waitUntil) ctx.waitUntil(p); };
 
   if (path.endsWith("/access")) {
-    const ip = request.headers.get("CF-Connecting-IP") || "unknown";
-    if (throttled(ip)) return json({ error: "too_many_tries" }, 429, head);
     const code = normCode(body.code);
     const device = str(body.device, 64);
+    const ip = (request.headers.get("CF-Connecting-IP") || "unknown") + "|" + device;
+    if (throttled(ip)) return json({ error: "too_many_tries" }, 429, head);
     const me = cleanDetails(body);
     if (me.error) return json({ error: me.error }, 400, head);
     if (!/^[A-Z0-9]{6,16}$/.test(code) || device.length < 8) { missed(ip); return json({ error: "bad_code" }, 401, head); }
@@ -311,9 +324,14 @@ export async function studentRoute(path, request, env, ctx, head, json) {
       if (!st) {
         const sc = (await rows(await sb(env, "signup_codes?code=eq." + code + "&select=id,trade,batch,active,expires_on")))[0];
         if (sc) {
-          if (!sc.active) return json({ error: "inactive" }, 401, head);
-          if (sc.expires_on && sc.expires_on < istToday()) return json({ error: "expired" }, 401, head);
-          st = await joinWithSignupCode(env, sc, me);
+          /* A switched-off or expired sign-up code stops new sign-ups only:
+             a student who already joined with it (new phone, cleared app)
+             still gets back in - they were never shown a code of their own. */
+          const off = !sc.active ? "inactive" : sc.expires_on && sc.expires_on < istToday() ? "expired" : "";
+          if (off) {
+            st = await findStudent(env, me);
+            if (!st) return json({ error: off }, 401, head);
+          } else st = await joinWithSignupCode(env, sc, me);
         }
       }
     }

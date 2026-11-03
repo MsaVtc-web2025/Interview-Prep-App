@@ -62,8 +62,8 @@ const Judge = (function () {
   function busy() {
     try { return Date.now() < Number(localStorage.getItem(BUSY_KEY) || 0); } catch (e) { return false; }
   }
-  function setBusy(seconds) {
-    const s = Math.min(Math.max(Number(seconds) || 60, 30), 6 * 3600);
+  function setBusy(seconds, upTo) {
+    const s = Math.min(Math.max(Number(seconds) || 60, 30), upTo || 6 * 3600);
     try { localStorage.setItem(BUSY_KEY, String(Date.now() + s * 1000)); } catch (e) {}
     if (typeof onBusy === "function") { try { onBusy(); } catch (e) {} }
   }
@@ -71,6 +71,14 @@ const Judge = (function () {
     if (!res || res.status !== 429) return;
     res.clone().json().then(j => {
       if (j && j.error === "ai_busy") setBusy(j.retry_after);
+      /* This student's AI answers for today are used up: stop asking until
+         midnight in India, when the Worker's count starts again. Retrying
+         before then cannot work, and each try still counted against them. */
+      if (j && j.error === "daily_limit") {
+        const ist = new Date(Date.now() + 5.5 * 3600000);
+        const left = 86400 - (ist.getUTCHours() * 3600 + ist.getUTCMinutes() * 60 + ist.getUTCSeconds());
+        setBusy(left, 86400);
+      }
     }).catch(() => {});
   }
   let onBusy = null;

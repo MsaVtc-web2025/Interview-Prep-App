@@ -67,6 +67,8 @@ const Dictation = (function () {
   let startedAt = 0;
   let handlers = {};
   let levelTimer = null;
+  let opening = 0;                // the start() still waiting for the mic, 0 = none
+  let opens = 0;
 
   function supported() {
     return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia &&
@@ -74,7 +76,9 @@ const Dictation = (function () {
   }
 
   function enabled() { return !!DICTATION_URL && supported(); }
-  function active() { return recording; }
+  // Also while the mic is still opening (the permission prompt), so Back or
+  // the next question calls abort() and the late mic is let go at once
+  function active() { return recording || opening !== 0; }
   function seconds() { return recording ? Math.round((Date.now() - startedAt) / 1000) : 0; }
 
   /* ---------------- capture ---------------- */
@@ -86,6 +90,7 @@ const Dictation = (function () {
     handlers = opts || {};
     if (recording) return Promise.resolve(true);
     if (!enabled()) return Promise.resolve(false);
+    const me = opening = ++opens;
 
     chunks = [];
     captured = 0;
@@ -100,6 +105,11 @@ const Dictation = (function () {
         autoGainControl: true
       }
     }).then(s => {
+      if (opening !== me) {                 // aborted while the mic was opening
+        try { s.getTracks().forEach(t => t.stop()); } catch (e) {}
+        return false;
+      }
+      opening = 0;
       stream = s;
       const AC = window.AudioContext || window.webkitAudioContext;
       ctx = new AC();
@@ -151,6 +161,8 @@ const Dictation = (function () {
       if (handlers.onLive) handlers.onLive();
       return true;
     }).catch(err => {
+      if (opening !== me) return false;     // aborted meanwhile: nothing to report
+      opening = 0;
       teardown();
       const name = (err && err.name) || "unknown";
       if (handlers.onError) {
@@ -186,6 +198,7 @@ const Dictation = (function () {
      release the hardware without spending anything on transcription. */
   function teardown() {
     recording = false;
+    opening = 0;
     stopLevelMeter();
     try { if (processor) { processor.onaudioprocess = null; processor.disconnect(); } } catch (e) {}
     try { if (source) source.disconnect(); } catch (e) {}
