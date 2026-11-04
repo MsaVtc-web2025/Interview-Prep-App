@@ -415,6 +415,28 @@ One quiz per book chapter, numbered as in the book (`no: "2"`). When the book
 splits a chapter into sections (2.1, 2.4, 2.6 ...), put them all in that one
 chapter and give each question its section's name in `t`.
 
+### Long chapters become parts
+
+A chapter of more than 25 questions is offered as one quiz per section, so
+chapter 2 of the CNC book (125 questions) appears as 2.1 to 2.5, each
+25 questions, named **Part 1 · Basic Linear Measurement** and so on. Nothing in
+`chapters-*.js` changes — the splitting is done once in `splitChapter()` in
+`courses.js`, and from there a part behaves as an ordinary chapter: its own row
+in the list, its own score, its own report card.
+
+A chapter is split only when every one of its sections holds at least 10
+questions. That is what keeps the nursing chapters whole: they carry sections
+too, but short and uneven ones (chapter 11 runs 7, 6, 4, 2, 9, 5), and a part of
+two questions is not a quiz.
+
+To change either number, edit `PART_MAX` (25) or `PART_MIN` (10) in `courses.js`.
+Set `PART_MAX` very high and nothing splits at all.
+
+> Each part gets a new id (`c2` becomes `c2-p1` … `c2-p5`). A score saved against
+> the old whole-chapter id is simply no longer shown; nothing breaks. The written
+> multiple-choice options in `mcq-*.js` stay keyed by the **original** chapter and
+> index — a part remembers where it came from, so those files need no changes.
+
 Write each question the way an interviewer would ask it out loud, since the
 avatar reads it word for word. Say a term once, not twice in brackets
 (`Bed Bath`, not `બેડબાથ (Bed Bath)`). Use the full name of a role, tool or

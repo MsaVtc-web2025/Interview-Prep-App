@@ -71,9 +71,26 @@ const Quiz = (function () {
     return LANGS3.map(l => version(b, l)).filter((v, i, all) => all.findIndex(x => x.lang === v.lang) === i);
   }
 
+  /* Is the name shown the book's own Gujarati, with no translation for it?
+     That decides the font, so it is asked separately - the "Part n" prefix
+     below would otherwise make the name never match the book's. */
+  function chTitleIsGu(ch) {
+    return !(getLang() !== "gu" && ch.titles && ch.titles[getLang()]);
+  }
+
+  /* A chapter's name. For a part of a long chapter (courses.js splitChapter)
+     the name is the book's own name for that section, with "Part n" in front
+     so the order is plain: "Part 2 · Steel Rule & Unit Conversion". */
   function chTitle(ch) {
     const l = getLang();
-    return (l !== "gu" && ch.titles && ch.titles[l]) || ch.title;
+    const base = (l !== "gu" && ch.titles && ch.titles[l]) || ch.title;
+    return ch.part ? t("quiz.part", { n: ch.part.n }) + " · " + base : base;
+  }
+
+  /* The written multiple-choice options for a question. mcq-*.js is keyed by
+     the chapter the book had, so a part maps its index back into it. */
+  function mcqFor(cid, ch, i) {
+    return ch.part ? getMcq(cid, ch.part.srcId, ch.part.from + i) : getMcq(cid, ch.id, i);
   }
 
   /* The section a question comes from, shown above it: one name, or a name
@@ -153,7 +170,7 @@ const Quiz = (function () {
       return '<div class="chrow">' +
         '<button class="chgo" data-ch="' + esc(ch.id) + '">' +
           '<span class="no">' + esc(ch.no) + "</span>" +
-          '<span class="tx"><span class="nm' + (chTitle(ch) === ch.title ? " guscript" : "") + '">' + esc(chTitle(ch)) + "</span>" +
+          '<span class="tx"><span class="nm' + (chTitleIsGu(ch) ? " guscript" : "") + '">' + esc(chTitle(ch)) + "</span>" +
           '<span class="mt">' + esc(t("tile.questions", { n: ch.qs.length })) + "</span></span>" +
           '<svg class="svi sm" aria-hidden="true"><use href="#i-next"/></svg>' +
         "</button>" + last + "</div>";
@@ -220,7 +237,7 @@ const Quiz = (function () {
 
     const seen = new Set([flat(mine.a)]);
     // The written wrong options for this question, when there are some
-    const own = getMcq(run.cid, run.ch.id, run.idx);
+    const own = mcqFor(run.cid, run.ch, run.idx);
     const mineOwn = own && Array.isArray(own[mine.lang]) ? own[mine.lang].filter(a => a && !seen.has(flat(a))) : [];
     const pool = mineOwn.length >= 3 ? [] : run.ch.qs.map((x, j) => j === run.idx ? null : version(x, getLang()))
       .filter(v => v && v.lang === mine.lang)
