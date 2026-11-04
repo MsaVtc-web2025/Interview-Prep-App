@@ -32,7 +32,7 @@ for Hindi), so the app still renders correctly offline.
 
 | Mode | Questions | Type |
 |---|---|---|
-| 💼 Interview (general) | 22 | HR / personal |
+| 💼 Interview (general) | 13 | HR / personal |
 | 💻 Computer | 10 | technical |
 | ⚙️ CNC machining | 10 | technical |
 | ⚡ Electrician | 10 | technical |
@@ -40,6 +40,10 @@ for Hindi), so the app still renders correctly offline.
 | 🔋 E-vehicle | 10 | technical |
 | 🩺 Nursing | 10 | technical |
 | 🔥 Welding | 10 | technical |
+
+Every trade sits the general mode, so it holds only questions any student can
+answer - nothing a single trade is taught. Trade knowledge belongs in that
+trade’s own mode.
 
 Progress is kept separately for each mode.
 

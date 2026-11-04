@@ -36,6 +36,9 @@ const CAT_I18N = {
   "ઇન્જેક્શન":                        { en: "Injections",                  hi: "इंजेक्शन" },
   "ઇન્ટરનેટ અને ઈમેલ":                { en: "Internet and email",          hi: "इंटरनेट और ईमेल" },
   "ઉદ્યોગની સમજ":                     { en: "Industry awareness",          hi: "उद्योग की समझ" },
+  /* No question carries this category any more - the Tally questions left the
+     general interview. It stays because answers given before then are still in
+     the student's history, which shows the category it was stored with. */
   "એકાઉન્ટિંગ / ટેલી":                 { en: "Accounting / Tally",          hi: "अकाउंटिंग / टैली" },
   "એન્જિન":                           { en: "Engine",                      hi: "इंजन" },
   "ઓપરેટિંગ સિસ્ટમ":                  { en: "Operating system",            hi: "ऑपरेटिंग सिस्टम" },

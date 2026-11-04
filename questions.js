@@ -24,109 +24,19 @@ registerCourse({
 
   /* Questions are asked in real-interview order — this list holds question ids.
      Order: self-introduction -> home town -> family -> education -> hobbies
-            -> job role -> timing/shift -> salary -> practical skills
-            -> technical (Tally).
-     To change the order, edit just this one line. */
-  order: [21, 17, 11, 12, 9, 10, 19, 18, 13, 14, 15, 16, 22, 20, 7, 8, 1, 2, 3, 4, 5, 6],
+            -> timing/shift -> salary -> practical skills.
+     To change the order, edit just this one line.
+
+     Every trade sits this mode, so it holds nothing a single trade is taught.
+     The Tally and accounting questions (ids 1-6) and the call-centre ones -
+     Domestic Voice, Voice vs Non-Voice, VOIS (ids 13, 15, 16) - were removed
+     for that reason: outside the computer and BPO trades nobody has been
+     taught them, and a welder scoring 1 on Tally has learnt nothing. Trade
+     knowledge belongs in that trade's bank-*.js. */
+  order: [21, 17, 11, 12, 9, 10, 19, 18, 14, 22, 20, 7, 8],
   greet: true,          // greet the student by name before the first question
 
   questions: [
-{
-  id: 1,
-  cat: "એકાઉન્ટિંગ / ટેલી",
-  q: "How do you make a purchase entry in Tally?",
-  i18n: {
-    gu: { q: "Tally માં purchase entry કેવી રીતે કરો છો?" },
-    hi: { q: "Tally में purchase entry कैसे करते हैं?",
-          gu: "Tally में purchase entry के लिए Gateway of Tally से Accounting Vouchers चुनिए और F9 (Purchase) दबाइए। फिर supplier का नाम, invoice number और तारीख़ भरिए। उसके बाद ख़रीदी हुई चीज़, मात्रा और रक़म डालिए, GST लागू होता हो तो जोड़िए, और आख़िर में Ctrl+A दबाकर entry save कीजिए।",
-          tip: "क़दम क्रम से बोलिए। इससे interview लेने वाले को लगता है कि आपको सचमुच practical अनुभव है।" },
-    en: { tip: "Say the steps in order. It convinces the interviewer that you have genuine hands-on experience." }
-  },
-  kw: [["purchase"], ["voucher", "f9", "entry"], ["supplier", "party", "creditor", "vendor"], ["amount", "gst", "tax", "rate"], ["ledger", "account", "save"]],
-  gu: "ટેલીમાં પર્ચેસ એન્ટ્રી માટે Gateway of Tally માંથી Accounting Vouchers પસંદ કરો અને F9 (Purchase) દબાવો. પછી સપ્લાયરનું નામ, ઇન્વોઇસ નંબર અને તારીખ ભરો. ત્યાર બાદ ખરીદેલી વસ્તુ, જથ્થો અને રકમ નાખો, GST લાગુ પડતો હોય તો ઉમેરો, અને છેલ્લે Ctrl+A દબાવીને એન્ટ્રી સેવ કરો.",
-  en: "To make a purchase entry in Tally, I go to Accounting Vouchers and press F9 for Purchase. I enter the supplier name, the invoice number and the date. Then I enter the item, quantity and amount, add GST if it applies, and save the entry using Ctrl plus A.",
-  tip: "પગલાં ક્રમ પ્રમાણે બોલો. તેનાથી ઇન્ટરવ્યુ લેનારને લાગે છે કે તમને ખરેખર પ્રેક્ટિકલ અનુભવ છે."
-},
-{
-  id: 2,
-  cat: "એકાઉન્ટિંગ / ટેલી",
-  q: "How are accounting entries made?",
-  i18n: {
-    gu: { q: "Accounting entries કઈ રીતે કરવામાં આવે છે?" },
-    hi: { q: "Accounting entries किस तरह की जाती हैं?",
-          gu: "हर entry में debit और credit, ये दो पक्ष होते हैं, और दोनों की रक़म बराबर होनी चाहिए। पहले तय कीजिए कि कौन से दो खाते प्रभावित होते हैं, फिर Golden Rules के अनुसार तय कीजिए कि कौन सा debit होगा और कौन सा credit।",
-          tip: "एक छोटा उदाहरण देकर समझाएँगे तो जवाब बहुत मज़बूत लगेगा।" },
-    en: { tip: "Explaining with one small example makes the answer far stronger." }
-  },
-  kw: [["debit", "dr"], ["credit", "cr"], ["account", "ledger"], ["equal", "same", "both", "two"], ["rule", "golden", "example"]],
-  gu: "દરેક એન્ટ્રીમાં ડેબિટ અને ક્રેડિટ એમ બે બાજુ હોય છે, અને બંનેની રકમ સરખી હોવી જોઈએ. પહેલાં નક્કી કરો કે કયા બે ખાતાં અસર પામે છે, પછી ગોલ્ડન રૂલ્સ પ્રમાણે કયું ડેબિટ થશે અને કયું ક્રેડિટ તે નક્કી કરો.",
-  en: "Every accounting entry has two sides, debit and credit, and both amounts must be equal. First I identify which two accounts are affected, then I apply the golden rules to decide which account to debit and which to credit. For example, if I buy goods for cash, the Purchase account is debited and the Cash account is credited.",
-  tip: "એક નાનું ઉદાહરણ આપીને સમજાવશો તો જવાબ ઘણો મજબૂત લાગશે."
-},
-{
-  id: 3,
-  cat: "એકાઉન્ટિંગ / ટેલી",
-  q: "What are the Golden Rules of Accounting?",
-  i18n: {
-    gu: { q: "Accounting ના Golden Rules શું છે?" },
-    hi: { q: "Accounting के Golden Rules क्या हैं?",
-          gu: "तीन तरह के खातों के लिए तीन नियम हैं। Personal account: पाने वाले को debit, देने वाले को credit। Real account: जो आए वह debit, जो जाए वह credit। Nominal account: ख़र्च और नुक़सान debit, आय और मुनाफ़ा credit।",
-          tip: "तीनों नियम क्रम से बोलिए और हर एक के साथ एक छोटा उदाहरण दीजिए।" },
-    en: { tip: "State all three rules in order, and give one small example with each." }
-  },
-  kw: [["personal"], ["real"], ["nominal"], ["debit", "dr"], ["credit", "cr"], ["receiver", "comes", "expense", "giver", "goes", "income"]],
-  gu: "ત્રણ પ્રકારના ખાતાં માટે ત્રણ નિયમો છે. પર્સનલ એકાઉન્ટ: મેળવનારને ડેબિટ, આપનારને ક્રેડિટ. રિયલ એકાઉન્ટ: જે આવે તે ડેબિટ, જે જાય તે ક્રેડિટ. નોમિનલ એકાઉન્ટ: ખર્ચ અને નુકસાન ડેબિટ, આવક અને નફો ક્રેડિટ.",
-  en: "There are three golden rules. For personal accounts, debit the receiver and credit the giver. For real accounts, debit what comes in and credit what goes out. For nominal accounts, debit all expenses and losses, and credit all incomes and gains.",
-  tip: "ત્રણેય નિયમો ક્રમમાં બોલો અને દરેક સાથે એક નાનું ઉદાહરણ આપો."
-},
-{
-  id: 4,
-  cat: "એકાઉન્ટિંગ / ટેલી",
-  q: "What is a Contra voucher, and what entries are related to it?",
-  i18n: {
-    gu: { q: "Contra voucher શું હોય છે, અને તેની સાથે જોડાયેલી કઈ entries હોય છે?" },
-    hi: { q: "Contra voucher क्या होता है, और उससे जुड़ी कौन सी entries होती हैं?",
-          gu: "Contra voucher उन लेन-देन के लिए इस्तेमाल होता है जिनमें पैसा सिर्फ़ cash और bank के बीच आता-जाता है। जैसे bank में cash जमा करना, bank से cash निकालना, या एक bank खाते से दूसरे खाते में transfer करना। Tally में उसकी shortcut key F4 है।",
-          tip: "यह भी जोड़िए कि इस entry से कंपनी की कुल पूँजी नहीं बदलती — पैसा सिर्फ़ एक जगह से दूसरी जगह जाता है।" },
-    en: { tip: "Add that this entry does not change the company's total capital — the money only moves from one place to another." }
-  },
-  kw: [["contra"], ["cash"], ["bank"], ["deposit", "withdraw", "transfer"], ["f4", "voucher"]],
-  gu: "કોન્ટ્રા વાઉચર એવા વ્યવહારો માટે વપરાય છે જેમાં ફક્ત રોકડ અને બેંક વચ્ચે પૈસાની હેરફેર થાય છે. જેમ કે બેંકમાં રોકડ જમા કરાવવી, બેંકમાંથી રોકડ ઉપાડવી, અથવા એક બેંક ખાતામાંથી બીજા ખાતામાં ટ્રાન્સફર કરવું. ટેલીમાં તેની શોર્ટકટ કી F4 છે.",
-  en: "A contra voucher is used when money moves only between cash and bank. For example, depositing cash into the bank, withdrawing cash from the bank, or transferring money from one bank account to another. In Tally the shortcut key for contra is F4.",
-  tip: "ઉમેરો કે આ એન્ટ્રીથી કંપનીની કુલ મૂડી બદલાતી નથી — પૈસા ફક્ત એક જગ્યાએથી બીજી જગ્યાએ જાય છે."
-},
-{
-  id: 5,
-  cat: "એકાઉન્ટિંગ / ટેલી",
-  q: "What is bank reconciliation?",
-  i18n: {
-    gu: { q: "Bank reconciliation શું હોય છે?" },
-    hi: { q: "Bank reconciliation क्या होता है?",
-          gu: "Bank reconciliation यानी अपनी बही में लिखे bank खाते के आँकड़े और bank के statement के आँकड़े मिलाना। दोनों में फ़र्क़ हो तो उसका कारण ढूँढ़ना — जैसे cheque लिखा गया हो पर अभी bank में pass न हुआ हो, या bank ने कोई charge काटा हो जो हमने दर्ज न किया हो।",
-          tip: "आख़िर में जोड़िए कि यह काम आम तौर पर हर महीने होता है — इससे practical समझ दिखती है।" },
-    en: { tip: "Finish by saying this is normally done every month — it shows practical understanding." }
-  },
-  kw: [["bank"], ["statement", "passbook"], ["book", "books", "ledger"], ["match", "compare", "difference", "tally"], ["cheque", "charges", "cleared", "month"]],
-  gu: "બેંક રીકન્સીલેશન એટલે આપણા ચોપડામાં લખેલા બેંક ખાતાના આંકડા અને બેંકના સ્ટેટમેન્ટના આંકડા સરખાવવા. બંને વચ્ચે ફરક હોય તો તેનું કારણ શોધવું — જેમ કે ચેક લખાયો હોય પણ હજી બેંકમાં પાસ ન થયો હોય, અથવા બેંકે ચાર્જ કાપ્યો હોય જે આપણે નોંધ્યો ન હોય.",
-  en: "Bank reconciliation means comparing the bank balance shown in our books with the balance shown in the bank statement. If there is a difference, I find the reason, such as a cheque that is issued but not yet cleared, or bank charges that are not yet recorded in our books. It is usually done every month.",
-  tip: "છેલ્લે ઉમેરો કે આ કામ સામાન્ય રીતે દર મહિને થાય છે — તેનાથી પ્રેક્ટિકલ સમજ દેખાય છે."
-},
-{
-  id: 6,
-  cat: "એકાઉન્ટિંગ / ટેલી",
-  q: "What was taught in your Tally training?",
-  i18n: {
-    gu: { q: "તમારી Tally training માં શું શીખવવામાં આવ્યું હતું?" },
-    hi: { q: "आपकी Tally training में क्या सिखाया गया था?",
-          gu: "आपने क्या सीखा वह क्रम से बताइए — company बनाना, ledger और group बनाना, voucher entry, GST, और report देखना। आख़िर में एक वाक्य में कहिए कि आप किस चीज़ में सबसे ज़्यादा सहज हैं।",
-          tip: "सूची लंबी करने के बजाय जो सचमुच आता है वही बताइए — उसी पर आगे सवाल पूछे जा सकते हैं।" },
-    en: { tip: "Rather than padding the list, name only what you genuinely know — follow-up questions come from it." }
-  },
-  kw: [["company", "create"], ["ledger", "group"], ["voucher", "entry", "entries"], ["gst", "tax"], ["report", "balance", "profit"]],
-  gu: "તમે શું શીખ્યા તે ક્રમમાં જણાવો — કંપની બનાવવી, લેજર અને ગ્રુપ બનાવવા, વાઉચર એન્ટ્રી, GST, અને રિપોર્ટ જોવા. છેલ્લે એક વાક્યમાં કહો કે તમે કઈ બાબતમાં સૌથી વધુ આરામદાયક છો.",
-  en: "In my Tally training I learned how to create a company, how to create ledgers and groups, and how to pass voucher entries like purchase, sales, payment, receipt and contra. I also learned GST entries and how to view reports like the balance sheet and the profit and loss account. I am most comfortable with purchase and sales entries.",
-  tip: "યાદી લાંબી કરવા કરતાં જે ખરેખર આવડે છે તે જ કહો — તેના પર આગળ પ્રશ્ન પુછાઈ શકે છે."
-},
 {
   id: 7,
   cat: "ડિજિટલ પેમેન્ટ / વ્યવહારુ કૌશલ્ય",
@@ -224,22 +134,6 @@ registerCourse({
   tip: "ફક્ત સંખ્યા બોલીને અટકશો નહીં — દરેક શું કરે છે તે એક વાક્યમાં ઉમેરો."
 },
 {
-  id: 13,
-  cat: "નોકરીની ભૂમિકા અને શિફ્ટ",
-  q: "What is Domestic Voice?",
-  i18n: {
-    gu: { q: "Domestic Voice શું હોય છે?" },
-    hi: { q: "Domestic Voice क्या होता है?",
-          gu: "Domestic Voice यानी ऐसी process जिसमें फ़ोन पर भारत के ही ग्राहकों से बात करनी होती है। ग्राहक के सवाल सुनकर हिंदी, अंग्रेज़ी या स्थानीय भाषा में जवाब देना होता है। इसके मुक़ाबले international process में विदेश के ग्राहकों से बात करनी होती है।",
-          tip: "Domestic और international का फ़र्क़ बताएँगे तो जवाब पूरा माना जाएगा।" },
-    en: { tip: "Explaining the difference between domestic and international makes the answer complete." }
-  },
-  kw: [["domestic", "india", "indian", "country"], ["voice", "call", "calls", "phone"], ["customer", "client"], ["language", "hindi", "english"], ["process", "support", "query"]],
-  gu: "ડોમેસ્ટિક વોઈસ એટલે એવી Process જેમાં ફોન પર ભારતના જ ગ્રાહકો સાથે વાત કરવાની હોય છે. ગ્રાહકના પ્રશ્નો સાંભળીને હિન્દી, અંગ્રેજી કે સ્થાનિક ભાષામાં જવાબ આપવાનો હોય છે. તેની સામે ઇન્ટરનેશનલ પ્રોસેસમાં વિદેશના ગ્રાહકો સાથે વાત કરવાની હોય છે.",
-  en: "Domestic voice means a process where we speak with customers who are within India, over the phone. We listen to their questions or complaints and solve them in Hindi or English. It is different from an international process, where we handle customers from other countries.",
-  tip: "ડોમેસ્ટિક અને ઇન્ટરનેશનલ વચ્ચેનો ફરક જણાવશો તો જવાબ પૂરો ગણાશે."
-},
-{
   id: 14,
   cat: "નોકરીની ભૂમિકા અને શિફ્ટ",
   q: "Are you willing to work night shifts?",
@@ -254,38 +148,6 @@ registerCourse({
   gu: "સીધો જવાબ આપો — હા કે ના. જો હા હોય તો ઉમેરો કે ઘરેથી પરવાનગી છે અને આવવા-જવાની વ્યવસ્થા છે. જો ના હોય તો નમ્રતાથી કારણ જણાવો અને કઈ શિફ્ટ ફાવે તે કહો. ખોટું 'હા' કહેવા કરતાં પ્રામાણિક જવાબ સારો.",
   en: "Yes, I am comfortable working night shifts. I have already discussed this with my family and they are supportive. As long as transport facility is provided, I will be able to reach on time and work regularly.",
   tip: "'હા' કહો તો કારણ પણ આપો. ફક્ત 'હા' બોલવાથી જવાબ અધૂરો લાગે છે."
-},
-{
-  id: 15,
-  cat: "નોકરીની ભૂમિકા અને શિફ્ટ",
-  q: "What is the difference between a Voice and a Non-Voice process?",
-  i18n: {
-    gu: { q: "Voice અને Non-Voice process વચ્ચે શું ફરક છે?" },
-    hi: { q: "Voice और Non-Voice process में क्या फ़र्क़ है?",
-          gu: "Voice process में फ़ोन पर ग्राहक से सीधी बात करनी होती है, इसलिए बोलने की कुशलता ज़रूरी है। Non-voice process में बात नहीं करनी होती — उसमें chat, email या back office का काम होता है, इसलिए लिखने और typing की कुशलता ज़रूरी है।",
-          tip: "दोनों के लिए कौन सी कुशलता चाहिए यह जोड़िए — इससे आपकी समझ गहरी लगती है।" },
-    en: { tip: "Add which skill each one needs — it makes your understanding sound deeper." }
-  },
-  kw: [["voice", "call", "talk", "speak", "phone"], ["non-voice", "non voice", "chat", "email", "back office"], ["customer"], ["write", "written", "typing"]],
-  gu: "વોઈસ પ્રોસેસમાં ફોન પર ગ્રાહક સાથે સીધી વાત કરવાની હોય છે, તેથી બોલવાની આવડત જરૂરી છે. નોન-વોઈસ પ્રોસેસમાં વાત કરવાની હોતી નથી — તેમાં ચેટ, ઈમેલ કે બેક ઓફિસનું કામ હોય છે, તેથી લખવાની અને ટાઇપિંગની આવડત જરૂરી છે.",
-  en: "In a voice process we talk to customers directly on the phone, so good speaking and listening skills are important. In a non-voice process we do not speak to customers. Instead we handle chats, emails or back office work, so writing and typing skills are more important.",
-  tip: "બંને માટે કઈ આવડત જોઈએ તે ઉમેરો — તેનાથી તમારી સમજ ઊંડી લાગે છે."
-},
-{
-  id: 16,
-  cat: "નોકરીની ભૂમિકા અને શિફ્ટ",
-  q: "What is VOIS?",
-  i18n: {
-    gu: { q: "VOIS શું છે?" },
-    hi: { q: "VOIS क्या है?",
-          gu: "VOIS यानी Vodafone Intelligent Solutions। यह Vodafone group का एक केंद्र है जो technology, ग्राहक सेवा और कई दूसरी सेवाएँ दुनिया भर की Vodafone कंपनियों को देता है। भारत में इसके बड़े office हैं।",
-          tip: "Interview से पहले कंपनी का पूरा नाम और वह क्या करती है यह ज़रूर देख लीजिए — यह सवाल लगभग हर बार पूछा जाता है।" },
-    en: { tip: "Before the interview, look up the company's full name and what it does — this question comes up almost every time." }
-  },
-  kw: [["vois", "vodafone", "intelligent", "solutions"], ["company", "organisation", "organization"], ["service", "shared", "global", "technology"], ["india", "pune", "ahmedabad"]],
-  gu: "VOIS એટલે Vodafone Intelligent Solutions. તે Vodafone ગ્રુપનું એક કેન્દ્ર છે જે ટેકનોલોજી, ગ્રાહક સેવા અને બીજી ઘણી સેવાઓ દુનિયાભરની Vodafone કંપનીઓને પૂરી પાડે છે. ભારતમાં તેની મોટી ઓફિસો છે.",
-  en: "VOIS stands for Vodafone Intelligent Solutions. It is a part of the Vodafone Group that provides technology, customer service and business support to Vodafone companies across the world. It has large centres in India.",
-  tip: "ઇન્ટરવ્યુ પહેલાં કંપનીનું પૂરું નામ અને તે શું કરે છે તે ચોક્કસ જોઈ લો — આ પ્રશ્ન લગભગ દરેક વખતે પુછાય છે."
 },
 {
   id: 17,
